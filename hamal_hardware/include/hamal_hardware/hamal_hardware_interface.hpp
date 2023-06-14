@@ -14,7 +14,13 @@
 
 #include <ros/ros.h>
 #include <hardware_interface/robot_hw.h>
+#include <hardware_interface/joint_state_interface.h>
+#include <hardware_interface/joint_command_interface.h>
+#include <controller_manager/controller_manager.h>
+
 #include <unordered_map>
+#include <optional>
+#include <memory>
 
 #include "hamal_hardware/ethercat_controller.hpp"
 
@@ -23,10 +29,23 @@ namespace hamal
 
     struct WheelJointHandle
     {
-        std::string name;
+        WheelJointHandle(
+            const std::string& name
+        )
+        {
+            jointName = name;
+            position = 0.0;
+            velocity = 0.0;
+            effort = 0.0;
+            targetVelocity = 0.0;
+        }
+
+        std::string jointName;
         double position;
         double velocity;
         double effort;
+        
+        double targetVelocity;
     };
 
     class HardwareInterface : public hardware_interface::RobotHW
@@ -45,6 +64,12 @@ namespace hamal
          * 
          */
         ~HardwareInterface();
+        
+        /**
+         * @brief 
+         * 
+         */
+        void update();
 
         private:
 
@@ -54,13 +79,33 @@ namespace hamal
          */
         ros::NodeHandle m_NodeHandle;
 
+        std::shared_ptr<controller_manager::ControllerManager> m_ControllerManager;
+
+        std::unique_ptr<HamalEthercatController> m_EthercatController;
+
+        /**
+         * @brief 
+         * 
+         */
         std::unordered_map<std::string, WheelJointHandle> m_WheelJointsMap;
+
+        hardware_interface::JointStateInterface m_JointStateInterface;
+
+        hardware_interface::VelocityJointInterface m_VelJointInterface;
         
+        double m_LoopFrequency = 50.0;
+
+        bool m_RosLoopFlag = true;
+
         /**
          * @brief 
          * 
          */
         void configure();
+
+        void read();
+
+        void write();
 
     };
 }
