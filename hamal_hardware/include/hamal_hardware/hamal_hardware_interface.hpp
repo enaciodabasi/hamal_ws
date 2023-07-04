@@ -29,6 +29,7 @@ namespace hamal
 
     struct WheelJointHandle
     {
+        WheelJointHandle(){}
         WheelJointHandle(
             const std::string& name
         )
@@ -82,7 +83,7 @@ namespace hamal
         std::shared_ptr<controller_manager::ControllerManager> m_ControllerManager;
 
         std::unique_ptr<HamalEthercatController> m_EthercatController;
-
+        std::string m_EthercatConfigFilePath = "";
         /**
          * @brief 
          * 

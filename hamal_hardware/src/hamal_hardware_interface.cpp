@@ -21,6 +21,11 @@ namespace hamal
             this,
             m_NodeHandle
         );
+
+        m_EthercatController = std::make_unique<HamalEthercatController>(
+            m_EthercatConfigFilePath,
+            true
+        );
         
         // Register Joint State and Command Interfaces
         for(auto& [joint_name, wheel_joint] : m_WheelJointsMap)
@@ -61,6 +66,7 @@ namespace hamal
         {
             // Read
 
+            read();
             // Update CM
             ros::Time current = ros::Time::now();
             ros::Duration period = ros::Duration(current - prevTime);
@@ -68,6 +74,8 @@ namespace hamal
             prevTime = current;
 
             // Write();
+
+            write();
 
             rate.sleep();
 
@@ -103,6 +111,11 @@ namespace hamal
         {
             ROS_INFO("Loop freuency is not specified in the parameter server. Defaulting back to 50 Hz");
         }
+
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/ethercat_config_path"))
+        {
+            m_NodeHandle.getParam("/hamal/hardware_interface/ethercat_config_path", m_EthercatConfigFilePath);
+        }
     }
 
     void HardwareInterface::read()
@@ -136,6 +149,14 @@ namespace hamal
 int main(int argc, char** argv)
 {
 
+    ros::init(argc, argv, "hamal_hw");
+    ros::NodeHandle nh;
+    hamal::HardwareInterface hw(nh);
+    ros::AsyncSpinner asyncSpinner(0);
+    
+    asyncSpinner.start();
+
+    ros::waitForShutdown();
 
     return 0;
 }

@@ -1,0 +1,9 @@
+<library path="libhamal_diff_drive_controller">
+
+  <class name="hamal_diff_drive_controller/HamalDiffDriveController" type="hamal_diff_drive_controller::HamalDiffDriveController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Hamal differential drive controller.
+    </description>
+  </class>
+
+</library>

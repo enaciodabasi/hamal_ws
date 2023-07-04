@@ -65,21 +65,21 @@ void HamalEthercatController::cyclicTask()
         if(slavesEnabled)
         {
 
-            auto leftMotorPosOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_0", "current_position");
-            auto rightMotorPosOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_1", "current_position");
+            auto leftMotorPosOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_0", "actual_position");
+            auto rightMotorPosOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_1", "actual_position");
 
             if(leftMotorPosOpt != std::nullopt && rightMotorPosOpt != std::nullopt)
             {
-                setData<int32_t>("EL7221_9014_0", "current_position", leftMotorPosOpt.value());
-                setData<int32_t>("EL7221_9014_1", "current_position", rightMotorPosOpt.value());
+                setData<int32_t>("SOMANET_NODE_0", "actual_position", leftMotorPosOpt.value());
+                setData<int32_t>("SOMANET_NODE_1", "actual_position", rightMotorPosOpt.value());
             }
 
-            auto leftMotorVelOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_0", "current_velocity");
-            auto rightMotorVelOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_1", "current_velocity");
+            auto leftMotorVelOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_0", "actual_velocity");
+            auto rightMotorVelOpt = m_Master->read<int32_t>("hamal_domain", "SOMANET_NODE_1", "actual_velocity");
             if(leftMotorVelOpt != std::nullopt && rightMotorVelOpt != std::nullopt)
             {
-                setData<int32_t>("SOMANET_NODE_0", "current_velocity", leftMotorVelOpt.value());
-                setData<int32_t>("SOMANET_NODE_1", "current_velocity", rightMotorVelOpt.value());
+                setData<int32_t>("SOMANET_NODE_0", "actual_velocity", leftMotorVelOpt.value());
+                setData<int32_t>("SOMANET_NODE_1", "actual_velocity", rightMotorVelOpt.value());
             }   
         }
 
@@ -90,8 +90,8 @@ void HamalEthercatController::cyclicTask()
 
             if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt != std::nullopt)
             {
-                m_Master->write("amr_domain", "SOMANET_NODE_0", "target_velocity", leftTargetVelOpt.value());
-                m_Master->write("amr_domain", "SOMANET_NODE_1", "target_velocity", rightTargetVelOpt.value());
+                m_Master->write("hamal_domain", "SOMANET_NODE_0", "target_velocity", leftTargetVelOpt.value());
+                m_Master->write("hamal_domain", "SOMANET_NODE_1", "target_velocity", rightTargetVelOpt.value());
             }
         }
 

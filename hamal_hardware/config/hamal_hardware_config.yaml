@@ -1,0 +1,7 @@
+hamal:
+  hardware_interface:
+    wheel_joints:
+      -
+      -
+    loop_hz: 50.0
+    ethercat_config_path: /home/naci/hamal_ws/src/hamal_hardware/config/ethercat_config.yaml
