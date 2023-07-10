@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+<rosparam file="$(find hamal_control)/config/hamal_control.yaml" command="load"></rosparam>
+<node
+
+    name="controller_manager"
+    pkg="controller_manager"
+    type="spawner"
+    respawn="false"
+    output="screen"
+    args="/hamal/joint_state_controller /hamal/lifter_controller"
+/>
+
+<node pkg="hamal_control" name="lifter_controller_client" type="lifter_controller_client" output="screen"></node>
+
+</launch>

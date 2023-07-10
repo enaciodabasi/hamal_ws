@@ -9,11 +9,13 @@
  * 
  */
 
-#include "ethercat_interface/controller.hpp"
 
 #ifndef ETHERCAT_CONTROLLER_HPP_
 #define ETHERCAT_CONTROLLER_HPP_
 
+#include "ethercat_interface/controller.hpp"
+
+#include "hamal_hardware/hamal_hardware_defs.hpp"
 
 class HamalEthercatController : public ethercat_interface::controller::Controller
 {
@@ -25,6 +27,13 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
     );
 
     ~HamalEthercatController();
+
+    bool m_EthercatLoopFlag = true;
+
+    inline void setLifterControlType(const ControlType& control_type)
+    {
+        m_LifterControlType = control_type;
+    }
 
     void stopEcThread()
     {
@@ -42,9 +51,11 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     private:
 
-    bool m_EnableDC = true;
+    ControlType m_LifterControlType;
+
+    bool m_EnableDC = false;
     
-    bool m_EthercatLoopFlag = true;
+    
 
     void cyclicTask() override;
 

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <library path="libhamal_diff_drive_controller">
 
   <class name="hamal_diff_drive_controller/HamalDiffDriveController" type="hamal_diff_drive_controller::HamalDiffDriveController" base_class_type="controller_interface::ControllerBase">

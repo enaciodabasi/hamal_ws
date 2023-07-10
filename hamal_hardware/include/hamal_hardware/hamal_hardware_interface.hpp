@@ -21,16 +21,24 @@
 #include <unordered_map>
 #include <optional>
 #include <memory>
+#include <variant>
 
 #include "hamal_hardware/ethercat_controller.hpp"
 
 namespace hamal
 {
-
-    struct WheelJointHandle
+/*     using LifterInterface = std::variant<hardware_interface::PositionJointInterface, hardware_interface::VelocityJointInterface>;
+ */
+    enum LifterInterfaceType
     {
-        WheelJointHandle(){}
-        WheelJointHandle(
+        Position,
+        Velocity
+    };
+
+    struct JointHandle
+    {
+        JointHandle(){}
+        JointHandle(
             const std::string& name
         )
         {
@@ -39,6 +47,7 @@ namespace hamal
             velocity = 0.0;
             effort = 0.0;
             targetVelocity = 0.0;
+            targetPosition = 0.0;
         }
 
         std::string jointName;
@@ -47,6 +56,7 @@ namespace hamal
         double effort;
         
         double targetVelocity;
+        double targetPosition;
     };
 
     class HardwareInterface : public hardware_interface::RobotHW
@@ -88,15 +98,25 @@ namespace hamal
          * @brief 
          * 
          */
-        std::unordered_map<std::string, WheelJointHandle> m_WheelJointsMap;
+        std::unordered_map<std::string, JointHandle> m_JointsMap;
 
         hardware_interface::JointStateInterface m_JointStateInterface;
 
         hardware_interface::VelocityJointInterface m_VelJointInterface;
+
+        std::optional<hardware_interface::PositionJointInterface> m_LifterPositionInterface;
+
+        std::string m_LifterJointName = "";
+
+        LifterInterfaceType m_LifterInterfaceType;
         
         double m_LoopFrequency = 50.0;
 
         bool m_RosLoopFlag = true;
+
+        double m_Reduction = 0.0;
+
+        double m_Increment = 0.0;
 
         /**
          * @brief 
@@ -108,6 +128,50 @@ namespace hamal
 
         void write();
 
+        /**
+         * @brief Turns motor position [increments] coming from EtherCAT to joint position [rad].
+         * 
+         * @param motor_position Motor position in incrementsç
+         * @return const double: Joint position in radians. 
+         */
+        inline const double motorPositionToJointPosition(const int32_t& motor_position)
+        {
+            return (double)(motor_position / m_Increment) * (2.0 / M_PI) / m_Reduction;
+        }
+        
+        /**
+         * @brief 
+         * 
+         * @param joint_position 
+         * @return const int32_t 
+         */
+        inline const int32_t jointPositionToMotorPosition(const double& joint_position)
+        {
+            return (int32_t)((joint_position * M_PI * m_Increment * m_Reduction) / 2);
+        }
+
+        /**
+         * @brief 
+         * 
+         * @param motor_velocity 
+         * @return const double 
+         */
+        inline const double motorVelocityToJointVelocity(const int32_t& motor_velocity)
+        {
+            
+        }
+
+        /**
+         * @brief 
+         * 
+         * @param joint_velocity 
+         * @return const int32_t 
+         */
+        inline const int32_t jointVelocityToMotorVelocity(const double& joint_velocity)
+        {
+            
+        }
+            
     };
 }
 

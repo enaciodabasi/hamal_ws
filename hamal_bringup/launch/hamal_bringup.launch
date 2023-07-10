@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <include file="$(find hamal_description)/launch/display.launch"></include>
+    <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
+    <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>
+</launch>

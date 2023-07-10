@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot name="lifter" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<link name="base_link">
+<visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.5 0.5 0.5"></box>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.5 0.5 0.5"></box>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="289" />
+      <inertia ixx="28.034" ixy="0.669" ixz="-2.355"
+        iyy="96.827" iyz="0.232"
+        izz="108.149" />
+    </inertial>
+</link>
+
+<link name="lifter_link">
+<visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder length="0.2" radius="0.1"></cylinder>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder length="0.2" radius="0.1"></cylinder>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="289" />
+      <inertia ixx="28.034" ixy="0.669" ixz="-2.355"
+        iyy="96.827" iyz="0.232"
+        izz="108.149" />
+    </inertial>
+</link>
+<joint name="lifter_joint" type="continuous">
+    <parent link="base_link"></parent>
+    <child link="lifter_link"></child>
+    <origin xyz="0 0 0" tpy="0 0 0"></origin>
+    <!-- <limit lower="-3.1416" upper="3.1416" effort="10" velocity="3"/>
+    <axis xyz="0 0 1"/> -->
+</joint>
+
+</robot>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <rosparam file="$(find hamal_hardware)/config/hamal_hardware_config.yaml" command="load"></rosparam>
+
+    <node pkg="hamal_hardware" name="hamal_hardware" type="hamal_hardware" output="screen"></node>
+
+</launch>
