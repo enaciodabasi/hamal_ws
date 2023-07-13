@@ -1,6 +1,8 @@
 hamal:
   hardware_interface:
-    loop_hz: 500.0
+    left_wheel: left_wheel_joint
+    right_wheel: right_wheel_joint
+    loop_hz: 50.0
     ethercat_config_path: /home/naci/hamal_ws/src/hamal_hardware/config/ethercat_config.yaml
     lifter_joint: lifter_joint
     lifter_interface_type: velocity

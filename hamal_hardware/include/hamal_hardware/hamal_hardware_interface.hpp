@@ -100,15 +100,18 @@ namespace hamal
          */
         std::unordered_map<std::string, JointHandle> m_JointsMap;
 
+        std::string m_LeftWheelJointName;
+        std::string m_RightWheelJointName;
+
         hardware_interface::JointStateInterface m_JointStateInterface;
 
         hardware_interface::VelocityJointInterface m_VelJointInterface;
 
-        std::optional<hardware_interface::PositionJointInterface> m_LifterPositionInterface;
+        /* std::optional<hardware_interface::PositionJointInterface> m_LifterPositionInterface;
 
         std::string m_LifterJointName = "";
 
-        LifterInterfaceType m_LifterInterfaceType;
+        LifterInterfaceType m_LifterInterfaceType; */
         
         double m_LoopFrequency = 50.0;
 
@@ -158,7 +161,8 @@ namespace hamal
          */
         inline const double motorVelocityToJointVelocity(const int32_t& motor_velocity)
         {
-            
+            const double currentVel = ((double)motor_velocity * 2.0) / (60.0 * M_PI * 24.685);
+            return currentVel;
         }
 
         /**
@@ -169,7 +173,8 @@ namespace hamal
          */
         inline const int32_t jointVelocityToMotorVelocity(const double& joint_velocity)
         {
-            
+            const int32_t targetVel = ((60 * joint_velocity) / 2 * M_PI) * m_Reduction; 
+            return targetVel;
         }
             
     };

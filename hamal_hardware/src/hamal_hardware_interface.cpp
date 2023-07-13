@@ -27,16 +27,19 @@ namespace hamal
             false
         );
 
-        m_EthercatController->setup();
-
-        if(m_LifterInterfaceType == LifterInterfaceType::Position)
+        bool ec_ok = m_EthercatController->setup();
+        if(!ec_ok)
+        {
+            ros::shutdown();
+        }
+        /* if(m_LifterInterfaceType == LifterInterfaceType::Position)
         {
             m_EthercatController->setLifterControlType(ControlType::Position);
         }
         else if(m_LifterInterfaceType == LifterInterfaceType::Velocity)
         {
             m_EthercatController->setLifterControlType(ControlType::Velocity);
-        }
+        } */
         
         // Register Joint State and Command Interfaces
         for(auto& [joint_name, joint_handle] : m_JointsMap)
@@ -51,6 +54,7 @@ namespace hamal
 
             m_JointStateInterface.registerHandle(jointStateHandle);
 
+            /*
             // If control type of the lifter is specified as position
             // Skip registering inside the velocity command interface
             if(joint_name == m_LifterJointName && m_LifterInterfaceType == LifterInterfaceType::Position)
@@ -64,6 +68,7 @@ namespace hamal
                 m_LifterPositionInterface.value().registerHandle(posCommandHandle);
                 continue;
             }
+            */
             hardware_interface::JointHandle velCommandHandle(
                 jointStateHandle,
                 &joint_handle.targetVelocity
@@ -72,17 +77,19 @@ namespace hamal
             m_VelJointInterface.registerHandle(velCommandHandle);
         }  
 
-        if(m_LifterInterfaceType == LifterInterfaceType::Velocity)
+        /* if(m_LifterInterfaceType == LifterInterfaceType::Velocity)
         {
             m_LifterPositionInterface = std::nullopt;
         }
-
+ */
         this->registerInterface(&m_JointStateInterface);
         this->registerInterface(&m_VelJointInterface);
-        if(m_LifterPositionInterface != std::nullopt)
+        /* if(m_LifterPositionInterface != std::nullopt)
         {
             this->registerInterface(&m_LifterPositionInterface.value());
-        }
+        } */
+
+        m_EthercatController->startTask();
 
     }
 
@@ -92,8 +99,7 @@ namespace hamal
     }
 
     void HardwareInterface::update()
-    {
-        m_EthercatController->startTask();   
+    {   
         
         ros::Rate rate(m_LoopFrequency);
 
@@ -121,9 +127,9 @@ namespace hamal
     void HardwareInterface::configure()
     {
 
-        std::vector<std::string> wheelJointNames;
+        /* std::vector<std::string> wheelJointNames; */
 
-        if(m_NodeHandle.hasParam("/hamal/hardware_interface/wheel_joints"))
+        /* if(m_NodeHandle.hasParam("/hamal/hardware_interface/wheel_joints"))
         {
             m_NodeHandle.getParam("/hamal/hardware_interface/wheel_joints", wheelJointNames);
             for(const auto& wheel_joint_name : wheelJointNames)
@@ -135,10 +141,25 @@ namespace hamal
         {
             ROS_ERROR("No joint names find in the parameter server. Shutting down the hardware interface.");
             /* if(ros::ok())
-                ros::shutdown(); */
+                ros::shutdown(); 
+        }
+        */
+
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/left_wheel") && m_NodeHandle.hasParam("/hamal/hardware_interface/right_wheel"))
+        {
+            m_NodeHandle.getParam("/hamal/hardware_interface/left_wheel", m_LeftWheelJointName);
+            m_JointsMap[m_LeftWheelJointName] = JointHandle(m_LeftWheelJointName);
+            m_NodeHandle.getParam("/hamal/hardware_interface/right_wheel", m_RightWheelJointName);
+            m_JointsMap[m_RightWheelJointName] = JointHandle(m_RightWheelJointName);
+        }
+        else
+        {
+            ROS_ERROR("No joint name was found in the config file.");
+            if(ros::ok())
+                ros::shutdown();
         }
 
-        if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
+        /* if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
         {
             std::string lifterJointName;
             m_NodeHandle.getParam("/hamal/hardware_interface/lifter_joint", lifterJointName);
@@ -146,7 +167,7 @@ namespace hamal
             m_JointsMap.at(lifterJointName).targetVelocity = 0.0;
             m_LifterJointName = lifterJointName;
 
-        }
+        } */
 
         if(m_NodeHandle.hasParam("/hamal/harware_interface/loop_hz"))
         {
@@ -162,7 +183,7 @@ namespace hamal
             m_NodeHandle.getParam("/hamal/hardware_interface/ethercat_config_path", m_EthercatConfigFilePath);
         }
 
-        if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_interface_type"))
+        /* if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_interface_type"))
         {
             std::string lifterInterfaceType;
             m_NodeHandle.getParam("/hamal/hardware_interface/lifter_interface_type", lifterInterfaceType);
@@ -175,7 +196,7 @@ namespace hamal
             {
                 m_LifterInterfaceType = LifterInterfaceType::Velocity;
             }
-        }
+        } */
 
         if(m_NodeHandle.hasParam("/hamal/hardware_interface/reduction"))
         {
@@ -199,58 +220,33 @@ namespace hamal
 
     void HardwareInterface::read()
     {
-        /* auto rawLeftPosOpt = m_EthercatController->getData<int32_t>("somanet_node_0", "current_position");
-        auto rawRightPosOpt = m_EthercatController->getData<int32_t>("somanet_node_1", "current_position"); */
+        const auto leftWheelPosition = m_EthercatController->getData<int32_t>("somanet_node_0", "actual_position");
+        const auto rightWheelPosition = m_EthercatController->getData<int32_t>("somanet_node_0", "actual_position");
 
-        auto lifterPos = m_EthercatController->getData<int32_t>("somanet_node", "actual_position");
-        if(lifterPos != std::nullopt)
-        {   
-            m_JointsMap.at(m_LifterJointName).position = motorPositionToJointPosition(lifterPos.value());
-            /* ROS_INFO(std::to_string(lifterPos.value()).c_str()); */
-        }
-        auto lifterVel = m_EthercatController->getData<int32_t>("somanet_node", "actual_velocity");
-        if(lifterVel != std::nullopt)
+        if(leftWheelPosition && rightWheelPosition)
         {
-            m_JointsMap.at(m_LifterJointName).velocity = lifterVel.value();
-            /* std::string actVel = "Actual Velocity: " + std::to_string(lifterVel.value());
-            ROS_INFO(actVel.c_str()); */
+            m_JointsMap.at(m_LeftWheelJointName).position = leftWheelPosition.value();
+            m_JointsMap.at(m_RightWheelJointName).position = rightWheelPosition.value();
         }
 
-        // Write to values to joints
-        /* if(rawLeftPosOpt != std::nullopt && rawRightPosOpt != std::nullopt)
+        const auto leftWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_0", "actual_velocity");
+        const auto rightWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_0", "actual_velocity");
+        
+        if(leftWheelVelocity && rightWheelVelocity)
         {
-             if(m_EthercatController->m_SystemEnabled)
-            {
-                if(m_WheelHomingHelper.initialEcRead)
-                {
-                    m_WheelHomingHelper.leftPosDiff = amr::utils::motorPositionToWheelPositionRad(rawLeftPosOpt.value(), m_PositionHelper);
-                    m_WheelHomingHelper.rightPosDiff = amr::utils::motorPositionToWheelPositionRad(rawRightPosOpt.value(), m_PositionHelper);
-                    
-                    m_WheelHomingHelper.initialEcRead = false;
-                }
-            }
-        } */
+            m_JointsMap.at(m_LeftWheelJointName).velocity = leftWheelVelocity.value();
+            m_JointsMap.at(m_RightWheelJointName).velocity = rightWheelPosition.value();
+        }
 
     }
 
     void HardwareInterface::write()
     {
-        if(m_LifterInterfaceType == LifterInterfaceType::Position)
-        {
-            const auto target = m_JointsMap.at(m_LifterJointName).targetPosition;
-            // Turn position to driver position
-            /* ROS_INFO(std::to_string(target).c_str()); */
-            m_EthercatController->setData("somanet_node", "target_position", target);
-        }
-        else if(m_LifterInterfaceType == LifterInterfaceType::Velocity)
-        {
-            const auto target = m_JointsMap.at(m_LifterJointName).targetVelocity;
-            /* ROS_INFO(std::to_string(target).c_str()); */
-           /*  const std::string targetVel = "Target velocity: " + std::to_string(target);
-            ROS_INFO(targetVel.c_str());  */
-            m_EthercatController->setData("somanet_node", "target_velocity", 100);
-            /* m_JointsMap.at(m_LifterJointName).targetVelocity = 0.0; */
-        }
+        const auto leftWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
+        const auto rightWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
+
+        m_EthercatController->setData<int32_t>("somanet_node_0", "target_velocity", jointVelocityToMotorVelocity(leftWheelTargetVel));
+        /* m_EthercatController->setData<int32_t>("somanet_node_0", "target_velocity", jointVelocityToMotorVelocity(rightWheelTargetVel)); */
     }
 }
 
@@ -260,7 +256,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "hamal_hw");
     ros::NodeHandle nh;
     hamal::HardwareInterface hw(nh);
-    ros::AsyncSpinner asyncSpinner(0);
+    ros::AsyncSpinner asyncSpinner(5);
     
     asyncSpinner.start();
 

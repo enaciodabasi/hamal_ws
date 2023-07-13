@@ -2,25 +2,78 @@ hamal:
 
   joint_state_controller:
     type: joint_state_controller/JointStateController
-    publish_rate: 50
+    publish_rate: 50 
 
-  lifter_controller:
-    type: velocity_controllers/JointTrajectoryController
-    joints: 
-      - lifter_joint
-    #pid: {p: 10.0, i: 0.01, d: 1.0}
-    constraints:
-      goal_time: 0.0
-      stopped_velocity_tolerance: 0.01
-      lifter_joint:
-        trajectory: 0.04
-        goal: 0.02
+  mobile_base_controller:
+    type        : diff_drive_controller/DiffDriveController
+    left_wheel  : 'left_wheel_joint'
+    right_wheel : 'right_wheel_joint'
+    publish_rate: 50               # default: 50
+    pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    #pose_covariance_diagonal : [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+    #twist_covariance_diagonal: [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
+    
+    allow_multiple_cmd_vel_publishers: true
+    odom_frame_id: odom
+    base_frame_id: base_link
+    # Wheel separation and diameter. These are both optional.
+    # diff_drive_controller will attempt to read either one or both from the
+    # URDF if not specified as a parameter
+    wheel_separation : 0.45
+    wheel_radius : 0.210
+    publish_cmd : true
 
-    state_publish_rate: 25
-    action_monitor_rate: 20
-    stop_trajectory_duration: 0
-    gains:
-      lifter_joint: {p: 100,  d: 1, i: 1, i_clamp: 1}
+    # Wheel separation and radius multipliers
+    wheel_separation_multiplier: 1.0 # default: 1.0
+    wheel_radius_multiplier    : 1.0 # default: 1.0
+ 
+    # Velocity commands timeout [s], default 0.5
+    cmd_vel_timeout: 0.5
+ 
+    # Base frame_id #default: base_link
+
+    open_loop: false
+    enable_odom_tf: false
+ 
+    # Velocity and acceleration limitss
+    # Whenever a min_* is unspecified, default to -max_*
+    linear:
+      x:
+        has_velocity_limits    : true
+        max_velocity           : 0.45  # m/s
+        min_velocity           : -0.45 # m/s
+        has_acceleration_limits: true
+        max_acceleration       : 0.225 # m/s^2
+        min_acceleration       : -0.225 # m/s^2
+        has_jerk_limits        : false
+        max_jerk               : 1.0  # m/s^3
+    angular:
+      z:
+        has_velocity_limits    : true
+        max_velocity           : 1.96 # rad/s
+        has_acceleration_limits: true
+        max_acceleration       : 0.98  # rad/s^2
+        has_jerk_limits        : false
+        max_jerk               : 3.92 # rad/s^3
+
+  # lifter_controller:
+  #   type: velocity_controllers/JointTrajectoryController
+  #   joints: 
+  #     - lifter_joint
+  #   #pid: {p: 10.0, i: 0.01, d: 1.0}
+  #   constraints:
+  #     goal_time: 0.0
+  #     stopped_velocity_tolerance: 0.01
+  #     lifter_joint:
+  #       trajectory: 0.04
+  #       goal: 0.02
+
+  #   state_publish_rate: 25
+  #   action_monitor_rate: 20
+  #   stop_trajectory_duration: 0
+  #   gains:
+  #     lifter_joint: {p: 100,  d: 1, i: 1, i_clamp: 1}
     
   #diff_drive_controller:
   #  type: hamal_diff_drive_controller/HamalDiffDriveController

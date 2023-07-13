@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.0-0-g9aa0fdb  Build Version: 1.5.7004.21443
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="hamal">
+  <link name="base_link">
+    <visual>
+      <origin
+        xyz="0 0 0.045"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hamal_description/mesh/logos_maxi_base.stl" />
+      </geometry>
+      <collision>
+       <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hamal_description/mesh/logos_maxi_base.stl" />
+      </geometry>
+      </collision>
+      <material
+        name="white">
+      </material>
+    </visual>
+  </link>
+    <!--link
+    name="base_footprint">
+  </link>
+    <joint
+    name="footprint_joint"
+    type="fixed">
+      <origin
+      xyz="0 0 0.04"
+      rpy="0 0 0" />
+    <parent
+      link="base_footprint" />
+    <child
+      link="base_link" />
+  </joint> -->
+  <link
+    name="lw_link">
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="-1.5707963267949 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hamal_description/mesh/wheel.stl" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="left_wheel_joint"
+    type="continuous">
+      <origin
+      xyz="0 0.225 0.1"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="lw_link" />
+    <axis
+      xyz="0 1 0" />
+    <safety_controller
+      k_velocity="0" />
+  </joint>
+  <link
+    name="right_wheel_joint">
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="1.5707963267949 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hamal_description/mesh/wheel.stl" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="rw_joint"
+    type="continuous">
+      <origin
+      xyz="0 -0.225 0.1"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="rw_link" />
+    <axis
+      xyz="0 1 0" />
+    <safety_controller
+      k_velocity="0" />
+  </joint>
+
+  <!-- <joint name="hokuyo_joint" type="fixed">
+     <origin xyz="0.35 -0.28 0.09" rpy="0.0 0.0 -0.785"/>
+    <parent link="base_link"/>
+    <child link="hokuyo_link"/>
+  </joint>
+
+  <link name="hokuyo_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+       <mesh filename="package://hamal_description/mesh/hokuyo.dae" />
+      </geometry>
+    </visual>
+  </link> -->
+
+    <material name="black">
+      <color rgba="0.007 0.007 0.007 1.0"/>
+    </material>
+
+    <material name="red">
+      <color rgba="0.49693 0.01298 0.00518 1.0"/>
+    </material>
+
+    <material name="white">
+      <color rgba="0.87962 0.8388 0.75294 1.0"/>
+    </material>
+
+</robot>

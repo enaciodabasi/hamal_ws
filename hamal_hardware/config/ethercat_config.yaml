@@ -11,7 +11,7 @@ controller_config:
   cycle_period: 500
 ...
 ---
-slave_name: "somanet_node"
+slave_name: "somanet_node_0"
 slave_type: "driver"
 num_of_slaves: 1
 domain_name: "domain_0"
@@ -93,7 +93,7 @@ slave_sync_info:
 # dc_info:
 #   assign_activate: 0x300
 #   sync0_cycle: 2000000
-#   sync0_shift: 0
+#   sync0_shift: 1000000
 #   sync1_cycle: 2000000
 #   sync1_shift: 0
 

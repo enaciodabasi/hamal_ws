@@ -30,10 +30,10 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     bool m_EthercatLoopFlag = true;
 
-    inline void setLifterControlType(const ControlType& control_type)
+    /* inline void setLifterControlType(const ControlType& control_type)
     {
         m_LifterControlType = control_type;
-    }
+    } */
 
     void stopEcThread()
     {
@@ -42,6 +42,7 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     void startTask() override
     {
+        this->setThreadParams(SCHED_FIFO, 99);
         m_CyclicTaskThread = std::thread(
             &HamalEthercatController::cyclicTask,
             this
@@ -51,7 +52,7 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     private:
 
-    ControlType m_LifterControlType;
+    /* ControlType m_LifterControlType; */
 
     bool m_EnableDC = false;
     

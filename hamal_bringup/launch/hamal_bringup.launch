@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-    <include file="$(find hamal_description)/launch/display.launch"></include>
+    <arg name="model" default="$(find hamal_description)/urdf/hamal_simple.urdf.xacro"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+    <node
+        name="robot_state_publisher"
+        pkg="robot_state_publisher"
+        type="robot_state_publisher"
+        respawn="false"
+        output="screen"
+                        >
+        <param name="publish_frequency" value="100.0"></param>
+    </node>
+
     <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
     <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>
 </launch>
