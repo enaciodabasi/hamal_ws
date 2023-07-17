@@ -45,12 +45,12 @@ namespace hamal_diff_drive_controller
 
         if(m_HasVelLimit)
         {
-            v = std::clamp(v, m_VelLimit.min, m_VelLimit.max);
+            v = clamp(v, m_VelLimit.min, m_VelLimit.max);
         }
 
         if(temp == 0.0)
         {
-            return 0.0;
+            return 1.0;
         }
 
         return v  / temp;
@@ -64,9 +64,8 @@ namespace hamal_diff_drive_controller
         {
             const double dv_min = m_AccelLimit.min * dt;
             const double dv_max = m_AccelLimit.max * dt;
-
             // limit the acceleration:
-            const double dv = std::clamp(
+            const double dv = clamp(
                 v - v0,
                 dv_min,
                 dv_max
@@ -97,7 +96,7 @@ namespace hamal_diff_drive_controller
             const double da_min = m_JerkLimit.min * dt2;
             const double da_max = m_JerkLimit.max * dt2;
 
-            const double da = std::clamp(dv - dv0, da_min, da_max);
+            const double da = clamp(dv - dv0, da_min, da_max);
 
             v = v0 + dv0 + da; 
         } 

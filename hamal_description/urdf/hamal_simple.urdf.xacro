@@ -72,7 +72,7 @@
       k_velocity="0" />
   </joint>
   <link
-    name="right_wheel_joint">
+    name="rw_link">
     <visual>
       <origin
         xyz="0 0 0"
@@ -87,7 +87,7 @@
     </visual>
   </link>
   <joint
-    name="rw_joint"
+    name="right_wheel_joint"
     type="continuous">
       <origin
       xyz="0 -0.225 0.1"

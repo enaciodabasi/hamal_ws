@@ -52,8 +52,10 @@ namespace hamal_diff_drive_controller
 
         m_RightWheel.jointHandle = hw->getHandle(rightWheelJointName);
 
+        ROS_INFO("Got joint handles");
+
         controller_nh.param("publish_rate", m_PublishRate, 50.0);
-        m_PublishPeriod = ros::Duration(m_PublishRate);
+        m_PublishPeriod = ros::Duration(1.0/m_PublishRate);
 
         int odomRollingWindowSize;
         controller_nh.param("velocity_rolling_window_size", odomRollingWindowSize, 10);
@@ -160,8 +162,9 @@ namespace hamal_diff_drive_controller
                 m_FilteredOdomTopicName, 
                 100
             );
-
+            
             m_FilteredOdomPublisher->msg_ = templateOdomMsg; */
+            ROS_INFO("Using both position and velocity data for odometry calculation.");
             m_UnfilteredPositionOdomPub = std::make_shared<realtime_tools::RealtimePublisher<nav_msgs::Odometry>>(
                     controller_nh,
                     m_UnfilteredPosOdomTopicName,
@@ -217,7 +220,7 @@ namespace hamal_diff_drive_controller
             m_OdomTfPublisher->msg_.transforms.at(0).transform.translation.z = 0.0;
         }
 
-        controller_nh.param("twist_cmd_topic_name", m_TwistCmdTopicName, m_TwistCmdTopicName);
+        controller_nh.getParam("twist_cmd_topic_name", m_TwistCmdTopicName);
 
         m_TwistCmdSub = controller_nh.subscribe(
             m_TwistCmdTopicName,
@@ -226,6 +229,12 @@ namespace hamal_diff_drive_controller
             this
         );
 
+        m_ControllerStatePublister.reset(new realtime_tools::RealtimePublisher<control_msgs::JointTrajectoryControllerState>(
+            controller_nh,
+            "wheel_joint_controller_state",
+            100
+        ));
+
         // Initialize limiters
         bool hasLinearVelLimit = true;
         bool hasLinearAccelLimit = true;
@@ -233,7 +242,7 @@ namespace hamal_diff_drive_controller
         controller_nh.param("limiter/linear_x/has_velocity_limits", hasLinearVelLimit, hasLinearVelLimit);
         controller_nh.param("limiter/linear_x/has_accel_limits", hasLinearAccelLimit, hasLinearAccelLimit);
         controller_nh.param("limiter/linear_x/has_jerk_limits", hasLinearJerkLimit, hasLinearJerkLimit);
-        
+
         bool hasAngularVelLimit = true;
         bool hasAngularAccelLimit = true;
         bool hasAngularJerkLimit = false;
@@ -243,6 +252,7 @@ namespace hamal_diff_drive_controller
 
         m_LinearVelLimiter = std::make_unique<Limiter>(hasLinearVelLimit, hasLinearAccelLimit, hasLinearJerkLimit);
         m_AngularVelLimiter = std::make_unique<Limiter>(hasAngularVelLimit, hasAngularAccelLimit, hasAngularJerkLimit);
+    
         
         double lin_max_vel, lin_min_vel = 0.0;
         controller_nh.param("limiter/linear_x/max_vel", lin_max_vel, lin_max_vel);
@@ -273,9 +283,22 @@ namespace hamal_diff_drive_controller
         controller_nh.param("limiter/angular_z/max_jerk", ang_max_jerk, ang_max_jerk);
         controller_nh.param("limiter/angular_z/min_jerk", ang_min_jerk, ang_min_jerk);
         m_AngularVelLimiter->setJerkLimits(ang_min_jerk, ang_max_jerk);
-        
-        // Dynamic Parameters:
+         
+        ROS_INFO("Configured the controller");
         HamalDiffDriveControllerConfig conf;
+        conf.min_vel_x = lin_min_vel;
+        conf.max_vel_x = lin_max_vel;
+        conf.min_accel_x = lin_min_accel;
+        conf.max_accel_x = lin_max_accel;
+        conf.min_jerk_x = lin_min_jerk;
+        conf.max_jerk_x = lin_max_jerk;
+
+        conf.min_vel_z = ang_min_vel;
+        conf.max_vel_z = ang_max_vel;
+        conf.min_accel_z = ang_min_accel;
+        conf.max_accel_z = ang_max_accel;
+        conf.min_jerk_z = ang_min_jerk;
+        conf.max_jerk_z = ang_max_jerk;
 
         m_DynamicParamServer = std::make_shared<dynamic_reconfigure::Server<HamalDiffDriveControllerConfig>>(m_DynamicParamMutex, controller_nh);
         m_DynamicParamMutex.lock();
@@ -289,6 +312,8 @@ namespace hamal_diff_drive_controller
             std::placeholders::_2
         ));
 
+        // Dynamic Parameters:
+        
         return true;
 
     }
@@ -308,8 +333,8 @@ namespace hamal_diff_drive_controller
     void HamalDiffDriveController::update(const ros::Time& time, const ros::Duration& period)
     {
         // Update dynamic parameters:
-
-        auto newParamsPtr = m_DynamicParamsBuffer.readFromRT();
+    
+        auto newParamsPtr = m_DynamicParamsBuffer.readFromNonRT();
         if(newParamsPtr)
         {
             
@@ -322,8 +347,7 @@ namespace hamal_diff_drive_controller
             m_AngularVelLimiter->setVelLimits(newParams.angularVelLimit);
             m_AngularVelLimiter->setAccelLimits(newParams.angularAccelLimit);
             m_AngularVelLimiter->setJerkLimits(newParams.angularJerkLimit);
-            
-            delete newParamsPtr;
+
         }
 
         if(m_UsePositionForOdom)
@@ -345,7 +369,7 @@ namespace hamal_diff_drive_controller
 
         if(m_OdomControlTime + m_PublishPeriod < time)
         {
-
+            
             if(m_UsePositionForOdom && m_UnfilteredPositionOdomPub->trylock())
             {
                 const geometry_msgs::Quaternion orientation = tf::createQuaternionMsgFromYaw(m_PosOdom->getPose().heading);
@@ -370,10 +394,14 @@ namespace hamal_diff_drive_controller
 
             m_OdomControlTime += m_PublishPeriod;
         }
+        else
+        {
+            ROS_WARN("Odom Publish period surpassed");
+        }
 
         // Write Commands:
 
-        VelCommand newVelCommand = *(m_VelCommandBuffer.readFromRT());
+        VelCommand newVelCommand = *(m_VelCommandBuffer.readFromNonRT());
         const auto elapsedTime = (time - newVelCommand.timestamp).toSec();
 
         if(elapsedTime > m_VelCommandTimeout)
@@ -383,6 +411,7 @@ namespace hamal_diff_drive_controller
         }
 
         const double commandDt = period.toSec();
+        
         m_LinearVelLimiter->limit(newVelCommand.linear, m_LastTwoVelCmds.first.linear, m_LastTwoVelCmds.second.linear, commandDt);
         m_AngularVelLimiter->limit(newVelCommand.angular, m_LastTwoVelCmds.first.angular, m_LastTwoVelCmds.second.angular, commandDt);
 
@@ -392,10 +421,12 @@ namespace hamal_diff_drive_controller
         const double leftWheelVel = (newVelCommand.linear - newVelCommand.angular * m_WheelParams.wheel_separation / 2.0) / m_WheelParams.wheel_radius;
         const double rightWheelVel = (newVelCommand.linear + newVelCommand.angular * m_WheelParams.wheel_separation / 2.0) / m_WheelParams.wheel_radius;
         
+        /* std::cout << leftWheelVel << std::endl; */
         m_LeftWheel.jointHandle.setCommand(leftWheelVel);
         m_RightWheel.jointHandle.setCommand(rightWheelVel);
 
         m_PreviousTime = time;
+
     }
 
     void HamalDiffDriveController::stopping(const ros::Time& time)
@@ -423,7 +454,7 @@ namespace hamal_diff_drive_controller
         cmd.timestamp = ros::Time::now();
         cmd.linear = twistCmd.linear.x;
         cmd.angular = twistCmd.angular.z;
-
+        /* std::cout << cmd.linear << std::endl; */
         m_VelCommandBuffer.writeFromNonRT(
             cmd
         );

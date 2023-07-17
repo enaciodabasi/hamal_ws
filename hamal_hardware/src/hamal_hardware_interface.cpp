@@ -24,7 +24,7 @@ namespace hamal
 
         m_EthercatController = std::make_unique<HamalEthercatController>(
             m_EthercatConfigFilePath,
-            false
+            true
         );
 
         bool ec_ok = m_EthercatController->setup();
@@ -235,7 +235,7 @@ namespace hamal
         if(leftWheelVelocity && rightWheelVelocity)
         {
             m_JointsMap.at(m_LeftWheelJointName).velocity = leftWheelVelocity.value();
-            m_JointsMap.at(m_RightWheelJointName).velocity = rightWheelPosition.value();
+            m_JointsMap.at(m_RightWheelJointName).velocity = rightWheelVelocity.value();
         }
 
     }
@@ -244,6 +244,9 @@ namespace hamal
     {
         const auto leftWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
         const auto rightWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
+
+        /* std::string s = "Target Velocity: " + std::to_string(leftWheelTargetVel) + "[rad/s]\n";
+        ROS_INFO(s.c_str()); */
 
         m_EthercatController->setData<int32_t>("somanet_node_0", "target_velocity", jointVelocityToMotorVelocity(leftWheelTargetVel));
         /* m_EthercatController->setData<int32_t>("somanet_node_0", "target_velocity", jointVelocityToMotorVelocity(rightWheelTargetVel)); */

@@ -75,7 +75,7 @@ void HamalEthercatController::cyclicTask()
 
             if(leftMotorPosOpt != std::nullopt && rightMotorPosOpt != std::nullopt)
             {
-                std::cout << "Motor position: " << leftMotorPosOpt.value() << std::endl;
+                /* std::cout << "Motor position: " << leftMotorPosOpt.value() << std::endl; */
                 setData<int32_t>("somanet_node_0", "actual_position", leftMotorPosOpt.value());
                 /* setData<int32_t>("somanet_node_0", "actual_position", rightMotorPosOpt.value()); */
             }
@@ -85,7 +85,7 @@ void HamalEthercatController::cyclicTask()
             if(leftMotorVelOpt != std::nullopt && rightMotorVelOpt != std::nullopt)
             {
                 setData<int32_t>("somanet_node_0", "actual_velocity", leftMotorVelOpt.value());
-                std::cout << "Motor velocity: " << leftMotorVelOpt.value() << std::endl;
+                /* std::cout << "Motor velocity: " << leftMotorVelOpt.value() << std::endl; */
                 /* setData<int32_t>("somanet_node_0", "actual_velocity", rightMotorVelOpt.value()); */
             }   
         }

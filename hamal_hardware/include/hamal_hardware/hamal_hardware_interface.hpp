@@ -173,7 +173,8 @@ namespace hamal
          */
         inline const int32_t jointVelocityToMotorVelocity(const double& joint_velocity)
         {
-            const int32_t targetVel = ((60 * joint_velocity) / 2 * M_PI) * m_Reduction; 
+            int32_t targetVel = ((60 * joint_velocity) / 2 * M_PI) * m_Reduction; 
+            targetVel = joint_velocity *((180/M_PI)/6) * m_Reduction;
             return targetVel;
         }
             

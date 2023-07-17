@@ -12,6 +12,7 @@
 #include "hamal_diff_drive_controller/defs.hpp"
 
 #include <algorithm>
+#include <iostream>
 
 namespace hamal_diff_drive_controller
 {
@@ -45,8 +46,8 @@ namespace hamal_diff_drive_controller
 
         inline void setAccelLimits(double min, double max)
         {
-            m_AccelLimit.min = min;
-            m_AccelLimit.max = max;
+            this->m_AccelLimit.min = min;
+            this->m_AccelLimit.max = max;
         }
 
         inline void setAccelLimits(const Limit& accel_limit)
@@ -84,6 +85,11 @@ namespace hamal_diff_drive_controller
         double limit_accel(double& v, double v0, double dt);
 
         double limit_jerk(double& v, double v0, double v1, double dt);
+
+        double clamp(double x, double min, double max)
+        {
+            return std::min(std::max(min, x), max);
+        }
 
     }; 
 }
