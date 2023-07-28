@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
     actionlib
     control_msgs
     std_msgs
+    pluginlib
 )
 
 find_package(Boost REQUIRED)
@@ -24,14 +25,32 @@ include_directories(
     include/
 )
 
-add_executable(lifter_controller_client src/lifter_trajectory_generator.cpp)
-target_link_libraries(lifter_controller_client ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(lifter_controller_client PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
+add_library(hamal_lifter_controller src/lifter_controller.cpp)
+target_link_libraries(hamal_lifter_controller ${catkin_LIBRARIES})
+target_include_directories(hamal_lifter_controller PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
+#add_dependencies(hamal_lifter_controller ${hamal_lifter_controller_EXPORTED_TARGETS})
+
+# add_executable(lifter_controller_client src/lifter_trajectory_generator.cpp)
+# target_link_libraries(lifter_controller_client ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+# target_include_directories(lifter_controller_client PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
 
 
-install(TARGETS lifter_controller_client
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# install(TARGETS lifter_controller_client
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
 install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
+
+install(TARGETS hamal_lifter_controller
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+install(
+    FILES
+    hamal_lifter_controller_plugins.xml
+    DESTINATION
+    ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

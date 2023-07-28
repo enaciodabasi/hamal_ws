@@ -1,6 +1,26 @@
 ---
 startup_config:
 
+  -
+    slave_name: "somanet_node_0"
+    sdo_index: 0x6098
+    sdo_subindex: 0x0
+    data_type: int8
+    data_value: 0x25
+
+  -
+    slave_name: "somanet_node_0"
+    sdo_index: 0x6060
+    sdo_subindex: 0x0
+    data_type: uint8
+    data_value: 0x6
+  -
+    slave_name: "somanet_node_0"
+    sdo_index: 0x6040
+    sdo_subindex: 0x0
+    data_type: uint16
+    data_value: 0x10
+
 ...
 ---
 controller_config:
@@ -70,6 +90,7 @@ pdo_entry_info:
     - 32
     - 16
     - 32
+  use_default_pdo_mapping: false
   rxpdo_address: 0x1600
   txpdo_address: 0x1A00
   rxpdo_indexes:
@@ -81,10 +102,10 @@ pdo_entry_info:
 slave_sync_info:
   num_sync_managers: 4
   sync_manager_directions:
-    - 1
-    - 2
-    - 1
-    - 2
+    - output
+    - input
+    - output
+    - input
   number_of_pdos:
     - 0
     - 0
@@ -96,10 +117,10 @@ slave_sync_info:
     - 0
     - 1
   watchdog_mode:
-    - 2
-    - 2
-    - 1
-    - 2
+    - disable
+    - disable
+    - enable
+    - disable
 dc_info:
   assign_activate: 0x0300
   sync0_cycle: 2000000

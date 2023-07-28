@@ -16,6 +16,7 @@
 #include <hardware_interface/robot_hw.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <hardware_interface/joint_command_interface.h>
+#include <hardware_interface/posvelacc_command_interface.h>
 #include <controller_manager/controller_manager.h>
 
 #include <unordered_map>
@@ -57,6 +58,7 @@ namespace hamal
         
         double targetVelocity;
         double targetPosition;
+        double targetAccel;
     };
 
     class HardwareInterface : public hardware_interface::RobotHW
@@ -102,10 +104,13 @@ namespace hamal
 
         std::string m_LeftWheelJointName;
         std::string m_RightWheelJointName;
+        std::string m_LifterJointName;
 
         hardware_interface::JointStateInterface m_JointStateInterface;
 
         hardware_interface::VelocityJointInterface m_VelJointInterface;
+
+        hardware_interface::PosVelAccJointInterface m_LifterJointInterface;
 
         /* std::optional<hardware_interface::PositionJointInterface> m_LifterPositionInterface;
 

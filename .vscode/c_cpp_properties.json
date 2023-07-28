@@ -6,12 +6,13 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/grass/hamal_ws/devel/include/**",
+        "/home/naci/hamal_ws/devel/include/**",
         "/opt/ros/noetic/include/**",
-        "/home/grass/hamal_ws/src/hamal_control/include/**",
-        "/home/grass/hamal_ws/src/hamal_diff_drive_controller/include/**",
-        "/home/grass/hamal_ws/src/hamal_hardware/include/**",
-        "/usr/include/**"
+        "/home/naci/hamal_ws/src/hamal_control/include/**",
+        "/home/naci/hamal_ws/src/hamal_diff_drive_controller/include/**",
+        "/home/naci/hamal_ws/src/hamal_hardware/include/**",
+        "/usr/include/**",
+        "/home/naci/Projects/igh_master/include/*"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

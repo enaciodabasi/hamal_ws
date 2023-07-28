@@ -1,0 +1,11 @@
+
+float64 target_position
+
+---
+
+bool target_reached
+
+---
+
+float64 current_position
+float64 target_command

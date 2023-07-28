@@ -74,7 +74,14 @@ hamal:
   #   stop_trajectory_duration: 0
   #   gains:
   #     lifter_joint: {p: 100,  d: 1, i: 1, i_clamp: 1}
-    
+
+  lifter_controller:
+    type: hamal_lifter_controller/LifterController
+    lifter_joint_name: "lifter_joint"
+    controller_rate: 250.0
+    max_velocity: 0.5
+    max_accel: 0.75
+
   diff_drive_controller:
    type: hamal_diff_drive_controller/HamalDiffDriveController
    
