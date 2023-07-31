@@ -59,7 +59,7 @@ hamal:
 
   lifter_controller:
     type: hamal_lifter_controller/HamalLifterController
-    lifter_joint_name: "left_wheel_joint"
+    lifter_joint_name: "lifter_joint"
     controller_rate: 250.0
     max_velocity: 0.5
     max_accel: 0.75

@@ -128,7 +128,11 @@ namespace hamal
             m_JointsMap[m_RightWheelJointName] = JointHandle(m_RightWheelJointName);
 
             if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
+            {    
                 m_NodeHandle.getParam("/hamal/hardware_interface/lifter_joint", m_LifterJointName);
+                m_JointsMap[m_LifterJointName]  = JointHandle(m_LifterJointName);
+            }
+            
         }
         else
         {
@@ -203,7 +207,7 @@ namespace hamal
 
         if(leftWheelPosition /* && rightWheelPosition */)
         {
-            m_JointsMap.at(m_LeftWheelJointName).position = leftWheelPosition.value();
+            m_JointsMap.at(m_LifterJointName).position = leftWheelPosition.value();
             /* m_JointsMap.at(m_RightWheelJointName).position = rightWheelPosition.value(); */
         }
 
@@ -212,7 +216,7 @@ namespace hamal
         
         if(leftWheelVelocity /* && rightWheelVelocity */)
         {
-            m_JointsMap.at(m_LeftWheelJointName).velocity = leftWheelVelocity.value();
+            m_JointsMap.at(m_LifterJointName).velocity = leftWheelVelocity.value();
             /* m_JointsMap.at(m_RightWheelJointName).velocity = rightWheelVelocity.value(); */
         }
 
@@ -220,7 +224,7 @@ namespace hamal
 
     void HardwareInterface::write()
     {
-        const auto leftWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
+        const auto leftWheelTargetVel = m_JointsMap.at(m_LifterJointName).targetVelocity;
         /* const auto rightWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity; */
 
         /* std::string s = "Target Velocity: " + std::to_string(leftWheelTargetVel) + "[rad/s]\n";

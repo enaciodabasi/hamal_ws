@@ -10,10 +10,12 @@
         "/opt/ros/noetic/include/**",
         "/home/naci/hamal_ws/src/hamal_control/include/**",
         "/home/naci/hamal_ws/src/hamal_diff_drive_controller/include/**",
+        "/home/naci/hamal_ws/src/hamal_lifter_controller/include/**",
         "/home/naci/hamal_ws/src/hamal_hardware/include/**",
         "/usr/include/**",
         "/home/grass/ethercat_interface/include/*",
-        "/home/grass/hamal_ws/devel/include/**"
+        "/home/grass/hamal_ws/devel/include/**",
+        "/home/naci/hamal_ws/devel/include/**"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

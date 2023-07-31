@@ -40,6 +40,8 @@ namespace hamal_lifter_controller
             controller_nh.getParam("lifter_joint_name", m_LifterJointName);
         }
 
+        m_LifterJointHandle = pos_vel_acc_interface->getHandle(m_LifterJointName);
+
         controller_nh.param("controller_rate", m_ControllerRate, 250.0);
         m_ControllerPeriod = ros::Duration(1.0 / m_ControllerRate);
 
