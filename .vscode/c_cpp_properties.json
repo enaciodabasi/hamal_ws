@@ -12,7 +12,8 @@
         "/home/naci/hamal_ws/src/hamal_diff_drive_controller/include/**",
         "/home/naci/hamal_ws/src/hamal_hardware/include/**",
         "/usr/include/**",
-        "/home/naci/Projects/igh_master/include/*"
+        "/home/grass/ethercat_interface/include/*",
+        "/home/grass/hamal_ws/devel/include/**"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

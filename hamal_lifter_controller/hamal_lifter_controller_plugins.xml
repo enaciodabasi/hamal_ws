@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library path="lib/libhamal_lifter_controller">
+
+  <class name="hamal_lifter_controller/HamalLifterController" type="hamal_lifter_controller::HamalLifterController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Position based velocity controller for commanding a single lifter axis.
+    </description>
+  </class>
+
+</library>

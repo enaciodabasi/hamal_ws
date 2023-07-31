@@ -1,38 +1,38 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>hamal_control</name>
+  <name>hamal_lifter_controller</name>
   <version>0.0.0</version>
-  <description>The hamal_control package</description>
-  <maintainer email="naci@todo.todo">naci</maintainer>
+  <description>The hamal_lifter_controller package</description>
+  <maintainer email="grass@todo.todo">grass</maintainer>
 
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>controller_interface</depend>
   <build_depend>controller_manager</build_depend>
-  <build_depend>hamal_diff_drive_controller</build_depend>
-  <build_depend>hamal_lifter_controller</build_depend>
   <build_depend>hardware_interface</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>actionlib</build_depend>
   <build_depend>control_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_export_depend>controller_manager</build_export_depend>
-  <build_export_depend>hamal_diff_drive_controller</build_export_depend>
-  <build_export_depend>hamal_lifter_controller</build_export_depend>
   <build_export_depend>hardware_interface</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>joint_state_controller</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>hamal_diff_drive_controller</exec_depend>
-  <exec_depend>hamal_lifter_controller</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>actionlib</exec_depend>
   <exec_depend>control_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <depend>hamal_custom_interfaces</depend>
+  <build_depend>pluginlib</build_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
   <export>
-
-
+    <!-- Other tools can request additional information be placed here -->
+    <controller_interface plugin="${prefix}/hamal_lifter_controller_plugins.xml"></controller_interface>
   </export>
 </package>

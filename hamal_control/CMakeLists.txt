@@ -4,6 +4,7 @@ project(hamal_control)
 find_package(catkin REQUIRED COMPONENTS 
     controller_manager
     hamal_diff_drive_controller
+    hamal_lifter_controller
     hardware_interface
     roscpp
     actionlib
@@ -25,9 +26,7 @@ include_directories(
     include/
 )
 
-add_library(hamal_lifter_controller src/lifter_controller.cpp)
-target_link_libraries(hamal_lifter_controller ${catkin_LIBRARIES})
-target_include_directories(hamal_lifter_controller PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
+
 #add_dependencies(hamal_lifter_controller ${hamal_lifter_controller_EXPORTED_TARGETS})
 
 # add_executable(lifter_controller_client src/lifter_trajectory_generator.cpp)
@@ -41,16 +40,3 @@ target_include_directories(hamal_lifter_controller PUBLIC ${catkin_INCLUDE_DIRS}
 
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
 install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
-
-install(TARGETS hamal_lifter_controller
-    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-install(
-    FILES
-    hamal_lifter_controller_plugins.xml
-    DESTINATION
-    ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
