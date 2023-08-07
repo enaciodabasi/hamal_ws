@@ -15,7 +15,9 @@
         "/usr/include/**",
         "/home/grass/ethercat_interface/include/*",
         "/home/grass/hamal_ws/devel/include/**",
-        "/home/naci/hamal_ws/devel/include/**"
+        "/home/naci/hamal_ws/devel/include/**",
+        "/home/grass/hamal_ws/src/hamal_hardware/include/**",
+        "/home/grass/hamal_ws/src/hamal_lifter_controller/include/**"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

@@ -50,17 +50,17 @@ namespace hamal_lifter_controller
 
         m_LifterActionServer = std::make_shared<actionlib::SimpleActionServer<LifterAction>>(base_nh, "lifter_action_server", false);
         m_LifterActionServer->registerGoalCallback(boost::bind(&HamalLifterController::lifterActionGoalCallback, this));
-
+        m_PointPublisher = base_nh.advertise<std_msgs::Float64>("/traj_points", 10);
         return true;
     }   
 
     void HamalLifterController::update(const ros::Time& time, const ros::Duration& period)
     {   
-
+        const auto currentPosition = m_LifterJointHandle.getPosition();
+        const auto currentTime = time; 
         if(m_LifterActionServer->isActive())
-        {
-            const auto currentTime = time;   
-            const auto currentPosition = m_LifterJointHandle.getPosition();
+        {  
+            
             if(currentPosition == m_TargetPosition)
             {
                 LifterResult res;
@@ -74,8 +74,11 @@ namespace hamal_lifter_controller
             {
                 m_StartTime = currentTime;
                 m_TargetTime = calculateRequiredOperationDuration();
+                m_StartPosition = m_LifterJointHandle.getPosition();
                 m_IsGoalNew = false;
             }
+
+            ROS_INFO("Profile Time: %f", m_TargetTime);
 
             const double time = (currentTime - m_StartTime).toSec();
 
@@ -85,6 +88,12 @@ namespace hamal_lifter_controller
                 res.target_reached =false;
                 ROS_ERROR("Elapsed time is bigger than target profile time. Aborting...");
                 m_LifterActionServer->setAborted(res);
+                m_LifterJointHandle.setCommandPosition(0.0);
+                m_LifterJointHandle.setCommandVelocity(0.0);
+                m_LifterJointHandle.setCommandAcceleration(0.0);
+                m_TargetPosition = 0.0;
+                m_TargetTime = 0.0;
+                m_IsGoalNew = true;
                 return;
             }
 
@@ -94,11 +103,16 @@ namespace hamal_lifter_controller
                 time
             );
 
+            ROS_INFO("Before limiter: %f", newCommands.velocity);
+
             checkLimits(newCommands);
 
             LifterFeedback feedback;
-            feedback.target_command = newCommands.position;
+            feedback.target_command = newCommands.velocity;
             feedback.current_position = currentPosition;
+            std_msgs::Float64 p;
+            p.data = newCommands.position;
+            m_PointPublisher.publish(p);
 
             m_LifterActionServer->publishFeedback(feedback);
 
@@ -141,11 +155,13 @@ namespace hamal_lifter_controller
     {
         const double current_position = m_LifterJointHandle.getPosition();
 
-        double duration = std::fmax(
+       /*  double duration = std::fmax(
             (15.0 * std::fabs(m_TargetPosition - current_position)) / (8.0 * m_MaxVel),
             (std::sqrt((10.0 * std::fabs(m_TargetPosition - current_position)) / (m_MaxAccel * std::sqrt(3.0))))
-        );
+        ); */
 
+        /* double duration = fmax((15.0 * (fabs(m_TargetPosition - current_position) / 2.0)) / (8.0 * m_MaxVel), sqrt((10.0 * (fabs(m_TargetPosition - current_position) / 2.0)) / (m_MaxAccel * sqrt(3.0)))); */
+        double duration = fmax((15.0 * (fabs(m_TargetPosition - current_position))) / (8.0 * m_MaxVel), sqrt((10.0 * (fabs(m_TargetPosition - current_position))) / (m_MaxAccel * sqrt(3.0))));
         return duration;
     }
 
@@ -155,11 +171,12 @@ namespace hamal_lifter_controller
     {
         Commands cmds;
 
-        const double startPos = m_LifterJointHandle.getPosition();
-        const double startVel = m_LifterJointHandle.getVelocity();
-        const double startAccel = 0.0;
+        double startPos = m_LifterJointHandle.getPosition();
+        double startVel = m_LifterJointHandle.getVelocity();
+        double startAccel = 0.0;
 
-        const auto coeffs = fifthOrderPolyCoeffs(
+        //startPos = m_StartPosition;
+        auto coeffs = fifthOrderPolyCoeffs(
             startPos,
             m_TargetPosition,
             startVel,
@@ -169,6 +186,13 @@ namespace hamal_lifter_controller
             m_TargetTime,
             current_time
         );
+
+        coeffs.a0 = 0.0;
+        coeffs.a1 = 0.0;
+        coeffs.a2 = 0.0;
+        coeffs.a3 = (20.0*m_TargetPosition - 20.0*startPos) / (2.0 * std::pow(m_TargetTime, 3));
+        coeffs.a4 = (30.0*m_TargetPosition - 30.0*startPos) / (2.0 * std::pow(m_TargetTime, 4));
+        coeffs.a5 = (12.0*m_TargetPosition - 12.0*startPos) / (2.0 * std::pow(m_TargetTime, 5));
 
         cmds.position = (
             coeffs.a0   +
@@ -180,18 +204,18 @@ namespace hamal_lifter_controller
         );
 
         cmds.velocity = (
-            coeffs.a1 * current_time    +
-            coeffs.a2 * std::pow(current_time, 2)   +
-            coeffs.a3 * std::pow(current_time, 3)   +
-            coeffs.a4 * std::pow(current_time, 4)   +
-            coeffs.a5 * std::pow(current_time, 5)
+            coeffs.a1    +
+            2.0 * coeffs.a2 * std::pow(current_time, 1)   +
+            3.0 * coeffs.a3 * std::pow(current_time, 2)   +
+            4.0 * coeffs.a4 * std::pow(current_time, 3)   +
+            5.0* coeffs.a5 * std::pow(current_time, 4)
         );
 
         cmds.accel = (
-            coeffs.a2 * std::pow(current_time, 2)   +
-            coeffs.a3 * std::pow(current_time, 3)   +
-            coeffs.a4 * std::pow(current_time, 4)   +
-            coeffs.a5 * std::pow(current_time, 5)
+            2.0 * coeffs.a2   +
+            6.0 * coeffs.a3 * std::pow(current_time, 1)   +
+            12.0 * coeffs.a4 * std::pow(current_time, 2)   +
+            20.0 * coeffs.a5 * std::pow(current_time, 3)
         );
 
         return cmds;
@@ -211,8 +235,8 @@ namespace hamal_lifter_controller
     {
 
         FifthOrderCoeffs coeffs;
-        coeffs.a0 = start_pos;
-        coeffs.a1 = start_vel;
+        coeffs.a0 = 0.0;
+        coeffs.a1 = 0.0;
         coeffs.a2 = start_acc / 2.0;
 
         coeffs.a3 = (

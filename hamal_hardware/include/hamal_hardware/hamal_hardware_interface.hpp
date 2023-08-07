@@ -144,7 +144,7 @@ namespace hamal
          */
         inline const double motorPositionToJointPosition(const int32_t& motor_position)
         {
-            return (double)(motor_position / m_Increment) * (2.0 / M_PI) / m_Reduction;
+            return (double)(motor_position / m_Increment) * (2.0 * M_PI) / m_Reduction;
         }
         
         /**
@@ -155,7 +155,7 @@ namespace hamal
          */
         inline const int32_t jointPositionToMotorPosition(const double& joint_position)
         {
-            return (int32_t)((joint_position * M_PI * m_Increment * m_Reduction) / 2);
+            return (int32_t)((joint_position * m_Increment * m_Reduction) / (2.0 * M_PI));
         }
 
         /**
@@ -166,7 +166,7 @@ namespace hamal
          */
         inline const double motorVelocityToJointVelocity(const int32_t& motor_velocity)
         {
-            const double currentVel = ((double)motor_velocity * 2.0) / (60.0 * M_PI * 24.685);
+            const double currentVel = ((double)motor_velocity * 2.0) / (60.0 * M_PI * m_Reduction);
             return currentVel;
         }
 
@@ -179,7 +179,7 @@ namespace hamal
         inline const int32_t jointVelocityToMotorVelocity(const double& joint_velocity)
         {
             int32_t targetVel = ((60 * joint_velocity) / 2 * M_PI) * m_Reduction; 
-            targetVel = joint_velocity *((180/M_PI)/6) * m_Reduction;
+            targetVel = joint_velocity *((60.0/M_PI*2.0)) * m_Reduction;
             return targetVel;
         }
             

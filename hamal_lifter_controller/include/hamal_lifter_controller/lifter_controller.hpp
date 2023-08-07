@@ -20,6 +20,7 @@
 #include <hardware_interface/posvelacc_command_interface.h>
 #include <actionlib/server/simple_action_server.h>
 #include <pluginlib/class_list_macros.h>
+#include <std_msgs/Float64.h>
 
 #include "hamal_custom_interfaces/LifterOperationAction.h"
 
@@ -96,6 +97,8 @@ namespace hamal_lifter_controller
 
         private:
 
+        ros::Publisher m_PointPublisher;
+
         std::string m_ControllerName;
 
         std::string m_LifterJointName;
@@ -104,6 +107,8 @@ namespace hamal_lifter_controller
         ros::Duration m_ControllerPeriod;
 
         hardware_interface::PosVelAccJointHandle m_LifterJointHandle;
+
+        double m_StartPosition = 0.0;
 
         double m_TargetPosition = 0.0;
 
@@ -135,7 +140,6 @@ namespace hamal_lifter_controller
         void lifterActionGoalCallback();
 
     };
-
 
     const FifthOrderCoeffs fifthOrderPolyCoeffs(
             const double& start_pos,
