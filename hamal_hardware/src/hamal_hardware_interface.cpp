@@ -54,7 +54,7 @@ namespace hamal
 
             m_JointStateInterface.registerHandle(jointStateHandle);
 
-            if(joint_name == m_LifterJointName)
+            /* if(joint_name == m_LifterJointName)
             {
                 hardware_interface::PosVelAccJointHandle posVelAccCommandHandle(
                     jointStateHandle,
@@ -66,7 +66,7 @@ namespace hamal
                 m_LifterJointInterface.registerHandle(posVelAccCommandHandle);
 
                 continue;
-            }
+            } */
 
             hardware_interface::JointHandle velCommandHandle(
                 jointStateHandle,
@@ -79,8 +79,8 @@ namespace hamal
 
         this->registerInterface(&m_JointStateInterface);
         this->registerInterface(&m_VelJointInterface);
-        this->registerInterface(&m_LifterJointInterface);
-
+/*         this->registerInterface(&m_LifterJointInterface);
+ */
 
         m_EthercatController->startTask();
 
@@ -126,12 +126,13 @@ namespace hamal
             m_JointsMap[m_LeftWheelJointName] = JointHandle(m_LeftWheelJointName);
             m_NodeHandle.getParam("/hamal/hardware_interface/right_wheel", m_RightWheelJointName);
             m_JointsMap[m_RightWheelJointName] = JointHandle(m_RightWheelJointName);
+            
 
-            if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
+            /* if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
             {    
                 m_NodeHandle.getParam("/hamal/hardware_interface/lifter_joint", m_LifterJointName);
                 m_JointsMap[m_LifterJointName]  = JointHandle(m_LifterJointName);
-            }
+            } */
             
         }
         else
@@ -202,21 +203,21 @@ namespace hamal
 
     void HardwareInterface::read()
     {
-        const auto leftWheelPosition = m_EthercatController->getData<int32_t>("somanet_node_0", "actual_position");
         const auto rightWheelPosition = m_EthercatController->getData<int32_t>("somanet_node_1", "actual_position");
+        const auto leftWheelPosition = m_EthercatController->getData<int32_t>("somanet_node_2", "actual_position");
 
-        if(leftWheelPosition /* && rightWheelPosition */)
+        if(leftWheelPosition && rightWheelPosition)
         {
-            m_JointsMap.at(m_LifterJointName).position = motorPositionToJointPosition(leftWheelPosition.value());
+            m_JointsMap.at(m_LeftWheelJointName).position = motorPositionToJointPosition(leftWheelPosition.value());
             m_JointsMap.at(m_RightWheelJointName).position = motorPositionToJointPosition(rightWheelPosition.value());
         }
 
-        const auto leftWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_0", "actual_velocity");
         const auto rightWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_1", "actual_velocity");
+        const auto leftWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_2", "actual_velocity");
         
-        if(leftWheelVelocity /* && rightWheelVelocity */)
+        if(leftWheelVelocity && rightWheelVelocity)
         {
-            m_JointsMap.at(m_LifterJointName).velocity = motorVelocityToJointVelocity(leftWheelVelocity.value());
+            m_JointsMap.at(m_LeftWheelJointName).velocity = motorVelocityToJointVelocity(leftWheelVelocity.value());
             m_JointsMap.at(m_RightWheelJointName).velocity = motorVelocityToJointVelocity(rightWheelVelocity.value());
         }
 
@@ -224,14 +225,14 @@ namespace hamal
 
     void HardwareInterface::write()
     {
-        const auto leftWheelTargetVel = m_JointsMap.at(m_LifterJointName).targetVelocity;
-        const auto rightWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
+        const auto rightWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
+        const auto leftWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
 
         /* std::string s = "Target Velocity: " + std::to_string(jointVelocityToMotorVelocity(leftWheelTargetVel)) + "[rad/s]\n";
         ROS_INFO(s.c_str()); */
 
-        m_EthercatController->setData<int32_t>("somanet_node_0", "target_velocity", jointVelocityToMotorVelocity(leftWheelTargetVel));
-        m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", jointVelocityToMotorVelocity(rightWheelTargetVel));
+        m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
+        m_EthercatController->setData<int32_t>("somanet_node_2", "target_velocity", (jointVelocityToMotorVelocity(rightWheelTargetVel) * -1));
     }
 }
 

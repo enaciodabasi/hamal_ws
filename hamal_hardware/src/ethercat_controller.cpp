@@ -55,14 +55,20 @@ void HamalEthercatController::cyclicTask()
 
 
         m_Master->write<int8_t>(
+            "domain_0",
+            "somanet_node_0",
+            "op_mode",
+            0x09
+        );
+        m_Master->write<int8_t>(
                     "domain_0",
-                    "somanet_node_0",
+                    "somanet_node_1",
                     "op_mode",
                     0x09
         );
         m_Master->write<int8_t>(
             "domain_0",
-            "somanet_node_1",
+            "somanet_node_2",
             "op_mode",
             0x09
         );
@@ -70,36 +76,43 @@ void HamalEthercatController::cyclicTask()
         if(slavesEnabled)
         {
 
-            auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_position");
-            auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
+            auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
+            auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_position");
 
             if(leftMotorPosOpt != std::nullopt && rightMotorPosOpt != std::nullopt)
             {
                 /* std::cout << "Motor position: " << leftMotorPosOpt.value() << std::endl; */
-                setData<int32_t>("somanet_node_0", "actual_position", leftMotorPosOpt.value());
-                setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
+                setData<int32_t>("somanet_node_1", "actual_position", leftMotorPosOpt.value());
+                setData<int32_t>("somanet_node_2", "actual_position", rightMotorPosOpt.value());
             }
 
-            auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_velocity");
-            auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
+            auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
+            auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_velocity");
             if(leftMotorVelOpt != std::nullopt && rightMotorVelOpt != std::nullopt)
             {
-                setData<int32_t>("somanet_node_0", "actual_velocity", leftMotorVelOpt.value());
-                /* std::cout << "Motor velocity: " << leftMotorVelOpt.value() << std::endl; */
-                setData<int32_t>("somanet_node_1", "actual_velocity", rightMotorVelOpt.value());
+                setData<int32_t>("somanet_node_1", "actual_velocity", leftMotorVelOpt.value());
+                std::cout << "Motor velocity: " << leftMotorVelOpt.value() << std::endl;
+                std::cout << "Right: " << rightMotorVelOpt.value() << std::endl;
+                setData<int32_t>("somanet_node_2", "actual_velocity", rightMotorVelOpt.value());
             }   
         }
 
         if(slavesEnabled)
         {
-            auto leftTargetVelOpt = getData<int32_t>("somanet_node_0", "target_velocity");
-            auto rightTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
+            auto leftTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
+            auto rightTargetVelOpt = getData<int32_t>("somanet_node_2", "target_velocity");
 
-            if(leftTargetVelOpt != std::nullopt)
+            if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt)
             {
-                m_Master->write("domain_0", "somanet_node_0", "target_velocity", leftTargetVelOpt.value());
-                m_Master->write("domain_0", "somanet_node_1", "target_velocity", rightTargetVelOpt.value());
+                m_Master->write("domain_0", "somanet_node_1", "target_velocity", leftTargetVelOpt.value());
+                m_Master->write("domain_0", "somanet_node_2", "target_velocity", rightTargetVelOpt.value());
             }
+           
+        }
+        if(!slavesEnabled){
+            m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
+            m_Master->write("domain_0", "somanet_node_2", "target_velocity", 0);
+
         }
 
         if(m_EnableDC)
