@@ -48,9 +48,19 @@ namespace hamal_lifter_controller
         controller_nh.param("max_velocity", m_MaxVel, 0.5);
         controller_nh.param("max_accel", m_MaxAccel, 1.5);
 
+        double kp, ki, kd = 0.0;
+        controller_nh.param("pid/kp", kp, kp);
+        controller_nh.param("pid/ki", ki, ki);
+        controller_nh.param("pid/ki", kd, kd);
+
+        m_PidParams.Kp = kp;
+        m_PidParams.Ki = ki;
+        m_PidParams.Kd = kd;
+
         m_LifterActionServer = std::make_shared<actionlib::SimpleActionServer<LifterAction>>(base_nh, "lifter_action_server", false);
         m_LifterActionServer->registerGoalCallback(boost::bind(&HamalLifterController::lifterActionGoalCallback, this));
         m_PointPublisher = base_nh.advertise<std_msgs::Float64>("/traj_points", 10);
+
         return true;
     }   
 
@@ -67,6 +77,7 @@ namespace hamal_lifter_controller
                 res.target_reached = true;
                 ROS_INFO("Goal reached.");
                 m_LifterActionServer->setSucceeded(res);
+                
                 return;    
             }
             // If the goal is new
@@ -116,8 +127,10 @@ namespace hamal_lifter_controller
 
             m_LifterActionServer->publishFeedback(feedback);
 
+            const auto pidVal = m_VelocityController.pid(newCommands.position, currentTime);
+            
             m_LifterJointHandle.setCommandPosition(newCommands.position);
-            m_LifterJointHandle.setCommandVelocity(newCommands.velocity);
+            m_LifterJointHandle.setCommandVelocity(newCommands.velocity * pidVal);
             m_LifterJointHandle.setCommandAcceleration(newCommands.accel);
 
             m_PreviousTime = currentTime;
@@ -135,7 +148,7 @@ namespace hamal_lifter_controller
     {
         m_StartTime = ros::Time::now();
         m_PreviousTime = m_StartTime;
-
+        m_VelocityController.initController(m_StartTime, m_PidParams.Kp, m_PidParams.Ki, m_PidParams.Kd, m_StartPosition);
         m_LifterActionServer->start();
     }
 
@@ -148,6 +161,7 @@ namespace hamal_lifter_controller
     {
         const auto newGoal = m_LifterActionServer->acceptNewGoal();
         m_TargetPosition = newGoal->target_position;
+        
         m_IsGoalNew = true;
     }
 

@@ -47,13 +47,18 @@ double PID::pid(
 {
     
     const double dt =  (current_time - m_PreviousTime).toSec();
-    const double err =  target_value - *(m_ActualValuePtr);
+    
+    const double err =  target_value - *(m_ActualValuePtr); // Propotional
 
-    m_SumOfErrors += err * dt;
+    m_SumOfErrors += err * dt; // Integral
 
-    const double errorRate = (m_PreviousError - err) / dt; 
+    const double errorRate = (m_PreviousError - err) / dt; // Derivative 
 
     double output = 0.0;
+    output = (m_Kp * err) + (m_Ki * m_SumOfErrors) + (m_Kd * errorRate);
 
     m_PreviousError = err;
+
+    return output;
+
 }

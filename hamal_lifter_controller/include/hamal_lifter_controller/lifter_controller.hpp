@@ -22,6 +22,7 @@
 #include <pluginlib/class_list_macros.h>
 #include <std_msgs/Float64.h>
 
+#include "hamal_lifter_controller/controllers.hpp"
 #include "hamal_custom_interfaces/LifterOperationAction.h"
 
 #include <boost/bind/bind.hpp>
@@ -124,6 +125,14 @@ namespace hamal_lifter_controller
         double m_MaxPos = 0.0;
         double m_MaxVel = 0.0;
         double m_MaxAccel = 0.0;
+
+        struct{
+            double Kp;
+            double Ki;
+            double Kd;
+        }m_PidParams;
+
+        PID m_VelocityController;
 
         std::shared_ptr<actionlib::SimpleActionServer<LifterAction>> m_LifterActionServer;
 
