@@ -22,6 +22,7 @@
 #include <pluginlib/class_list_macros.h>
 
 #include "hamal_custom_interfaces/LifterOperationAction.h"
+#include "hamal_lifter_controller/controllers.hpp"
 
 #include <boost/bind/bind.hpp>
 
@@ -83,6 +84,7 @@ namespace hamal_lifter_controller
             ros::NodeHandle& controller_nh
         );
 
+
         void update(const ros::Time& time, const ros::Duration& period);
 
         void starting(const ros::Time &time);
@@ -121,6 +123,7 @@ namespace hamal_lifter_controller
         double m_MaxAccel = 0.0;
 
         std::shared_ptr<actionlib::SimpleActionServer<LifterAction>> m_LifterActionServer;
+
 
         bool m_IsGoalNew = true;
 
