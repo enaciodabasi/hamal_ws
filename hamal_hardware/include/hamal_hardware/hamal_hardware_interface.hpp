@@ -47,7 +47,7 @@ namespace hamal
             position = 0.0;
             velocity = 0.0;
             effort = 0.0;
-            targetVelocity = 0.0;
+            /* targetVelocity = 0.0; */
             targetPosition = 0.0;
         }
 

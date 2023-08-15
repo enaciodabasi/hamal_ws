@@ -69,6 +69,12 @@ struct Commands
     }
 };
 
+template<typename T>
+bool inline inRange(const T& check_val, const T& target_val, const T& range)
+{
+    return (check_val < (target_val + range)) && (check_val > (target_val - range));
+}
+
 namespace hamal_lifter_controller
 {
     class HamalLifterController : public controller_interface::Controller<hardware_interface::PosVelAccJointInterface>
@@ -126,11 +132,14 @@ namespace hamal_lifter_controller
         double m_MaxVel = 0.0;
         double m_MaxAccel = 0.0;
 
+        double m_Tolerance = 0.0;
+
         struct{
             double Kp;
             double Ki;
             double Kd;
         }m_PidParams;
+        double m_KffV;
 
         PID m_VelocityController;
 

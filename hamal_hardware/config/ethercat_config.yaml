@@ -2,20 +2,20 @@
 startup_config:
 
   -
-    slave_name: "somanet_node_0"
+    slave_name: "somanet_node"
     sdo_index: 0x6098
     sdo_subindex: 0x0
     data_type: int8
     data_value: 0x25
 
   -
-    slave_name: "somanet_node_0"
+    slave_name: "somanet_node"
     sdo_index: 0x6060
     sdo_subindex: 0x0
     data_type: uint8
     data_value: 0x6
   -
-    slave_name: "somanet_node_0"
+    slave_name: "somanet_node"
     sdo_index: 0x6040
     sdo_subindex: 0x0
     data_type: uint16
@@ -31,7 +31,7 @@ controller_config:
   cycle_period: 500
 ...
 ---
-slave_name: "somanet_node_0"
+slave_name: "somanet_node"
 slave_type: "driver"
 num_of_slaves: 1
 domain_name: "domain_0"

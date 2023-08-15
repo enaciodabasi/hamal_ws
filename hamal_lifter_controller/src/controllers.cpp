@@ -18,17 +18,16 @@ PID::PID()
 
 PID::~PID()
 {
-    if(m_ActualValuePtr){
+    /* if(m_ActualValuePtr){
         delete m_ActualValuePtr;
-    }
+    } */
 }
 
 void PID::initController(
     const ros::Time& init_time,
     double Kp,
     double Ki,
-    double Kd,
-    double& actual_value
+    double Kd
 )
 {
     m_PreviousTime = init_time;
@@ -36,28 +35,30 @@ void PID::initController(
     m_Ki = Ki;
     m_Kd = Kd;
 
-    m_ActualValuePtr = &actual_value;
 }
 
 
 double PID::pid(
     const double& target_value,
+    const double& current_value,
     const ros::Time& current_time
 )
 {
     
+    std::cout << "Kp: " << m_Kp << std::endl;
     const double dt =  (current_time - m_PreviousTime).toSec();
     
-    const double err =  target_value - *(m_ActualValuePtr); // Propotional
+    const double err =  target_value - current_value; // Propotional
 
     m_SumOfErrors += err * dt; // Integral
 
-    const double errorRate = (m_PreviousError - err) / dt; // Derivative 
+    const double errorRate = (err - m_PreviousError) / dt; // Derivative 
 
     double output = 0.0;
     output = (m_Kp * err) + (m_Ki * m_SumOfErrors) + (m_Kd * errorRate);
 
     m_PreviousError = err;
+    m_PreviousTime = current_time;
 
     return output;
 

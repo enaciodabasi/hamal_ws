@@ -48,10 +48,16 @@ namespace hamal_lifter_controller
         controller_nh.param("max_velocity", m_MaxVel, 0.5);
         controller_nh.param("max_accel", m_MaxAccel, 1.5);
 
+        controller_nh.param("tolerance", m_Tolerance, 0.05);
+
         double kp, ki, kd = 0.0;
         controller_nh.param("pid/kp", kp, kp);
         controller_nh.param("pid/ki", ki, ki);
         controller_nh.param("pid/ki", kd, kd);
+
+        double Kffv = 0.0;
+        controller_nh.param("feed_forward/Kffv", Kffv, Kffv);
+        m_KffV = Kffv;
 
         m_PidParams.Kp = kp;
         m_PidParams.Ki = ki;
@@ -67,11 +73,13 @@ namespace hamal_lifter_controller
     void HamalLifterController::update(const ros::Time& time, const ros::Duration& period)
     {   
         const auto currentPosition = m_LifterJointHandle.getPosition();
+        const auto currentVelocity = m_LifterJointHandle.getVelocity();
+        ROS_INFO("Current Position: %f", currentPosition);
         const auto currentTime = time; 
         if(m_LifterActionServer->isActive())
         {  
             
-            if(currentPosition == m_TargetPosition)
+            if(inRange(currentPosition, m_TargetPosition, m_Tolerance))
             {
                 LifterResult res;
                 res.target_reached = true;
@@ -99,6 +107,7 @@ namespace hamal_lifter_controller
                 res.target_reached =false;
                 ROS_ERROR("Elapsed time is bigger than target profile time. Aborting...");
                 m_LifterActionServer->setAborted(res);
+                
                 m_LifterJointHandle.setCommandPosition(0.0);
                 m_LifterJointHandle.setCommandVelocity(0.0);
                 m_LifterJointHandle.setCommandAcceleration(0.0);
@@ -114,7 +123,9 @@ namespace hamal_lifter_controller
                 time
             );
 
-            ROS_INFO("Before limiter: %f", newCommands.velocity);
+            const auto pidVal = m_VelocityController.pid(newCommands.velocity, currentVelocity, currentTime);
+            newCommands.velocity *= pidVal;
+            newCommands.velocity += m_KffV * (newCommands.position - currentPosition);
 
             checkLimits(newCommands);
 
@@ -127,10 +138,9 @@ namespace hamal_lifter_controller
 
             m_LifterActionServer->publishFeedback(feedback);
 
-            const auto pidVal = m_VelocityController.pid(newCommands.position, currentTime);
-            
+            std::cout << "PID output: " << pidVal << std::endl;
             m_LifterJointHandle.setCommandPosition(newCommands.position);
-            m_LifterJointHandle.setCommandVelocity(newCommands.velocity * pidVal);
+            m_LifterJointHandle.setCommandVelocity(newCommands.velocity);
             m_LifterJointHandle.setCommandAcceleration(newCommands.accel);
 
             m_PreviousTime = currentTime;
@@ -148,7 +158,7 @@ namespace hamal_lifter_controller
     {
         m_StartTime = ros::Time::now();
         m_PreviousTime = m_StartTime;
-        m_VelocityController.initController(m_StartTime, m_PidParams.Kp, m_PidParams.Ki, m_PidParams.Kd, m_StartPosition);
+        m_VelocityController.initController(m_StartTime, m_PidParams.Kp, m_PidParams.Ki, m_PidParams.Kd);
         m_LifterActionServer->start();
     }
 
@@ -286,6 +296,8 @@ namespace hamal_lifter_controller
 
     void HamalLifterController::checkLimits(Commands& commands)
     {
+        
+
         if(std::abs(commands.velocity) > m_MaxVel)
         {
             if(commands.velocity < 0) {commands.velocity = -m_MaxVel;}
@@ -297,6 +309,13 @@ namespace hamal_lifter_controller
             if(commands.accel < 0) {commands.accel = -m_MaxAccel;}
             else {commands.accel = m_MaxAccel;}
         }
+
+        /* if(commands.velocity < 0.436 && commands.velocity > 0)
+            commands.velocity = 0.436;
+        else if(commands.velocity > -0.436 && commands.velocity < 0)
+            commands.velocity = -0.436; */
+
+            
     }
 
 }

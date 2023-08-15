@@ -31,7 +31,7 @@ include_directories(
     include ${Boost_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} src/lifter_controller.cpp)
+add_library(${PROJECT_NAME} src/lifter_controller.cpp src/controllers.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 

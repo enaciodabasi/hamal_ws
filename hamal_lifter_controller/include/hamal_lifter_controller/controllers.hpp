@@ -28,12 +28,12 @@ class PID
         const ros::Time& init_time,
         double Kp,
         double Ki,
-        double Kd,
-        double& actual_value
+        double Kd    
     );
     
     double pid(
         const double& target_value,
+        const double& current_value,
         const ros::Time& current_time
     );
 
@@ -43,8 +43,8 @@ class PID
     );
     private:
     
-    double* m_ActualValuePtr;
-    
+/*     double* m_ActualValuePtr;
+ */    
     double m_Error;
     double m_PreviousError;
     double m_SumOfErrors;
