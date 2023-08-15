@@ -65,9 +65,9 @@ hamal:
     max_accel: 0.5
     tolerance: 0.05
     feed_forward:
-      Kffv: 0.1
+      Kffv: 0.8
     pid:
-      kp: 1.0 
+      kp: 0.0
       ki: 0.0
       kd: 0.0
 
