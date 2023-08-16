@@ -56,49 +56,49 @@ void HamalEthercatController::cyclicTask()
 
         m_Master->write<int8_t>(
                     "domain_0",
-                    "somanet_node",
+                    "somanet_node_0",
                     "op_mode",
                     0x09
         );
-        /* m_Master->write<int8_t>(
+        m_Master->write<int8_t>(
             "domain_0",
             "somanet_node_1",
             "op_mode",
             0x09
-        ); */
+        );
 
         if(slavesEnabled)
         {
 
-            auto lifterPositionOpt = m_Master->read<int32_t>("domain_0", "somanet_node", "actual_position");
-/*             auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
- */
-            if(lifterPositionOpt != std::nullopt/*  && rightMotorPosOpt != std::nullopt */)
+            auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_position");
+            auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
+
+            if(leftMotorPosOpt != std::nullopt && rightMotorPosOpt != std::nullopt)
             {
                 /* std::cout << "Motor position: " << leftMotorPosOpt.value() << std::endl; */
-                setData<int32_t>("somanet_node", "actual_position", lifterPositionOpt.value());
-/*                 setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
- */            }
+                setData<int32_t>("somanet_node_0", "actual_position", leftMotorPosOpt.value());
+                setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
+            }
 
-            auto lifterVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node", "actual_velocity");
-/*             auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
- */            if(lifterVelOpt != std::nullopt /* && rightMotorVelOpt != std::nullopt */)
+            auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_velocity");
+            auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
+            if(leftMotorVelOpt != std::nullopt && rightMotorVelOpt != std::nullopt)
             {
-                setData<int32_t>("somanet_node", "actual_velocity", lifterVelOpt.value());
+                setData<int32_t>("somanet_node_0", "actual_velocity", leftMotorVelOpt.value());
                 /* std::cout << "Motor velocity: " << leftMotorVelOpt.value() << std::endl; */
-                /* setData<int32_t>("somanet_node_1", "actual_velocity", rightMotorVelOpt.value()); */
+                setData<int32_t>("somanet_node_1", "actual_velocity", rightMotorVelOpt.value());
             }   
         }
 
         if(slavesEnabled)
         {
-            auto lifterTargetVelOpt = getData<int32_t>("somanet_node", "target_velocity");
-/*             auto rightTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
- */
-            if(lifterTargetVelOpt != std::nullopt)
+            auto leftTargetVelOpt = getData<int32_t>("somanet_node_0", "target_velocity");
+            auto rightTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
+
+            if(leftTargetVelOpt != std::nullopt)
             {
-                m_Master->write("domain_0", "somanet_node", "target_velocity", lifterTargetVelOpt.value());
-                /* m_Master->write("domain_0", "somanet_node_1", "target_velocity", rightTargetVelOpt.value()); */
+                m_Master->write("domain_0", "somanet_node_0", "target_velocity", leftTargetVelOpt.value());
+                m_Master->write("domain_0", "somanet_node_1", "target_velocity", rightTargetVelOpt.value());
             }
         }
 

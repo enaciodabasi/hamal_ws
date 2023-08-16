@@ -123,10 +123,13 @@ namespace hamal_lifter_controller
                 time
             );
 
-            newCommands.velocity += m_KffV * newCommands.velocity;
-            const auto pidVal = m_VelocityController.pid(newCommands.position, currentPosition, currentTime);
+/*             newCommands.velocity += m_KffV * newCommands.velocity;
+ */            const auto pidVal = m_VelocityController.pid(newCommands.position, currentPosition, currentTime);
 /*             newCommands.velocity *= pidVal;
  */
+
+            newCommands.velocity = pidVal + m_KffV * newCommands.velocity;
+
             checkLimits(newCommands);
 
             LifterFeedback feedback;
