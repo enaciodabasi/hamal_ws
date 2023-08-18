@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <arg name="lifelong" default="false"></arg>
+    <arg name="localization" default="false"></arg>
+    <arg name="offline" default="false"></arg>
+    <arg name="online_async" default="false"></arg>
+    <arg name="online_sync" default="false"></arg>
+
+    <group if="$(arg lifelong)">
+        <node 
+            pkg="slam_toolbox" 
+            type="lifelong_slam_toolbox_node"
+            name="slam_toolbox"
+            output="screen"    
+        >
+            <rosparam
+                command="load"
+                file="$(find amr_mapping)/config/sbox_lifelong.yaml"
+            >
+            </rosparam>
+        </node>
+    </group>
+
+    <group if="$(arg localization)">
+        <node 
+            pkg="slam_toolbox" 
+            type="localization_slam_toolbox_node"
+            name="slam_toolbox"
+            output="screen"    
+        >
+            <rosparam
+                command="load"
+                file="$(find amr_mapping)/config/sbox_localization.yaml"
+            >
+            </rosparam>
+        </node>
+    </group>
+
+    <group if="$(arg offline)">
+        <node 
+            pkg="slam_toolbox" 
+            type="sync_slam_toolbox_node"
+            name="slam_toolbox"
+            output="screen"    
+        >
+            <rosparam
+                command="load"
+                file="$(find amr_mapping)/config/sbox_offline.yaml"
+            >
+            </rosparam>
+        </node>
+    </group>
+
+    <group if="$(arg online_async)">
+        <node 
+            pkg="slam_toolbox" 
+            type="async_slam_toolbox_node"
+            name="slam_toolbox"
+            output="screen"    
+        >
+            <rosparam
+                command="load"
+                file="$(find amr_mapping)/config/sbox_online_async.yaml"
+            >
+            </rosparam>
+        </node>
+    </group>
+
+    <group if="$(arg online_sync)">
+        <group if="$(arg online_async)">
+        <node 
+            pkg="slam_toolbox" 
+            type="sync_slam_toolbox_node"
+            name="slam_toolbox"
+            output="screen"    
+        >
+            <rosparam
+                command="load"
+                file="$(find amr_mapping)/config/sbox_online_sync.yaml"
+            >
+            </rosparam>
+        </node>
+    </group>
+    </group>
+
+</launch>

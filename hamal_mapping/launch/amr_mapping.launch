@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+
+    
+  <arg name="use_gmapping" default="false"></arg>
+  <arg name="use_hector" default="false"></arg>
+  <arg name="use_slam_toolbox" default="false"></arg>
+  <arg name="mode" default="lifelong"></arg>
+
+  <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
+  
+  <group if="$(arg use_slam_toolbox)">
+    <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"></node> -->
+    <include file="$(find hamal_mapping)/launch/slam_toolbox.launch">
+      <arg name="$(arg mode)" value="true"></arg>
+    </include>
+  </group>
+
+  <group if="$(arg use_gmapping)">
+    <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
+  </group>
+
+  <group if="$(arg use_hector)">
+    <include file="$(find hamal_mapping)/launch/hector_mapping.launch"/>
+  </group>
+
+</launch>

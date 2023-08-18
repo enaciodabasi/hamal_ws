@@ -1,80 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-    <arg name="model" default="$(find hamal_description)/urdf/moobot.urdf.xacro"/>
-    <arg name="sensor_ip_front"         default="192.168.1.100" />
-    <arg name="sensor_ip_rear"          default="192.168.1.101" />
-    <arg name="host_ip"                 default="192.168.1.55" />
-    <arg name="host_udp_port"           default="0" />
-    <arg name="frame_id_front"          default="front_scan_link" />
-    <arg name="frame_id_rear"           default="rear_scan_link" />
-    <arg name="skip"                    default="0" />
-    <arg name="angle_start_front"       default="-1.45" />
-    <arg name="angle_end_front"         default="1.5" />
-    <arg name="angle_start_rear"        default="-1.6" />
-    <arg name="angle_end_rear"          default="1.6" />
-    <arg name="time_offset"             default="0.0" />
-    <arg name="min_intensities"         default="0.0" doc="minimal intensity for a laserscan point" />
-    <arg name="channel_enabled"         default="True" />
-    <arg name="general_system_state"    default="True" />
-    <arg name="derived_settings"        default="True" />
-    <arg name="measurement_data"        default="True" />
-    <arg name="intrusion_data"          default="True" />
-    <arg name="application_io_data"     default="True" />
-    <arg name="use_persistent_config"   default="False" />
-  <!-- Launch Front Scanner -->
-  <node pkg="sick_safetyscanners" type="sick_safetyscanners_node" name="front_laser_scanner" output="screen" ns="front_laser_scanner">
-     <param name="sensor_ip"              type="string" value="$(arg sensor_ip_front)" />
-     <param name="host_ip"                type="string" value="$(arg host_ip)" />
-     <param name="host_udp_port"          type="int"    value="$(arg host_udp_port)" />
-     <param name="frame_id"               type="string" value="$(arg frame_id_front)" />
-     <param name="skip"                   type="int"    value="$(arg skip)" />
-     <param name="angle_start"            type="double" value="$(arg angle_start_front)" />
-     <param name="angle_end"              type="double" value="$(arg angle_end_front)" />
-     <param name="time_offset"            type="double" value="$(arg time_offset)" />
-     <param name="min_intensities"        type="double" value="$(arg min_intensities)" />
-     <param name="channel_enabled"        type="bool"   value="$(arg channel_enabled)" />
-     <param name="general_system_state"   type="bool"   value="$(arg general_system_state)" />
-     <param name="derived_settings"       type="bool"   value="$(arg derived_settings)" />
-     <param name="measurement_data"       type="bool"   value="$(arg measurement_data)" />
-     <param name="intrusion_data"         type="bool"   value="$(arg intrusion_data)" />
-     <param name="application_io_data"    type="bool"   value="$(arg application_io_data)" />
-     <param name="use_persistent_config"  type="bool"   value="$(arg use_persistent_config)" />
-     <remap from="scan" to="/front_scan"/>
-  </node>
 
-      <!-- Launch Rear Scanner -->
-  <node pkg="sick_safetyscanners" type="sick_safetyscanners_node" name="rear_laser_scanner" output="screen" ns="rear_laser_scanner">
-     <param name="sensor_ip"              type="string" value="$(arg sensor_ip_rear)" />
-     <param name="host_ip"                type="string" value="$(arg host_ip)" />
-     <param name="host_udp_port"          type="int"    value="$(arg host_udp_port)" />
-     <param name="frame_id"               type="string" value="$(arg frame_id_rear)" />
-     <param name="skip"                   type="int"    value="$(arg skip)" />
-     <param name="angle_start"            type="double" value="$(arg angle_start_rear)" />
-     <param name="angle_end"              type="double" value="$(arg angle_end_rear)" />
-     <param name="time_offset"            type="double" value="$(arg time_offset)" />
-     <param name="min_intensities"        type="double" value="$(arg min_intensities)" />
-     <param name="channel_enabled"        type="bool"   value="$(arg channel_enabled)" />
-     <param name="general_system_state"   type="bool"   value="$(arg general_system_state)" />
-     <param name="derived_settings"       type="bool"   value="$(arg derived_settings)" />
-     <param name="measurement_data"       type="bool"   value="$(arg measurement_data)" />
-     <param name="intrusion_data"         type="bool"   value="$(arg intrusion_data)" />
-     <param name="application_io_data"    type="bool"   value="$(arg application_io_data)" />
-     <param name="use_persistent_config"  type="bool"   value="$(arg use_persistent_config)" />
-     <remap from="scan" to="/rear_scan"/>
-  </node>
+    <arg name="manual_enabled" default="false"></arg>
 
-  <arg name="node_start_delay" default="1.0" />  
-
-  <node pkg="ira_laser_tools" name="laserscan_multi_merger" type="laserscan_multi_merger" output="screen" respawn="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' ">
-      <param name="destination_frame" value="base_link"/>
-      <param name="cloud_destination_topic" value="/merged_cloud"/>
-      <param name="scan_destination_topic" value="/scan"/>
-      <param name="laserscan_topics" value="/front_scan /rear_scan" />
-      <param name="angle_min" value="-3.1415"/>
-      <param name="angle_max" value="3.1415"/>
-      <param name="range_min" value="0.10"/>
-      <param name="range_max" value="30.0"/>
-    </node>
+    <arg name="use_gmapping" default="false"></arg>
+    <arg name="use_hector" default="false"></arg>
+    <arg name="use_slam_toolbox" default="false"></arg>
+    <arg name="mode" default="lifelong"></arg>
 
     <arg name="joy_config" default="xbox" />
     <arg name="joy_dev" default="/dev/input/js0" />
@@ -82,73 +14,55 @@
     <arg name="joy_topic" default="joy" />
     <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
     
-    <node pkg="joy" type="joy_node" name="joy_node">
-    <param name="dev" value="$(arg joy_dev)" />
-    <param name="deadzone" value="0.3" />
-    <param name="autorepeat_rate" value="20" />
-    <remap from="joy" to="$(arg joy_topic)" />
-  </node>
-
-    <param name="use_sim_time" value="false"></param>
-    <node pkg="gmapping" type="slam_gmapping" name="gmapping_node" output="log">
-        <param name="map_update_interval" value="5.0"></param>
-        <param name="maxRange" value="29.0"></param>
-        <param name="sigma" value="0.05"></param>
-        <param name="kernelSize" value="1"></param>
-        <param name="lstep" value="0.05"></param>
-        <param name="astep" value="0.05"></param>
-        <param name="throttle_scans" value="1"></param>
-        <param name="iterations" value="5"></param>
-        <param name="lsigma" value="0.075"></param>
-        <param name="ogain" value="3.0"></param>
-        <param name="lskip" value="0"></param>
-        <param name="srr" value="0.1"></param>
-        <param name="srt" value="0.2"></param>
-        <param name="str" value="0.1"></param>
-        <param name="stt" value="0.2"></param>
-        <param name="minimumScore" value="0.0"></param>
-        <param name="linearUpdate" value="1.0"></param>
-        <param name="angularUpdate" value="0.5"></param>
-        <param name="temporalUpdate" value="-1.0"></param>
-        <param name="resampleThreshold" value="0.5"></param>
-        <param name="particles" value="30"></param>
-        <param name="xmin" value="-10.0"></param>
-        <param name="ymin" value="-10.0"></param>
-        <param name="xmax" value="10.0"></param>
-        <param name="ymax" value="10.0"></param>
-        <param name="delta" value="0.05"></param>
-        <param name="llsamplerange" value="0.01"></param>
-        <param name="llsamplestep" value="0.01"></param>
-        <param name="lasamplerange" value="0.005"></param>
-        <param name="lasamplestep" value="0.005"></param>
-        <param name="base_frame" value="base_link"></param>
-        <param name="transform_publish_period" value="0.05"></param>
-    </node>
-
-<node pkg="teleop_twist_joy" name="teleop_twist_joy" type="teleop_node">
-  <rosparam command="load" file="$(arg config_filepath)" />
-  <remap from="joy" to="$(arg joy_topic)" />
-  <remap from="cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"/>
-</node>
-    
     <node
         name="robot_state_publisher"
         pkg="robot_state_publisher"
         type="robot_state_publisher"
         respawn="false"
         output="screen"
-                        >
+    >
         <param name="publish_frequency" value="100.0"></param>
     </node>
-    <!-- <node
-        name="joint_state_publisher"
-        pkg="joint_state_publisher"
-        type="joint_state_publisher"
-        respawn="false"
-        output="screen"
-            >
-    </node> -->
+
     <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>
+    
     <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
     
+    <include file="$(find hamal_mapping)/launch/amr_mapping.launch">
+        <group if="$(arg use_gmapping)">
+            <arg name="use_gmapping" value="true"></arg>
+          </group>
+          <group if="$(arg use_hector)">
+            <arg name="use_hector" value="true"></arg>
+          </group>
+          <group if="$(arg use_slam_toolbox)">
+            <arg name="use_slam_toolbox" value="true"></arg>
+            <arg name="mode" value="$(arg mode)"></arg>
+          </group>
+    </include>
+
+    <group if="$(arg manual_enabled)">
+
+        <node pkg="joy" type="joy_node" name="joy_node">
+            <param name="dev" value="$(arg joy_dev)" />
+            <param name="deadzone" value="0.3" />
+            <param name="autorepeat_rate" value="20" />
+            <remap from="joy" to="$(arg joy_topic)" />
+        </node>
+    
+        <node pkg="teleop_twist_joy" name="teleop_twist_joy" type="teleop_node">
+          <rosparam command="load" file="$(arg config_filepath)" />
+          <remap from="joy" to="$(arg joy_topic)" />
+          <remap from="cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"/>
+        </node>
+
+    </group>
+    <group unless="$(arg manual_enabled)">
+        
+        <include file="$(find hamal_navigation)/launch/hamal_navigation.launch"></include>    
+        
+    </group>
+
+
+
 </launch>

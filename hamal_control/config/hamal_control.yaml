@@ -16,7 +16,7 @@ hamal:
     
     allow_multiple_cmd_vel_publishers: true
     odom_frame_id: odom
-    base_frame_id: base_link
+    base_frame_id: base_footprint
     # Wheel separation and diameter. These are both optional.
     # diff_drive_controller will attempt to read either one or both from the
     # URDF if not specified as a parameter
