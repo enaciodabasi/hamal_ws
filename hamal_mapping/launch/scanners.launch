@@ -1,8 +1,8 @@
 <launch>
 
     <arg name="model" default="$(find hamal_description)/urdf/moobot.urdf.xacro"/>
-    <arg name="sensor_ip_front"         default="192.168.1.100" />
-    <arg name="sensor_ip_rear"          default="192.168.1.101" />
+    <arg name="sensor_ip_front"         default="192.168.1.101" />
+    <arg name="sensor_ip_rear"          default="192.168.1.100" />
     <arg name="host_ip"                 default="192.168.1.55" />
     <arg name="host_udp_port"           default="0" />
     <arg name="frame_id_front"          default="front_scan_link" />

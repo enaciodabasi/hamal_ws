@@ -7,6 +7,7 @@
     <arg name="use_hector" default="false"></arg>
     <arg name="use_slam_toolbox" default="false"></arg>
     <arg name="mode" default="lifelong"></arg>
+    <arg name="model" default="$(find hamal_description)/urdf/moobot.urdf.xacro"></arg> 
 
     <arg name="joy_config" default="xbox" />
     <arg name="joy_dev" default="/dev/input/js0" />
@@ -28,7 +29,7 @@
     
     <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
     
-    <include file="$(find hamal_mapping)/launch/amr_mapping.launch">
+    <!-- <include file="$(find hamal_mapping)/launch/amr_mapping.launch">
         <group if="$(arg use_gmapping)">
             <arg name="use_gmapping" value="true"></arg>
           </group>
@@ -39,7 +40,11 @@
             <arg name="use_slam_toolbox" value="true"></arg>
             <arg name="mode" value="$(arg mode)"></arg>
           </group>
-    </include>
+    </include> -->
+
+    <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
+
+    <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
 
     <group if="$(arg manual_enabled)">
 

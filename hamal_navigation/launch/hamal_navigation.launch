@@ -5,12 +5,12 @@
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
         <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"></param>
         <param name="base_global_planner" value="global_planner/GlobalPlanner"/>
-        <rosparam file="$(find hamal_navigation)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find hamal_navigation)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find hamal_navigation)/params/local_costmap_params.yaml" command="load" />
-        <rosparam file="$(find hamal_navigation)/params/global_costmap_params.yaml" command="load" />
-        <rosparam file="$(find hamal_navigation)/params/move_base_params.yaml" command="load" />
-        <rosparam file="$(find hamal_navigation)/params/dwa_local_planner_params.yaml" command="load" />
+        <rosparam file="$(find hamal_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find hamal_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find hamal_navigation)/config/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find hamal_navigation)/config/global_costmap_params.yaml" command="load" />
+        <rosparam file="$(find hamal_navigation)/config/move_base_params.yaml" command="load" />
+        <rosparam file="$(find hamal_navigation)/config/dwa_local_planner_params.yaml" command="load" />
         <remap from="cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"/>
         <remap from="odom" to="/hamal/mobile_base_controller/odom"/>
     </node>

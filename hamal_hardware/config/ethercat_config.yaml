@@ -57,7 +57,7 @@ num_of_slaves: 3
 domain_name: "domain_0"
 vendor_id: 0x000022d2
 product_id: 0x00000201
-slave_position: 1
+slave_position: 0
 slave_alias: 0
 pdo_names:
   - "ctrl_word"
