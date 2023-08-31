@@ -31,6 +31,12 @@
   <exec_depend>actionlib</exec_depend>
   <exec_depend>control_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>move_base_msgs</build_depend>
+  <exec_depend>tf2_geometry_mexec_depends</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>move_base_msgs</exec_depend>
   <export>
 
 

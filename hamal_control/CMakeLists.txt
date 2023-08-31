@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
     control_msgs
     std_msgs
     pluginlib
+    tf2_geometry_msgs
+    geometry_msgs
+    move_base_msgs
 )
 
 find_package(Boost REQUIRED)
@@ -29,9 +32,9 @@ include_directories(
 
 #add_dependencies(hamal_lifter_controller ${hamal_lifter_controller_EXPORTED_TARGETS})
 
-# add_executable(lifter_controller_client src/lifter_trajectory_generator.cpp)
-# target_link_libraries(lifter_controller_client ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-# target_include_directories(lifter_controller_client PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
+add_executable(orientation_test src/orientation_test.cpp)
+target_link_libraries(orientation_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_include_directories(orientation_test PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
 
 
 # install(TARGETS lifter_controller_client
