@@ -36,6 +36,9 @@ int main(int argc, char** argv)
     ros::Subscriber degreeSub;
     degreeSub = nh.subscribe("/degree_command", 10, getInputDegree);
 
+    ros::Subscriber odomSub;
+    odomSub = nh.subscribe("/hamal/mobile_base_controller/odom", 10, odomCallback);
+
     ros::Rate rate(50.0); // Run at 50 Hz.
     
     MoveBaseClient client("move_base", true);
@@ -49,7 +52,7 @@ int main(int argc, char** argv)
         ROS_ERROR("Could not connect to the move_base action server.");
         return -1;
     } */
-
+    
     while(ros::ok())
     {
 
@@ -65,6 +68,7 @@ int main(int argc, char** argv)
 
             geometry_msgs::Quaternion quatMsg;
             quatMsg = tf2::toMsg(quat);
+            ROS_INFO("Target yaw: %f", radCmd);
 
             goal.target_pose.pose.orientation = quatMsg;
             goal.target_pose.header.frame_id = "base_link";
@@ -87,7 +91,7 @@ int main(int argc, char** argv)
 
         std::string yawStr = std::to_string(y);
 
-        ROS_INFO("Yaw Value: %f", y);
+        ROS_INFO("Yaw Value: %f", radToDeg(y));
 
         ros::spinOnce();
         rate.sleep();

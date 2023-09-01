@@ -28,6 +28,11 @@ inline const double degToRad(const double& reg)
     return reg * (M_PI / 180.0);
 }
 
+inline const double radToDeg(const double& rad)
+{
+    return rad * (180.0 / M_PI);
+}
+
 void getInputDegree(const std_msgs::Float64::ConstPtr& degree_command);
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg);
