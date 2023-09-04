@@ -217,6 +217,7 @@ namespace hamal
         if(lifterVelocity /* && rightWheelVelocity */)
         {
             m_JointsMap.at(m_LifterJointName).velocity = motorVelocityToJointVelocity(lifterVelocity.value());
+            ROS_INFO("Current Vel: %d", lifterVelocity.value());
             /* m_JointsMap.at(m_RightWheelJointName).velocity = motorVelocityToJointVelocity(rightWheelVelocity.value()); */
         }
 

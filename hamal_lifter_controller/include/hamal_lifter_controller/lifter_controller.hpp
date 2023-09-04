@@ -105,6 +105,7 @@ namespace hamal_lifter_controller
         private:
 
         ros::Publisher m_PointPublisher;
+        ros::Publisher m_CommandVelPublisher;
 
         std::string m_ControllerName;
 

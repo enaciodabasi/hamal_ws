@@ -67,9 +67,9 @@ hamal:
     feed_forward:
       Kffv: 0.8
     pid:
-      kp: 0.0
-      ki: 0.0
-      kd: 0.0
+      kp: 0.1
+      ki: 0.001
+      kd: 0.001
 
   diff_drive_controller:
    type: hamal_diff_drive_controller/HamalDiffDriveController

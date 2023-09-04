@@ -9,6 +9,7 @@
  * 
  */
 
+#include <math.h>
 #include "hamal_lifter_controller/lifter_controller.hpp"
 
 namespace hamal_lifter_controller
@@ -66,6 +67,7 @@ namespace hamal_lifter_controller
         m_LifterActionServer = std::make_shared<actionlib::SimpleActionServer<LifterAction>>(base_nh, "lifter_action_server", false);
         m_LifterActionServer->registerGoalCallback(boost::bind(&HamalLifterController::lifterActionGoalCallback, this));
         m_PointPublisher = base_nh.advertise<std_msgs::Float64>("/traj_points", 10);
+        m_CommandVelPublisher = base_nh.advertise<std_msgs::Float64>("/command_vel", 10);
 
         return true;
     }   
@@ -127,9 +129,8 @@ namespace hamal_lifter_controller
  */            const auto pidVal = m_VelocityController.pid(newCommands.position, currentPosition, currentTime);
 /*             newCommands.velocity *= pidVal;
  */
-
-            newCommands.velocity = pidVal + m_KffV * newCommands.velocity;
-
+/*             newCommands.velocity = pidVal + (m_KffV * newCommands.velocity);
+ */ 
             checkLimits(newCommands);
 
             LifterFeedback feedback;
@@ -139,9 +140,12 @@ namespace hamal_lifter_controller
             p.data = newCommands.position;
             m_PointPublisher.publish(p);
 
-            m_LifterActionServer->publishFeedback(feedback);
+            p.data = newCommands.velocity *(((60.0/M_PI*2.0)) * 24.685);
+            m_CommandVelPublisher.publish(p);
 
-            std::cout << "PID output: " << pidVal << std::endl;
+            m_LifterActionServer->publishFeedback(feedback);            
+
+            std::cout << "After PID and FF: " << newCommands.velocity << std::endl;
             m_LifterJointHandle.setCommandPosition(newCommands.position);
             m_LifterJointHandle.setCommandVelocity(newCommands.velocity);
             m_LifterJointHandle.setCommandAcceleration(newCommands.accel);
@@ -201,6 +205,7 @@ namespace hamal_lifter_controller
         double startPos = m_LifterJointHandle.getPosition();
         double startVel = m_LifterJointHandle.getVelocity();
         double startAccel = 0.0;
+        m_TargetVelocity = 0.0;
 
         //startPos = m_StartPosition;
         auto coeffs = fifthOrderPolyCoeffs(
