@@ -6,7 +6,7 @@
         "limitSymbolsToIncludedHeaders": false
       },
       "includePath": [
-        "/home/naci/hamal_ws/devel/include/**",
+        "/home/naci/hamal_ws/devel/include/*",
         "/opt/ros/noetic/include/**",
         "/home/naci/hamal_ws/src/hamal_control/include/**",
         "/home/naci/hamal_ws/src/hamal_diff_drive_controller/include/**",

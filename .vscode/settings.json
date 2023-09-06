@@ -79,6 +79,7 @@
         "any": "cpp",
         "codecvt": "cpp",
         "forward_list": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "regex": "cpp"
     }
 }

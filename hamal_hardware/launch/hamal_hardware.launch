@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
+    <arg name="lifter_only" default="false"></arg>
+    
     <rosparam file="$(find hamal_hardware)/config/hamal_hardware_config.yaml" command="load"></rosparam>
-
-    <node pkg="hamal_hardware" name="hamal_hardware" type="hamal_hardware" output="screen"></node>
-
+    <group if="$(arg lifter_only)">
+        <node pkg="hamal_hardware" name="lifter_hardware" type="lifter_hardware" output="screen">
+        </node>
+    </group>
+    <group unless="$(arg lifter_only)">
+        <node pkg="hamal_hardware" name="hamal_hardware" type="hamal_hardware" output="screen"></node>
+    </group>
 </launch>

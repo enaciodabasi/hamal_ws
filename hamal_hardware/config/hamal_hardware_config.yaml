@@ -10,3 +10,10 @@ hamal:
     reduction: 24.685
     #position_increment: 20480.0
     position_increment: 16384.0
+
+  lifter_hardware_interface:
+    lifter_joint: lifter_joint
+    ethercat_config_path: /home/grass/hamal_ws/src/hamal_hardware/config/lifter_config.yaml
+    loop_hz: 50.0
+    reduction: 24.685
+    position_increment: 20.480

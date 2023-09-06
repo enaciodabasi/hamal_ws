@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS std_msgs actionlib_msgs message_generati
 add_message_files(
     FILES
     LifterCommand.msg
+    HardwareInfo.msg
 )
 
 add_action_files(

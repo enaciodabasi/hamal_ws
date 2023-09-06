@@ -4,8 +4,8 @@ project(hamal_hardware)
 set(CMAKE_CXX_STANDARD 17)
 
 set(ethercat_interface_lib /usr/local/lib/libethercat_interface.so)
-set(ethercat_interface_lib_INCLUDE_DIRS /home/grass/ethercat_interface/include/)
-#set(ethercat_interface_lib_INCLUDE_DIRS /home/naci/Projects/igh_master/include/)
+#set(ethercat_interface_lib_INCLUDE_DIRS /home/grass/ethercat_interface/include/)
+set(ethercat_interface_lib_INCLUDE_DIRS /home/naci/Projects/igh_master/include/)
 set(etherlab /usr/local/lib/libethercat.so)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -65,11 +65,17 @@ add_executable(hamal_hardware
     src/hamal_hardware_interface.cpp
     src/ethercat_controller.cpp
 )
-#message(FATAL_ERROR ${ethercat_interface_lib_LIBRARIES})
-
 target_link_libraries(hamal_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads)
 target_link_directories(hamal_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_interface_lib_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
+
+add_executable(lifter_hardware 
+    src/lifter_hwi.cpp
+)
+target_link_libraries(lifter_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads)
+target_link_directories(lifter_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_interface_lib_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
+
 
 install(TARGETS hamal_hardware
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+install(TARGETS lifter_hardware RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
