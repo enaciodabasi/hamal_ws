@@ -12,9 +12,32 @@
 
 #include "hamal_hardware/lifter_hwi.hpp"
 
+const HomingStatus HomingHelper::getCurrentHomingStatus()
+{
+    if(!homingErrorBit && !homingAttainedBit && !targetReachedBit){
+        return HomingStatus::HomingIsPerformed;
+    }
+    else if(!homingErrorBit && !homingAttainedBit && targetReachedBit){
+        return HomingStatus::HomingIsInterruptedOrNotStarted;
+    }
+    else if(!homingErrorBit && homingAttainedBit && !targetReachedBit){
+        return HomingStatus::HomingConfirmedTargetNotReached;
+    }
+    else if(!homingErrorBit && homingAttainedBit && targetReachedBit){
+        return HomingStatus::HomingCompleted;
+    }
+    else if(homingErrorBit && !homingAttainedBit && !targetReachedBit){
+        return HomingStatus::ErrorDetectedMotorStillRunning;
+    }
+    else if(homingErrorBit && !homingAttainedBit && targetReachedBit){
+        return HomingStatus::ErrorDuringHomingMotorAtStandstill;
+    }
 
-CommInterface::CommInterface(const std::string& path_to_config_file)
-    : Controller(path_to_config_file)
+    return HomingStatus::Unknown;
+}
+
+CommInterface::CommInterface(const std::string& path_to_config_file, std::shared_ptr<HomingHelper>& homing_helper_ptr)
+    : Controller(path_to_config_file), m_HomingHelper(homing_helper_ptr)
 {
 
 }
@@ -32,30 +55,121 @@ void CommInterface::cyclicTask()
         
         bool slavesEnabled = m_Master->enableSlaves();
 
-        m_Master->write<int8_t>("lifter_domain", "somanet_node", "op_mode", 0x09);
+        if(!m_HomingHelper->isHomingActive){
+            m_Master->write<int8_t>("lifter_domain", "somanet_node", "op_mode", 0x09);
 
-        // Read
-        if(slavesEnabled){
-            auto lifterPos = m_Master->read<int32_t>("lifter_domain", "somanet_node", "actual_position");
-            auto lifterVel = m_Master->read<int32_t>("lifter_domain", "somanet_node", "actual_velocity");
+            // Read
+            if(slavesEnabled){
+                auto lifterPos = m_Master->read<int32_t>("lifter_domain", "somanet_node", "actual_position");
+                auto lifterVel = m_Master->read<int32_t>("lifter_domain", "somanet_node", "actual_velocity");
 
-            if(lifterPos){
+                if(lifterPos){
 
-                setData<int32_t>("somanet_node", "actual_position", lifterPos.value());
+                    setData<int32_t>("somanet_node", "actual_position", lifterPos.value());
 
-                if(lifterVel){
-                    setData<int32_t>("somanet_node", "actual_velocity", lifterVel.value());
+                    if(lifterVel){
+                        setData<int32_t>("somanet_node", "actual_velocity", lifterVel.value());
+                    }
+                } 
+            }
+
+            if(slavesEnabled){
+                auto targetVelOpt = getData<int32_t>("somanet_node", "target_velocity");
+                if(targetVelOpt){
+                    m_Master->write<int32_t>("lifter_domain", "somanet_node", "target_velocity", targetVelOpt.value());
                 }
-            } 
-        }
-
-        if(slavesEnabled){
-            auto targetVelOpt = getData<int32_t>("somanet_node", "target_velocity");
-            if(targetVelOpt){
-                m_Master->write<int32_t>("lifter_domain", "somanet_node", "target_velocity", targetVelOpt.value());
             }
         }
 
+        if(m_HomingHelper->isHomingActive){
+            if(slavesEnabled && !m_HomingHelper->isHomingSetupDone){
+                
+                m_Master->write<int8_t>("lifter_domain", "somanet_node", "op_mode", 0x06);
+                m_Master->write<int8_t>("lifter_domain", "somanet_node", "homing_method", m_HomingHelper->homingMethod);
+                m_Master->write<uint32_t>("lifter_domain", "somanet_node", "homing_speed", m_HomingHelper->switchSearchSpeed);
+                m_Master->write<uint32_t>("lifter_domain", "somanet_node", "homing_speed2", m_HomingHelper->zeroSearchSpeed);
+                m_Master->write<uint32_t>("lifter_domain", "somanet_node", "homing_accel", m_HomingHelper->homingAccel);
+                m_HomingHelper->isHomingSetupDone = true;
+                m_HomingHelper->isHomingInProgress = true;
+            }
+
+
+            bool opModeSetCorrect = false;
+            const auto opModeDisplayOpt = m_Master->read<int8_t>("lifter_domain", "somanet_node", "op_mode_display");
+            if(opModeDisplayOpt){
+                if(opModeDisplayOpt.value() == 0x06){
+                    opModeSetCorrect = true;
+                }
+            }
+
+            if(!opModeSetCorrect){
+                m_Master->write<int8_t>("lifter_domain", "somanet_node", "op_mode", 0x06);
+            }
+
+            if(m_HomingHelper->isHomingInProgress && opModeSetCorrect){
+                /* uint16_t ctrlWord = [this]() -> uint16_t {
+                    const auto ctrlWordOpt = m_Master->getControlWord("lifter_domain", "somanet_node");
+                    if(ctrlWordOpt){
+                        return ctrlWordOpt.value();
+                    }
+                    return 0x0;
+                }();
+                
+                uint16_t statusWord = [this]() -> uint16_t {
+                    const auto statusWordOpt = this->m_Master->read<uint16_t>("lifter_domain", "somanet_node", "status_word");
+                    if(statusWordOpt){
+                        return statusWordOpt.value();
+                    }
+                    return 0x0;
+                }(); */
+
+                const auto ctrlWordOpt = m_Master->getControlWord("lifter_domain", "somanet_node");
+                const auto statusWordOpt = this->m_Master->read<uint16_t>("lifter_domain", "somanet_node", "status_word");
+                if(ctrlWordOpt && statusWordOpt){
+                    uint16_t ctrlWord = ctrlWordOpt.value();
+                    uint16_t statusWord = statusWordOpt.value();
+                    // From the Synapticon instructions:
+                    // Set 8th bit to 0.
+                    if(ethercat_interface::utilities::isBitSet(ctrlWord, 8))
+                    {
+                        ethercat_interface::utilities::resetBitAtIndex(ctrlWord, 8);
+                    }
+                    // Set 4th bit to 1.
+                    if(!ethercat_interface::utilities::isBitSet(ctrlWord, 4)){
+                        ethercat_interface::utilities::setBitAtIndex(ctrlWord, 4);
+                    }
+
+                    if(m_HomingHelper->previousCtrlWord != ctrlWord){
+                        m_Master->write<uint16_t>("lifter_domain", "somanet_node", "ctrl_word", ctrlWord);
+                    }
+
+                    if(ethercat_interface::utilities::isBitSet(statusWord, 13)){
+                        m_HomingHelper->homingErrorBit = true;
+                    }
+                    else{
+                        m_HomingHelper->homingErrorBit = false;
+                    }
+
+                    if(ethercat_interface::utilities::isBitSet(statusWord, 12)){
+                        m_HomingHelper->homingAttainedBit = true;
+                    }
+                    else{
+                        m_HomingHelper->homingAttainedBit = false;
+                    }   
+
+                    if(ethercat_interface::utilities::isBitSet(statusWord, 10)){
+                        m_HomingHelper->targetReachedBit = true;
+                    }
+                    else{
+                        m_HomingHelper->targetReachedBit = false;
+                    }
+
+                    m_HomingHelper->previousCtrlWord = ctrlWord;
+                }
+
+            }
+
+        }
 
         clock_gettime(m_DcHelper.clock, &m_DcHelper.currentTime);
         m_Master->syncMasterClock(timespecToNanoSec(m_DcHelper.currentTime), m_DcHelper);
@@ -75,12 +189,14 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
     
     m_HardwareInfoMsg = hamal_custom_interfaces::HardwareInfo();
 
+    m_HomingHelper = std::make_shared<HomingHelper>();
+
     m_ControllerManager = std::make_shared<controller_manager::ControllerManager>(
         this,
         m_NodeHandle
     );
 
-    m_CommInterface = std::make_unique<CommInterface>(m_CommConfigPath);
+    m_CommInterface = std::make_unique<CommInterface>(m_CommConfigPath, m_HomingHelper);
 
     bool ec_ok = m_CommInterface->setup();
     if(!ec_ok){
@@ -108,8 +224,17 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
     registerInterface(&m_LifterJointInterface);
 
     m_HardwareInfoPub = m_NodeHandle.advertise<hamal_custom_interfaces::HardwareInfo>("/hardware_info", 10);
+    
+    m_HomingActionServer = std::make_unique<HomingActionServer>(
+        m_NodeHandle,
+        "lifter_homing_server",
+        boost::bind(&LifterHardwareInterface::execHomingCb, this, boost::placeholders::_1),
+        false
+    );
 
     m_CommInterface->startTask();
+
+    m_HomingActionServer->start();
 }   
 
 LifterHardwareInterface::~LifterHardwareInterface()
@@ -130,6 +255,55 @@ void LifterHardwareInterface::update()
         m_ControllerManager->update(currTime, period);
         prevTime = currTime;
         write();
+
+        if(m_HomingHelper->isHomingActive){
+            
+            if(m_HomingActionServer->isPreemptRequested()){
+                m_HomingActionServer->setPreempted();
+            }
+            const auto currHomingStatus = m_HomingHelper->getCurrentHomingStatus();
+            const auto found = HomingStatusStrings.find(currHomingStatus);
+            
+            switch (currHomingStatus)
+            {
+            case HomingStatus::HomingIsPerformed :
+            case HomingStatus::HomingIsInterruptedOrNotStarted :
+            case HomingStatus::HomingConfirmedTargetNotReached :
+            {
+
+                hamal_custom_interfaces::HomingOperationFeedback homingFb;
+                homingFb.homingStatus = found->second;
+
+                m_HomingActionServer->publishFeedback(homingFb);
+
+                break;
+            }
+            case HomingStatus::HomingCompleted :
+            {
+                hamal_custom_interfaces::HomingOperationResult homingRes;
+                homingRes.status = found->second;
+                homingRes.homingDone = true;
+                m_HomingActionServer->setSucceeded(homingRes);
+                m_HomingHelper->isHomingActive = false;
+                break;
+            }
+            case HomingStatus::ErrorDetectedMotorStillRunning :
+            case HomingStatus::ErrorDuringHomingMotorAtStandstill :
+            {
+                hamal_custom_interfaces::HomingOperationResult homingRes;
+                homingRes.status = found->second;
+                homingRes.homingDone = false;
+                m_HomingActionServer->setAborted(homingRes);
+                m_HomingHelper->isHomingActive = false;
+                break;
+            }
+            default:
+                break;
+            }
+
+            
+            
+        }
         rate.sleep();
     }
 
@@ -202,17 +376,33 @@ void LifterHardwareInterface::read()
     const auto lifterSlaveStateStrOpt =  m_CommInterface->getSlaveStateString("lifter_domain", "somanet_node");
     if(lifterSlaveStateStrOpt)
         m_HardwareInfoMsg.current_state = lifterSlaveStateStrOpt.value();
-        
+
     m_HardwareInfoMsg.timestamp = ros::Time::now();
     m_HardwareInfoPub.publish(m_HardwareInfoMsg);
 
 }
 
 void LifterHardwareInterface::write()
-{
+{   
+    if(m_HomingHelper->isHomingActive){
+
+        return;
+    }
+
     const auto lifterTargetVel = m_LifterJoint.targetVel;
     int32_t lifterTargetRPM = jointVelocityToMotorVelocity(lifterTargetVel);
     m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
+}
+
+void LifterHardwareInterface::execHomingCb(const hamal_custom_interfaces::HomingOperationGoalConstPtr& goal)
+{
+    const auto operationInfo = goal->homingInfo;
+    m_HomingHelper->switchSearchSpeed = operationInfo.switchSearchSpeed;
+    m_HomingHelper->zeroSearchSpeed = operationInfo.zeroSearchSpeed;
+    m_HomingHelper->homingAccel = operationInfo.homingAccel;
+    m_HomingHelper->homingMethod = operationInfo.homingMethod;
+
+    m_HomingHelper->isHomingActive = true;
 }
 
 int main(int argc, char** argv)

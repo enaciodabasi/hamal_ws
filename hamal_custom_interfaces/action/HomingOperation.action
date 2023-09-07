@@ -1,0 +1,9 @@
+#goal
+HomingInfo homingInfo
+---
+#result
+string status
+bool homingDone
+---
+#feedback
+string homingStatus

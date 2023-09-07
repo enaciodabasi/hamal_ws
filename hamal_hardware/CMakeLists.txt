@@ -21,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
     controller_manager
     class_loader
     diff_drive_controller
+    hamal_custom_interfaces
+    actionlib
 )
 
 find_package(yaml-cpp REQUIRED) 

@@ -7,6 +7,7 @@ add_message_files(
     FILES
     LifterCommand.msg
     HardwareInfo.msg
+    HomingInfo.msg
 )
 
 add_action_files(
@@ -14,6 +15,7 @@ add_action_files(
     action
     FILES
     LifterOperation.action
+    HomingOperation.action
 )
 
 generate_messages(

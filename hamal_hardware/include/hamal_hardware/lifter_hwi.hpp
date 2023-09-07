@@ -12,13 +12,17 @@
 #ifndef LIFTER_HWI_
 #define LIFTER_HWI_
 
-
+#include <boost/bind/bind.hpp>
 #include <ros/ros.h>
 #include <hardware_interface/robot_hw.h>
 #include <hardware_interface/posvelacc_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <controller_manager/controller_manager.h>
+#include <actionlib/server/simple_action_server.h>
 #include <hamal_custom_interfaces/HardwareInfo.h>
+#include <hamal_custom_interfaces/HomingInfo.h>
+#include <hamal_custom_interfaces/HomingOperationAction.h>
+
 
 #include <iostream>
 #include <memory>
@@ -29,11 +33,67 @@
 
 #include "ethercat_interface/controller.hpp"
 
+using HomingActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::HomingOperationAction>;
+
+enum class HomingStatus
+{
+    Unknown,
+    HomingIsPerformed,
+    HomingIsInterruptedOrNotStarted,
+    HomingConfirmedTargetNotReached,
+    HomingCompleted,
+    ErrorDetectedMotorStillRunning,
+    ErrorDuringHomingMotorAtStandstill
+};
+
+const std::unordered_map<HomingStatus, std::string> HomingStatusStrings = {
+    {HomingStatus::Unknown, "Unknown"},
+    {HomingStatus::HomingIsPerformed, "Homing is performed"},
+    {HomingStatus::HomingIsInterruptedOrNotStarted, "Homing is interrupted or not yet started"},
+    {HomingStatus::HomingConfirmedTargetNotReached, "Homing confirmed but target not yet reached"},
+    {HomingStatus::HomingCompleted, "Homing completed"},
+    {HomingStatus::ErrorDetectedMotorStillRunning, "Error detected, motor still running"},
+    {HomingStatus::ErrorDuringHomingMotorAtStandstill, "Error during homing, motor at standstill"}
+};
+
+struct HomingHelper
+{
+    bool isHomingActive;
+    bool isHomingInProgress;
+    bool isHomingSetupDone;
+    
+    int8_t homingMethod;
+    int32_t switchSearchSpeed;
+    int32_t zeroSearchSpeed;
+    int32_t homingAccel;
+    
+    uint16_t previousCtrlWord;
+
+    bool homingErrorBit = false;
+    bool homingAttainedBit = false;
+    bool targetReachedBit = false;
+
+    HomingHelper()
+    {
+        isHomingActive = false;
+        isHomingInProgress = false;
+        isHomingSetupDone = false;
+        switchSearchSpeed = 0;
+        homingMethod = 0x11;
+        zeroSearchSpeed = 0;
+        homingAccel = 0;
+        previousCtrlWord = 0x0;
+    }
+
+    const HomingStatus getCurrentHomingStatus();
+
+};
+
 class CommInterface : public ethercat_interface::controller::Controller
 {
     public:
 
-    CommInterface(const std::string& path_to_config_file);
+    CommInterface(const std::string& path_to_config_file, std::shared_ptr<HomingHelper>& homing_helper_ptr);
 
     ~CommInterface()
     {
@@ -46,6 +106,8 @@ class CommInterface : public ethercat_interface::controller::Controller
     {
         m_LoopFlag = false;
     }
+
+    std::shared_ptr<HomingHelper> m_HomingHelper;
 
     void startTask() override
     {
@@ -79,6 +141,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     ros::Publisher m_HardwareInfoPub;
     hamal_custom_interfaces::HardwareInfo m_HardwareInfoMsg;
 
+    std::unique_ptr<HomingActionServer> m_HomingActionServer;
+
     std::unique_ptr<CommInterface> m_CommInterface;
 
     std::shared_ptr<controller_manager::ControllerManager> m_ControllerManager;
@@ -99,9 +163,13 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
 
     hardware_interface::PosVelAccJointInterface m_LifterJointInterface;
 
+    std::shared_ptr<HomingHelper> m_HomingHelper;
+
     double m_LoopFreq = 50.0;
 
     bool m_RosLoopFlag = true;
+
+    bool m_IsHomingModeActive = false;
 
     double m_Reduction = 0.0;
     
@@ -112,6 +180,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     void read();
 
     void write();
+
+    void execHomingCb(const hamal_custom_interfaces::HomingOperationGoalConstPtr& goal);
 
     inline const double motorPositionToJointPosition(const int32_t& motor_position)
     {
