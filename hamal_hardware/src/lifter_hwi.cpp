@@ -51,9 +51,11 @@ bool PositionController::calculateControlParams(
     const double& target_acc
 )
 {
+    //std::cout << "Initial Position: " << initial_position << " Initial Velocity: " << initial_velocity << " Initial acceleration" << initial_acceleration;
+    //std::cout << '\n' << "Target Position: " << target_position << " Target Vel: " << target_vel << " Target accel: " << target_acc << std::endl; 
     double duration = fmax((15.0 * (fabs(target_position - initial_position))) / 
     (8.0 * m_Limits.velLimit), sqrt((10.0 * (fabs(target_position - initial_position))) / (m_Limits.accelLimit * sqrt(3.0))));
-
+    ROS_INFO("Target profile time: %f", duration);
     m_MaxProfileTime = ros::Duration(duration);
 
     const double tf = static_cast<double>(m_MaxProfileTime.toNSec());
@@ -66,6 +68,9 @@ bool PositionController::calculateControlParams(
     m_Coeffs.a3 = (-10.0 * posDiff) / (tf*tf*tf);
     m_Coeffs.a4 = (15.0 * posDiff) / (tf*tf*tf*tf);
     m_Coeffs.a5 = (-6.0 * posDiff) / (tf*tf*tf*tf*tf);
+
+    m_HardwareInfo.targetPosition = target_position;
+    m_HardwareInfo.targetVelocity = target_vel;
 
 }
 
@@ -296,14 +301,14 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
     m_LifterCommandActionServer = std::make_unique<LifterCommandActionServer>(
         m_NodeHandle,
         "lifter_command_server",
-        true
+        false
     );  
     m_LifterCommandActionServer->registerGoalCallback(boost::bind(&LifterHardwareInterface::lifterCommandCb, this));
 
     m_HomingActionServer = std::make_unique<HomingActionServer>(
         m_NodeHandle,
         "lifter_homing_server",
-        true
+        false
     );
     m_HomingActionServer->registerGoalCallback(boost::bind(&LifterHardwareInterface::execHomingCb, this));
 
@@ -476,7 +481,7 @@ void LifterHardwareInterface::read()
         m_HardwareInfoMsg.current_state = lifterSlaveStateStrOpt.value();
 
     m_HardwareInfoMsg.timestamp = ros::Time::now();
-    m_HardwareInfoPub.publish(m_HardwareInfoMsg);
+    
 
 }
 
@@ -500,6 +505,7 @@ void LifterHardwareInterface::write()
 
         const auto cmds = m_PositionController.getCommands(m_LifterJoint.currentPos, m_LifterJoint.currentVel);
         if(cmds){
+            m_HardwareInfoMsg.target_pos = cmds.value().pos;
             lifterTargetVel = cmds.value().vel;
             hamal_custom_interfaces::LifterOperationFeedback lifterCmdFeedback;
             lifterCmdFeedback.current_position = m_LifterJoint.currentPos;
@@ -510,14 +516,15 @@ void LifterHardwareInterface::write()
             
             hamal_custom_interfaces::LifterOperationResult lifterOpRes;
             lifterOpRes.target_reached = false;
-            m_LifterCommandActionServer->setAborted(lifterOpRes);
-        }
+/*             m_LifterCommandActionServer->setAborted(lifterOpRes);
+ */        }
     }
 
     int32_t lifterTargetRPM = jointVelocityToMotorVelocity(lifterTargetVel);
-/*     m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
- */
-    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250);
+    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
+    m_HardwareInfoMsg.target_vel = lifterTargetRPM;
+    m_HardwareInfoPub.publish(m_HardwareInfoMsg);
+    /* m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250); */
 
  }
 
@@ -539,7 +546,9 @@ void LifterHardwareInterface::lifterCommandCb()
         m_LifterJoint.currentPos,
         m_LifterJoint.currentVel,
         m_LifterJoint.currentAcc,
-        goal->target_position
+        goal->target_position,
+        0.0,
+        0.0
     );
 
     m_PositionController.setToActiveState();
