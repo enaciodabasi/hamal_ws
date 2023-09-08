@@ -22,7 +22,7 @@
 #include <hamal_custom_interfaces/HardwareInfo.h>
 #include <hamal_custom_interfaces/HomingInfo.h>
 #include <hamal_custom_interfaces/HomingOperationAction.h>
-
+#include <hamal_custom_interfaces/LifterOperationAction.h>
 
 #include <iostream>
 #include <memory>
@@ -33,6 +33,7 @@
 
 #include "ethercat_interface/controller.hpp"
 
+using LifterCommandActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::LifterOperationAction>;
 using HomingActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::HomingOperationAction>;
 
 enum class HomingStatus
@@ -89,6 +90,95 @@ struct HomingHelper
 
 };
 
+struct Commands
+{
+    double pos;
+    
+    double vel;
+    
+    double acc;
+
+    Commands() : pos(0.0), vel(0.0), acc(0.0) {}
+    Commands(double pos, double vel, double acc)
+    {
+        this->pos = pos;
+        this->vel = vel;
+        this->acc = acc;
+    }
+
+};
+
+class PositionController
+{
+    public:
+    
+    PositionController();
+
+    void setLimits(double pos_limit, double vel_limit, double accel_limit)
+    {
+        m_Limits.posLimit = pos_limit;
+        m_Limits.velLimit = vel_limit;
+        m_Limits.accelLimit = accel_limit;
+    }
+
+    bool calculateControlParams(
+        const double& initial_position,
+        const double& initial_velocity,
+        const double& initial_acceleration,
+        const double& target_position,
+        const double& target_vel = 0.0,
+        const double& target_acc = 0.0
+    );
+
+    std::optional<Commands> getCommands(double current_pos, double current_vel);    
+
+    double getCurrentTarget()
+    {
+        return m_HardwareInfo.targetPosition;
+    }
+
+    void setToActiveState()
+    {
+        m_IsActive = true;
+    }
+
+    bool isActive(){
+        return m_IsActive;
+    }
+
+    private:
+
+    bool m_IsActive = false;
+
+    struct{
+        double actualPosition = 0.0;
+        double actualVelocity = 0.0;
+        double targetPosition = 0.0; 
+        double targetVelocity = 0.0;
+    } m_HardwareInfo;
+
+    struct{
+        double posLimit = 0.0;
+        double velLimit = 0.0;
+        double accelLimit = 0.0;
+    } m_Limits;
+
+    struct{
+        double a0 = 0.0;
+        double a1 = 0.0;
+        double a2 = 0.0;
+        double a3 = 0.0;
+        double a4 = 0.0;
+        double a5 = 0.0;
+    } m_Coeffs;
+    
+    ros::Time m_PreviousUpdateTime;
+
+    ros::Duration m_MaxProfileTime;
+    
+
+};
+
 class CommInterface : public ethercat_interface::controller::Controller
 {
     public:
@@ -141,6 +231,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     ros::Publisher m_HardwareInfoPub;
     hamal_custom_interfaces::HardwareInfo m_HardwareInfoMsg;
 
+    std::unique_ptr<LifterCommandActionServer> m_LifterCommandActionServer;
+
     std::unique_ptr<HomingActionServer> m_HomingActionServer;
 
     std::unique_ptr<CommInterface> m_CommInterface;
@@ -165,6 +257,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
 
     std::shared_ptr<HomingHelper> m_HomingHelper;
 
+    PositionController m_PositionController;
+
     double m_LoopFreq = 50.0;
 
     bool m_RosLoopFlag = true;
@@ -182,6 +276,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     void write();
 
     void execHomingCb();
+
+    void lifterCommandCb();
 
     inline const double motorPositionToJointPosition(const int32_t& motor_position)
     {

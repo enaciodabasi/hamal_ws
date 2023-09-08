@@ -36,6 +36,71 @@ const HomingStatus HomingHelper::getCurrentHomingStatus()
     return HomingStatus::Unknown;
 }
 
+PositionController::PositionController()
+    : m_PreviousUpdateTime(ros::Time::now())
+{
+
+}
+
+bool PositionController::calculateControlParams(
+    const double& initial_position,
+    const double& initial_velocity,
+    const double& initial_acceleration,
+    const double& target_position,
+    const double& target_vel,
+    const double& target_acc
+)
+{
+    double duration = fmax((15.0 * (fabs(target_position - initial_position))) / 
+    (8.0 * m_Limits.velLimit), sqrt((10.0 * (fabs(target_position - initial_position))) / (m_Limits.accelLimit * sqrt(3.0))));
+
+    m_MaxProfileTime = ros::Duration(duration);
+
+    const double tf = static_cast<double>(m_MaxProfileTime.toNSec());
+    const double ti = 0.0;
+    const double posDiff = target_position - initial_position;
+
+    m_Coeffs.a0 = initial_position;
+    m_Coeffs.a1 = initial_velocity;
+    m_Coeffs.a2 = initial_acceleration / 2.0;
+    m_Coeffs.a3 = (-10.0 * posDiff) / (tf*tf*tf);
+    m_Coeffs.a4 = (15.0 * posDiff) / (tf*tf*tf*tf);
+    m_Coeffs.a5 = (-6.0 * posDiff) / (tf*tf*tf*tf*tf);
+
+}
+
+std::optional<Commands> PositionController::getCommands(double current_pos, double current_vel)
+{
+    const auto currTime = ros::Time::now();
+    if(currTime - m_PreviousUpdateTime >= m_MaxProfileTime){
+        return std::nullopt;
+    }
+    const auto tc = static_cast<double>(currTime.toNSec()); // Current time in nanoseconds
+    
+    double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
+    double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
+    double accRef = (2.0 * m_Coeffs.a2) + (6.0 * m_Coeffs.a3 * (tc)) + (12.0 * m_Coeffs.a4 * (tc*tc)) + (20.0 * m_Coeffs.a5 * (tc*tc*tc));
+
+    m_PreviousUpdateTime = currTime;
+
+    if(std::abs(posRef) > m_Limits.posLimit){
+        
+        (posRef < 0 ? posRef = -1.0 * m_Limits.posLimit : posRef = m_Limits.posLimit);
+    }
+    
+    if(std::abs(velRef) > m_Limits.velLimit){
+        
+        (velRef < 0 ? velRef = -1.0 * m_Limits.velLimit : velRef = m_Limits.velLimit);
+    }
+
+    if(std::abs(accRef) > m_Limits.accelLimit){
+        
+        (accRef < 0 ? accRef = -1.0 * m_Limits.accelLimit : accRef = m_Limits.accelLimit );
+    }
+
+    return Commands(posRef, velRef, accRef);
+}
+
 CommInterface::CommInterface(const std::string& path_to_config_file, std::shared_ptr<HomingHelper>& homing_helper_ptr)
     : Controller(path_to_config_file), m_HomingHelper(homing_helper_ptr)
 {
@@ -228,10 +293,17 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
 
     m_HardwareInfoPub = m_NodeHandle.advertise<hamal_custom_interfaces::HardwareInfo>("/hardware_info", 10);
     
+    m_LifterCommandActionServer = std::make_unique<LifterCommandActionServer>(
+        m_NodeHandle,
+        "lifter_command_server",
+        true
+    );  
+    m_LifterCommandActionServer->registerGoalCallback(boost::bind(&LifterHardwareInterface::lifterCommandCb, this));
+
     m_HomingActionServer = std::make_unique<HomingActionServer>(
         m_NodeHandle,
         "lifter_homing_server",
-        false
+        true
     );
     m_HomingActionServer->registerGoalCallback(boost::bind(&LifterHardwareInterface::execHomingCb, this));
 
@@ -239,6 +311,7 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
 
     ROS_INFO("EtherCAT task started");
 
+    m_LifterCommandActionServer->start();
     m_HomingActionServer->start();
 }   
 
@@ -361,6 +434,26 @@ void LifterHardwareInterface::configure()
         {
             m_Reduction = 20480.0;
         }
+
+        double maxPos, maxVel, maxAcc = 0.0;
+        if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/max_position"))
+        {
+            m_NodeHandle.getParam("/hamal/lifter_hardware_interface/max_position", maxPos);
+        }
+        
+        if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/max_velocity"))
+        {
+            m_NodeHandle.getParam("/hamal/lifter_hardware_interface/max_velocity", maxVel);
+        }
+        
+        if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/max_accel"))
+        {
+            m_NodeHandle.getParam("/hamal/lifter_hardware_interface/max_accel", maxAcc);
+        }
+
+        m_PositionController.setLimits(maxPos, maxVel, maxAcc);
+
+
 }
 
 void LifterHardwareInterface::read()
@@ -394,7 +487,33 @@ void LifterHardwareInterface::write()
         return;
     }
 
-    const auto lifterTargetVel = m_LifterJoint.targetVel;
+    auto lifterTargetVel = m_LifterJoint.targetVel;
+    
+    if(m_PositionController.isActive()){
+
+        if(m_PositionController.getCurrentTarget() == m_LifterJoint.currentPos){
+            hamal_custom_interfaces::LifterOperationResult lifterOpRes;
+            lifterOpRes.target_reached = true;
+            m_LifterCommandActionServer->setSucceeded(lifterOpRes);
+
+        }
+
+        const auto cmds = m_PositionController.getCommands(m_LifterJoint.currentPos, m_LifterJoint.currentVel);
+        if(cmds){
+            lifterTargetVel = cmds.value().vel;
+            hamal_custom_interfaces::LifterOperationFeedback lifterCmdFeedback;
+            lifterCmdFeedback.current_position = m_LifterJoint.currentPos;
+            lifterCmdFeedback.target_command = m_PositionController.getCurrentTarget();
+            m_LifterCommandActionServer->publishFeedback(lifterCmdFeedback);
+        }
+        else{
+            
+            hamal_custom_interfaces::LifterOperationResult lifterOpRes;
+            lifterOpRes.target_reached = false;
+            m_LifterCommandActionServer->setAborted(lifterOpRes);
+        }
+    }
+
     int32_t lifterTargetRPM = jointVelocityToMotorVelocity(lifterTargetVel);
 /*     m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
  */
@@ -411,6 +530,19 @@ void LifterHardwareInterface::execHomingCb()
     m_HomingHelper->homingAccel = operationInfo.homingAccel;
     m_HomingHelper->homingMethod = operationInfo.homingMethod;
     m_HomingHelper->isHomingActive = true;
+}
+
+void LifterHardwareInterface::lifterCommandCb()
+{
+    const auto goal = m_LifterCommandActionServer->acceptNewGoal();
+    m_PositionController.calculateControlParams(
+        m_LifterJoint.currentPos,
+        m_LifterJoint.currentVel,
+        m_LifterJoint.currentAcc,
+        goal->target_position
+    );
+
+    m_PositionController.setToActiveState();
 }
 
 int main(int argc, char** argv)
