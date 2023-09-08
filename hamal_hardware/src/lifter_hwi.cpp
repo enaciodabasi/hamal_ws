@@ -84,6 +84,7 @@ void CommInterface::cyclicTask()
         if(m_HomingHelper->isHomingActive){
             if(slavesEnabled && !m_HomingHelper->isHomingSetupDone){
                 
+                m_Master->write<int32_t>("lifter_domain", "somanet_node", "target_velocity", 0);
                 m_Master->write<int8_t>("lifter_domain", "somanet_node", "op_mode", 0x06);
                 m_Master->write<int8_t>("lifter_domain", "somanet_node", "homing_method", m_HomingHelper->homingMethod);
                 m_Master->write<uint32_t>("lifter_domain", "somanet_node", "homing_speed", m_HomingHelper->switchSearchSpeed);
@@ -203,6 +204,8 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
         ros::shutdown();
     }
 
+    ROS_INFO("EtherCAT communication is set up successfully.");
+
     hardware_interface::JointStateHandle stateHandle(
         m_LifterJoint.m_LifterJointName,
         &m_LifterJoint.currentPos,
@@ -228,11 +231,13 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
     m_HomingActionServer = std::make_unique<HomingActionServer>(
         m_NodeHandle,
         "lifter_homing_server",
-        boost::bind(&LifterHardwareInterface::execHomingCb, this, boost::placeholders::_1),
         false
     );
+    m_HomingActionServer->registerGoalCallback(boost::bind(&LifterHardwareInterface::execHomingCb, this));
 
     m_CommInterface->startTask();
+
+    ROS_INFO("EtherCAT task started");
 
     m_HomingActionServer->start();
 }   
@@ -307,7 +312,7 @@ void LifterHardwareInterface::update()
         rate.sleep();
     }
 
-    m_CommInterface->stopEcThread();
+    m_CommInterface->m_LoopFlag = false;
 }
 
 void LifterHardwareInterface::configure()
@@ -391,17 +396,20 @@ void LifterHardwareInterface::write()
 
     const auto lifterTargetVel = m_LifterJoint.targetVel;
     int32_t lifterTargetRPM = jointVelocityToMotorVelocity(lifterTargetVel);
-    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
-}
+/*     m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
+ */
+    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250);
 
-void LifterHardwareInterface::execHomingCb(const hamal_custom_interfaces::HomingOperationGoalConstPtr& goal)
+ }
+
+void LifterHardwareInterface::execHomingCb()
 {
+    const auto goal = m_HomingActionServer->acceptNewGoal();
     const auto operationInfo = goal->homingInfo;
     m_HomingHelper->switchSearchSpeed = operationInfo.switchSearchSpeed;
     m_HomingHelper->zeroSearchSpeed = operationInfo.zeroSearchSpeed;
     m_HomingHelper->homingAccel = operationInfo.homingAccel;
     m_HomingHelper->homingMethod = operationInfo.homingMethod;
-
     m_HomingHelper->isHomingActive = true;
 }
 

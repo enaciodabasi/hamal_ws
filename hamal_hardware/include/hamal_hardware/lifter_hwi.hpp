@@ -181,7 +181,7 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
 
     void write();
 
-    void execHomingCb(const hamal_custom_interfaces::HomingOperationGoalConstPtr& goal);
+    void execHomingCb();
 
     inline const double motorPositionToJointPosition(const int32_t& motor_position)
     {
