@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(hamal_custom_interfaces)
 
-find_package(catkin REQUIRED COMPONENTS std_msgs actionlib_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS std_msgs geometry_msgs actionlib_msgs message_generation)
 
 add_message_files(
     FILES
@@ -22,6 +22,7 @@ generate_messages(
     DEPENDENCIES
     std_msgs
     actionlib_msgs
+    geometry_msgs    
 )
 
 catkin_package(

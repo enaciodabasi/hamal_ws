@@ -77,10 +77,12 @@ bool PositionController::calculateControlParams(
 std::optional<Commands> PositionController::getCommands(double current_pos, double current_vel)
 {
     const auto currTime = ros::Time::now();
-    if(currTime - m_PreviousUpdateTime >= m_MaxProfileTime){
+    if((currTime - m_PreviousUpdateTime).toSec() >= m_MaxProfileTime.toSec()){
+        ROS_ERROR("Elapsed time is longer than the calculated maximum profile time");
         return std::nullopt;
     }
     const auto tc = static_cast<double>(currTime.toNSec()); // Current time in nanoseconds
+    std::cout << "Current time: " << tc << "[nsec]" << std::endl;
     
     double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
     double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
@@ -518,6 +520,9 @@ void LifterHardwareInterface::write()
             lifterOpRes.target_reached = false;
 /*             m_LifterCommandActionServer->setAborted(lifterOpRes);
  */        }
+    }
+    else{
+        ROS_WARN("Position Controller not yet active");
     }
 
     int32_t lifterTargetRPM = jointVelocityToMotorVelocity(lifterTargetVel);
