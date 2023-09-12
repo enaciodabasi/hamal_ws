@@ -132,6 +132,10 @@ class PositionController
 
     std::optional<Commands> getCommands(double current_pos, double current_vel);    
 
+    void updateUpdateTime(){
+        m_PreviousUpdateTime = ros::Time::now();
+    }
+
     double getCurrentTarget()
     {
         return m_HardwareInfo.targetPosition;
@@ -314,7 +318,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     inline const int32_t jointVelocityToMotorVelocity(const double& joint_velocity)
     {
         int32_t targetVel = ((60 * joint_velocity) / 2 * M_PI) * m_Reduction; 
-        targetVel = joint_velocity *((60.0/M_PI*2.0)) * m_Reduction;
+        targetVel = joint_velocity * (((60.0/M_PI*2.0)) * 24.685);
+        std::cout << "Target Motor Vel: " << targetVel << std::endl;
         return targetVel;
     }
 

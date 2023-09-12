@@ -37,7 +37,6 @@ const HomingStatus HomingHelper::getCurrentHomingStatus()
 }
 
 PositionController::PositionController()
-    : m_PreviousUpdateTime(ros::Time::now())
 {
 
 }
@@ -58,7 +57,7 @@ bool PositionController::calculateControlParams(
     ROS_INFO("Target profile time: %f", duration);
     m_MaxProfileTime = ros::Duration(duration);
 
-    const double tf = static_cast<double>(m_MaxProfileTime.toNSec());
+    const double tf = duration;
     const double ti = 0.0;
     const double posDiff = target_position - initial_position;
 
@@ -69,6 +68,8 @@ bool PositionController::calculateControlParams(
     m_Coeffs.a4 = (15.0 * posDiff) / (tf*tf*tf*tf);
     m_Coeffs.a5 = (-6.0 * posDiff) / (tf*tf*tf*tf*tf);
 
+    std::cout << "Coeffs: " << "a0: " << m_Coeffs.a0 << " a1: " << m_Coeffs.a1 << " a2: " << m_Coeffs.a2 << " a3: " << m_Coeffs.a3 << " a4: " << m_Coeffs.a4 << " a5: " << m_Coeffs.a5 << std::endl; 
+
     m_HardwareInfo.targetPosition = target_position;
     m_HardwareInfo.targetVelocity = target_vel;
 
@@ -77,18 +78,27 @@ bool PositionController::calculateControlParams(
 std::optional<Commands> PositionController::getCommands(double current_pos, double current_vel)
 {
     const auto currTime = ros::Time::now();
-    if((currTime - m_PreviousUpdateTime).toSec() >= m_MaxProfileTime.toSec()){
-        ROS_ERROR("Elapsed time is longer than the calculated maximum profile time");
+/*     ROS_INFO("Current time: %f", currTime.toSec());
+ */    
+    if((currTime.toSec() - m_PreviousUpdateTime.toSec()) >= m_MaxProfileTime.toSec()){
+        ROS_ERROR("Elapsed time is longer than the calculated maximum profile time: %f", (currTime.toSec() - m_PreviousUpdateTime.toSec()));
+
+        std::stringstream ss;
+        ss << currTime.sec << "." << currTime.nsec;
+        std::cout << ss.str() << std::endl;
+        m_PreviousUpdateTime = currTime;
+        m_IsActive = false;
         return std::nullopt;
     }
-    const auto tc = static_cast<double>(currTime.toNSec()); // Current time in nanoseconds
-    std::cout << "Current time: " << tc << "[nsec]" << std::endl;
-    
+    else if(m_HardwareInfo.targetPosition == current_pos){
+        m_PreviousUpdateTime = currTime;
+    }
+    const auto tc_alt = static_cast<double>(currTime.toSec()); // Current time in nanoseconds
+    const auto tc = (currTime - m_PreviousUpdateTime).toSec();
+    ROS_INFO("Current time: %f", tc);
     double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
     double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
     double accRef = (2.0 * m_Coeffs.a2) + (6.0 * m_Coeffs.a3 * (tc)) + (12.0 * m_Coeffs.a4 * (tc*tc)) + (20.0 * m_Coeffs.a5 * (tc*tc*tc));
-
-    m_PreviousUpdateTime = currTime;
 
     if(std::abs(posRef) > m_Limits.posLimit){
         
@@ -142,6 +152,7 @@ void CommInterface::cyclicTask()
                     if(lifterVel){
                         setData<int32_t>("somanet_node", "actual_velocity", lifterVel.value());
                     }
+                    
                 } 
             }
 
@@ -150,6 +161,9 @@ void CommInterface::cyclicTask()
                 if(targetVelOpt){
                     m_Master->write<int32_t>("lifter_domain", "somanet_node", "target_velocity", targetVelOpt.value());
                 }
+                /* else{
+                    setData<int32_t>("somanet_node", "target_velocity", 0);
+                } */
             }
         }
 
@@ -165,7 +179,7 @@ void CommInterface::cyclicTask()
                 m_HomingHelper->isHomingSetupDone = true;
                 m_HomingHelper->isHomingInProgress = true;
             }
-
+            ROS_INFO("Homing is active");
 
             bool opModeSetCorrect = false;
             const auto opModeDisplayOpt = m_Master->read<int8_t>("lifter_domain", "somanet_node", "op_mode_display");
@@ -430,7 +444,7 @@ void LifterHardwareInterface::configure()
         }
         else
         {
-            m_Reduction = 24.985;
+            m_Reduction = 24.685;
         }
 
         if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/position_increment"))
@@ -475,7 +489,7 @@ void LifterHardwareInterface::read()
 
     if(lifterVel){
         m_LifterJoint.currentVel = motorVelocityToJointVelocity(lifterVel.value());
-        m_HardwareInfoMsg.current_vel = m_LifterJoint.currentVel;
+        m_HardwareInfoMsg.current_vel = -1 * lifterVel.value();
     }  
 
     const auto lifterSlaveStateStrOpt =  m_CommInterface->getSlaveStateString("lifter_domain", "somanet_node");
@@ -495,7 +509,8 @@ void LifterHardwareInterface::write()
     }
 
     auto lifterTargetVel = m_LifterJoint.targetVel;
-    
+/*     ROS_INFO("Target Vel: %f", lifterTargetVel);
+ */    
     if(m_PositionController.isActive()){
 
         if(m_PositionController.getCurrentTarget() == m_LifterJoint.currentPos){
@@ -518,19 +533,18 @@ void LifterHardwareInterface::write()
             
             hamal_custom_interfaces::LifterOperationResult lifterOpRes;
             lifterOpRes.target_reached = false;
-/*             m_LifterCommandActionServer->setAborted(lifterOpRes);
- */        }
+            m_LifterCommandActionServer->setAborted(lifterOpRes);
+        }
     }
     else{
-        ROS_WARN("Position Controller not yet active");
     }
-
-    int32_t lifterTargetRPM = jointVelocityToMotorVelocity(lifterTargetVel);
-    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
+    
+    int32_t lifterTargetRPM = lifterTargetVel * (60.0 / (M_PI * 2.0)) * 24.685;
+    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM * -1);
     m_HardwareInfoMsg.target_vel = lifterTargetRPM;
     m_HardwareInfoPub.publish(m_HardwareInfoMsg);
-    /* m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250); */
-
+/*     m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250);
+ */
  }
 
 void LifterHardwareInterface::execHomingCb()
@@ -557,6 +571,7 @@ void LifterHardwareInterface::lifterCommandCb()
     );
 
     m_PositionController.setToActiveState();
+    m_PositionController.updateUpdateTime();
 }
 
 int main(int argc, char** argv)
@@ -565,7 +580,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "lifter_hardware_interface");
     ros::NodeHandle nh;
     LifterHardwareInterface hw(nh);
-    ros::AsyncSpinner asyncSpinner(5);
+    ros::AsyncSpinner asyncSpinner(10);
     asyncSpinner.start();
 
     hw.update();
