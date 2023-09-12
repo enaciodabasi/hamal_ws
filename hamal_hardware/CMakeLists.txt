@@ -4,8 +4,8 @@ project(hamal_hardware)
 set(CMAKE_CXX_STANDARD 17)
 
 set(ethercat_interface_lib /usr/local/lib/libethercat_interface.so)
-set(ethercat_interface_lib_INCLUDE_DIRS /home/grass/ethercat_interface/include/)
-#set(ethercat_interface_lib_INCLUDE_DIRS /home/naci/Projects/igh_master/include)
+#set(ethercat_interface_lib_INCLUDE_DIRS /home/grass/ethercat_interface/include/)
+set(ethercat_interface_lib_INCLUDE_DIRS /home/naci/Projects/igh_master/include)
 set(etherlab /usr/local/lib/libethercat.so)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

@@ -73,6 +73,8 @@ bool PositionController::calculateControlParams(
     m_HardwareInfo.targetPosition = target_position;
     m_HardwareInfo.targetVelocity = target_vel;
 
+    m_PositionPID.init(ros::Time::now());
+
 }
 
 std::optional<Commands> PositionController::getCommands(double current_pos, double current_vel)
@@ -88,6 +90,7 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
         std::cout << ss.str() << std::endl;
         m_PreviousUpdateTime = currTime;
         m_IsActive = false;
+        positionTracker = 0.0;
         return std::nullopt;
     }
     else if(m_HardwareInfo.targetPosition == current_pos){
@@ -99,6 +102,10 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
     double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
     double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
     double accRef = (2.0 * m_Coeffs.a2) + (6.0 * m_Coeffs.a3 * (tc)) + (12.0 * m_Coeffs.a4 * (tc*tc)) + (20.0 * m_Coeffs.a5 * (tc*tc*tc));
+
+    const double pidOutput = m_PositionPID.pid(currTime, current_pos, positionTracker);
+
+    velRef += pidOutput;
 
     if(std::abs(posRef) > m_Limits.posLimit){
         
@@ -114,8 +121,31 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
         
         (accRef < 0 ? accRef = -1.0 * m_Limits.accelLimit : accRef = m_Limits.accelLimit );
     }
-
+    positionTracker += posRef;
     return Commands(posRef, velRef, accRef);
+}
+
+void PositionController::PID::init(
+    ros::Time init_time
+)
+{
+    updateTime = init_time;
+}
+
+template<typename T>
+T PositionController::PID::pid(ros::Time current_time, T actual, T target)
+{
+    const double dt = (current_time - updateTime).toSec();
+
+    const double error = target - actual;
+    sumOfErrors = error * dt;
+    const double errorRate = (error - prevError) / dt;
+    double output = (Kp * error) * (Ki * sumOfErrors) * (Kd * errorRate);
+    
+    prevError = error;
+    updateTime = current_time;
+
+    return output;
 }
 
 CommInterface::CommInterface(const std::string& path_to_config_file, std::shared_ptr<HomingHelper>& homing_helper_ptr)
@@ -472,7 +502,19 @@ void LifterHardwareInterface::configure()
             m_NodeHandle.getParam("/hamal/lifter_hardware_interface/max_accel", maxAcc);
         }
 
+        double kp, ki, kd = 0.0;
+        if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/pid/Kp")){
+            m_NodeHandle.getParam("/hamal/lifter_hardware_interface/pid/Kp", kp);
+        }
+        if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/pid/Kp")){
+            m_NodeHandle.getParam("/hamal/lifter_hardware_interface/pid/Ki", ki);
+        }
+        if(m_NodeHandle.hasParam("/hamal/lifter_hardware_interface/pid/Kp")){
+            m_NodeHandle.getParam("/hamal/lifter_hardware_interface/pid/Kd", kd);
+        }
+
         m_PositionController.setLimits(maxPos, maxVel, maxAcc);
+        m_PositionController.m_PositionPID.setParams(kp, ki, kd);
 
 
 }

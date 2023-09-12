@@ -108,6 +108,7 @@ struct Commands
 
 };
 
+
 class PositionController
 {
     public:
@@ -149,6 +150,57 @@ class PositionController
     bool isActive(){
         return m_IsActive;
     }
+    private:
+
+    struct PID
+    {
+
+        double Kp;
+        double Ki;
+        double Kd;
+
+        double prevError;
+        double sumOfErrors;
+
+        ros::Time updateTime;
+
+        void setParams(
+            const double kp,
+            const double ki,
+            const double kd
+        )
+        {
+            Kp = kp;
+            Ki = ki;
+            Kd = kd;
+        }
+
+        template<typename T>
+        T pid(ros::Time current_time, T actual, T target);
+
+        void init(
+            ros::Time init_time
+        );
+
+        void reset()
+        {
+            prevError = 0.0;
+            sumOfErrors = 0.0;
+            updateTime = ros::Time(0.0);
+        }
+
+        PID()
+        {
+            Kp = 0;
+            Ki = 0;
+            Kd = 0;
+            updateTime = ros::Time(0.0);
+        }
+    };
+
+    public:
+    
+    PID m_PositionPID;
 
     private:
 
@@ -161,7 +213,10 @@ class PositionController
         double targetVelocity = 0.0;
     } m_HardwareInfo;
 
-    struct{
+    double positionTracker = 0.0;
+    
+
+    struct{ 
         double posLimit = 0.0;
         double velLimit = 0.0;
         double accelLimit = 0.0;
