@@ -20,3 +20,7 @@ hamal:
     max_position: 1.0
     max_velocity: 3.0
     max_accel: 6.0
+    pid:
+      Kp: 1.0
+      Ki: 0.0
+      Kd: 0.0

@@ -98,12 +98,15 @@ struct Commands
     
     double acc;
 
+    double targetWithoutControl;
+
     Commands() : pos(0.0), vel(0.0), acc(0.0) {}
-    Commands(double pos, double vel, double acc)
+    Commands(double pos, double vel, double acc, double targetWithoutControl)
     {
         this->pos = pos;
         this->vel = vel;
         this->acc = acc;
+        this->targetWithoutControl = targetWithoutControl;
     }
 
 };

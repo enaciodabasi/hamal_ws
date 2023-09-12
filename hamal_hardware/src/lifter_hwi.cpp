@@ -99,12 +99,15 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
     const auto tc_alt = static_cast<double>(currTime.toSec()); // Current time in nanoseconds
     const auto tc = (currTime - m_PreviousUpdateTime).toSec();
     ROS_INFO("Current time: %f", tc);
+    Commands newCmd;
+
     double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
     double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
     double accRef = (2.0 * m_Coeffs.a2) + (6.0 * m_Coeffs.a3 * (tc)) + (12.0 * m_Coeffs.a4 * (tc*tc)) + (20.0 * m_Coeffs.a5 * (tc*tc*tc));
+    
+    newCmd.targetWithoutControl = velRef;
 
     const double pidOutput = m_PositionPID.pid(currTime, current_pos, positionTracker);
-
     velRef += pidOutput;
 
     if(std::abs(posRef) > m_Limits.posLimit){
@@ -121,8 +124,11 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
         
         (accRef < 0 ? accRef = -1.0 * m_Limits.accelLimit : accRef = m_Limits.accelLimit );
     }
+    newCmd.pos = posRef;
+    newCmd.vel = velRef;
+    newCmd.acc = accRef;
     positionTracker += posRef;
-    return Commands(posRef, velRef, accRef);
+    return newCmd;
 }
 
 void PositionController::PID::init(
@@ -566,16 +572,19 @@ void LifterHardwareInterface::write()
         if(cmds){
             m_HardwareInfoMsg.target_pos = cmds.value().pos;
             lifterTargetVel = cmds.value().vel;
+            m_HardwareInfoMsg.target_without_control = cmds.value().targetWithoutControl;
             hamal_custom_interfaces::LifterOperationFeedback lifterCmdFeedback;
             lifterCmdFeedback.current_position = m_LifterJoint.currentPos;
             lifterCmdFeedback.target_command = m_PositionController.getCurrentTarget();
             m_LifterCommandActionServer->publishFeedback(lifterCmdFeedback);
+            m_PositionController.m_PositionPID.reset();
         }
         else{
             
             hamal_custom_interfaces::LifterOperationResult lifterOpRes;
             lifterOpRes.target_reached = false;
             m_LifterCommandActionServer->setAborted(lifterOpRes);
+            m_PositionController.m_PositionPID.reset();
         }
     }
     else{
