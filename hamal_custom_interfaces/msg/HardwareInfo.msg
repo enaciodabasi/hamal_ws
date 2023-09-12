@@ -11,3 +11,5 @@ float64 target_pos
 float64 target_vel
 
 float64 target_without_control
+
+float64 setpoint

@@ -100,9 +100,12 @@ struct Commands
 
     double targetWithoutControl;
 
+    double setPoint;
+
     Commands() : pos(0.0), vel(0.0), acc(0.0) {}
-    Commands(double pos, double vel, double acc, double targetWithoutControl)
-    {
+    Commands(double setPoint, double pos, double vel, double acc, double targetWithoutControl)
+    {   
+        this->setPoint = setPoint;
         this->pos = pos;
         this->vel = vel;
         this->acc = acc;

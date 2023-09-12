@@ -128,6 +128,7 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
     newCmd.vel = velRef;
     newCmd.acc = accRef;
     positionTracker += posRef;
+    newCmd.setPoint = positionTracker;
     return newCmd;
 }
 
@@ -572,7 +573,8 @@ void LifterHardwareInterface::write()
         if(cmds){
             m_HardwareInfoMsg.target_pos = cmds.value().pos;
             lifterTargetVel = cmds.value().vel;
-            m_HardwareInfoMsg.target_without_control = cmds.value().targetWithoutControl;
+            m_HardwareInfoMsg.target_without_control = cmds.value().targetWithoutControl * (60.0 / (M_PI * 2.0)) * 24.685;
+            m_HardwareInfoMsg.setpoint = cmds.value().setPoint;
             hamal_custom_interfaces::LifterOperationFeedback lifterCmdFeedback;
             lifterCmdFeedback.current_position = m_LifterJoint.currentPos;
             lifterCmdFeedback.target_command = m_PositionController.getCurrentTarget();
