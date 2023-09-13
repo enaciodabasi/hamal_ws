@@ -50,16 +50,19 @@ bool PositionController::calculateControlParams(
     const double& target_acc
 )
 {
+    m_ControlDataShMutex->lock_shared();
     //std::cout << "Initial Position: " << initial_position << " Initial Velocity: " << initial_velocity << " Initial acceleration" << initial_acceleration;
     //std::cout << '\n' << "Target Position: " << target_position << " Target Vel: " << target_vel << " Target accel: " << target_acc << std::endl; 
     double duration = fmax((15.0 * (fabs(target_position - initial_position))) / 
     (8.0 * m_Limits.velLimit), sqrt((10.0 * (fabs(target_position - initial_position))) / (m_Limits.accelLimit * sqrt(3.0))));
+    
     ROS_INFO("Target profile time: %f", duration);
     m_MaxProfileTime = ros::Duration(duration);
 
     const double tf = duration;
     const double ti = 0.0;
     const double posDiff = target_position - initial_position;
+    
     positionTracker = initial_position;
     m_Coeffs.a0 = initial_position;
     m_Coeffs.a1 = initial_velocity;
@@ -72,7 +75,7 @@ bool PositionController::calculateControlParams(
 
     m_HardwareInfo.targetPosition = target_position;
     m_HardwareInfo.targetVelocity = target_vel;
-
+    m_ControlDataShMutex->unlock_shared();
     m_PositionPID.init(ros::Time::now());
 
 }
@@ -374,6 +377,9 @@ LifterHardwareInterface::LifterHardwareInterface(ros::NodeHandle& nh)
 
     ROS_INFO("EtherCAT task started");
 
+    m_ControlDataShMutex = std::make_shared<std::shared_mutex>();
+    m_PositionController.m_ControlDataShMutex = m_ControlDataShMutex;
+
     m_LifterCommandActionServer->start();
     m_HomingActionServer->start();
 }   
@@ -618,6 +624,7 @@ void LifterHardwareInterface::execHomingCb()
 
 void LifterHardwareInterface::lifterCommandCb()
 {
+    m_ControlDataShMutex->lock();
     const auto goal = m_LifterCommandActionServer->acceptNewGoal();
     m_PositionController.calculateControlParams(
         m_LifterJoint.currentPos,
@@ -630,6 +637,8 @@ void LifterHardwareInterface::lifterCommandCb()
 
     m_PositionController.setToActiveState();
     m_PositionController.updateUpdateTime();
+
+    m_ControlDataShMutex->unlock();
 }
 
 int main(int argc, char** argv)

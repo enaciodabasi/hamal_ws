@@ -30,6 +30,8 @@
 #include <optional>
 #include <thread>
 #include <string>
+#include <mutex>
+#include <shared_mutex>
 
 #include "ethercat_interface/controller.hpp"
 
@@ -120,6 +122,8 @@ class PositionController
     public:
     
     PositionController();
+
+    std::shared_ptr<std::shared_mutex> m_ControlDataShMutex;
 
     void setLimits(double pos_limit, double vel_limit, double accel_limit)
     {
@@ -290,6 +294,8 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     void update();
 
     private:
+
+    std::shared_ptr<std::shared_mutex> m_ControlDataShMutex;
 
     ros::NodeHandle m_NodeHandle;
 
