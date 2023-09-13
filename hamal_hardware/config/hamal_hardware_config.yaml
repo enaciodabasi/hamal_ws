@@ -21,6 +21,6 @@ hamal:
     max_velocity: 3.0
     max_accel: 6.0
     pid:
-      Kp: 2.0
+      Kp: 0.001
       Ki: 0.0
       Kd: 0.0

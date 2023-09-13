@@ -60,7 +60,7 @@ bool PositionController::calculateControlParams(
     const double tf = duration;
     const double ti = 0.0;
     const double posDiff = target_position - initial_position;
-
+    positionTracker = initial_position;
     m_Coeffs.a0 = initial_position;
     m_Coeffs.a1 = initial_velocity;
     m_Coeffs.a2 = initial_acceleration / 2.0;
@@ -98,8 +98,8 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
     }
     const auto tc_alt = static_cast<double>(currTime.toSec()); // Current time in nanoseconds
     const auto tc = (currTime - m_PreviousUpdateTime).toSec();
-    ROS_INFO("Current time: %f", tc);
-    Commands newCmd;
+/*     ROS_INFO("Current time: %f", tc);
+ */    Commands newCmd;
 
     double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
     double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
@@ -109,6 +109,8 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
 
     const double pidOutput = m_PositionPID.pid(currTime, current_pos, positionTracker);
     velRef += pidOutput;
+    
+    ROS_INFO("PID output: %f", pidOutput);
 
     if(std::abs(posRef) > m_Limits.posLimit){
         
@@ -127,7 +129,10 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
     newCmd.pos = posRef;
     newCmd.vel = velRef;
     newCmd.acc = accRef;
-    positionTracker += posRef;
+    
+    if(!(positionTracker >= m_HardwareInfo.targetPosition)){
+        positionTracker += posRef;
+    }
     newCmd.setPoint = positionTracker;
     return newCmd;
 }
@@ -147,7 +152,7 @@ T PositionController::PID::pid(ros::Time current_time, T actual, T target)
     const double error = target - actual;
     sumOfErrors = error * dt;
     const double errorRate = (error - prevError) / dt;
-    double output = (Kp * error) * (Ki * sumOfErrors) * (Kd * errorRate);
+    double output = (Kp * error) + (Ki * sumOfErrors) + (Kd * errorRate);
     
     prevError = error;
     updateTime = current_time;
@@ -593,11 +598,11 @@ void LifterHardwareInterface::write()
     }
     
     int32_t lifterTargetRPM = lifterTargetVel * (60.0 / (M_PI * 2.0)) * 24.685;
-    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM * -1);
+    m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", lifterTargetRPM);
     m_HardwareInfoMsg.target_vel = lifterTargetRPM;
     m_HardwareInfoPub.publish(m_HardwareInfoMsg);
-/*     m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250);
- */
+    /* m_CommInterface->setData<int32_t>("somanet_node", "target_velocity", 250); */
+
  }
 
 void LifterHardwareInterface::execHomingCb()
@@ -633,7 +638,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "lifter_hardware_interface");
     ros::NodeHandle nh;
     LifterHardwareInterface hw(nh);
-    ros::AsyncSpinner asyncSpinner(10);
+    ros::AsyncSpinner asyncSpinner(5);
     asyncSpinner.start();
 
     hw.update();
