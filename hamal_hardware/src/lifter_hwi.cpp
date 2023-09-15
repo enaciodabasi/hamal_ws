@@ -50,13 +50,16 @@ bool PositionController::calculateControlParams(
     const double& target_acc
 )
 {
-    m_ControlDataShMutex->lock_shared();
+    //m_ControlDataShMutex->lock_shared();
     //std::cout << "Initial Position: " << initial_position << " Initial Velocity: " << initial_velocity << " Initial acceleration" << initial_acceleration;
     //std::cout << '\n' << "Target Position: " << target_position << " Target Vel: " << target_vel << " Target accel: " << target_acc << std::endl; 
     double duration = fmax((15.0 * (fabs(target_position - initial_position))) / 
     (8.0 * m_Limits.velLimit), sqrt((10.0 * (fabs(target_position - initial_position))) / (m_Limits.accelLimit * sqrt(3.0))));
-    
-    ROS_INFO("Target profile time: %f", duration);
+    double durationAlt = fmax((15.0 * fabs(target_position - initial_position)) / (8.0 * m_Limits.velLimit), sqrt((10.0 * fabs(target_position - initial_position)) / (m_Limits.accelLimit * sqrt(3.0))));
+/*     duration = 28.0;
+ *//*     duration = (2.0 * std::abs(target_position - initial_position) / m_Limits.velLimit);
+ */    ROS_INFO("Target profile time: %f", duration);
+    ROS_INFO("target profile time2: %f", durationAlt);
     m_MaxProfileTime = ros::Duration(duration);
 
     const double tf = duration;
@@ -67,16 +70,18 @@ bool PositionController::calculateControlParams(
     m_Coeffs.a0 = initial_position;
     m_Coeffs.a1 = initial_velocity;
     m_Coeffs.a2 = initial_acceleration / 2.0;
-    m_Coeffs.a3 = (-10.0 * posDiff) / (tf*tf*tf);
-    m_Coeffs.a4 = (15.0 * posDiff) / (tf*tf*tf*tf);
-    m_Coeffs.a5 = (-6.0 * posDiff) / (tf*tf*tf*tf*tf);
+    m_Coeffs.a3 = (10.0 * posDiff) / (tf*tf*tf);
+    m_Coeffs.a4 = (-15.0 * posDiff) / (tf*tf*tf*tf);
+    m_Coeffs.a5 = (6.0 * posDiff) / (tf*tf*tf*tf*tf);
 
     std::cout << "Coeffs: " << "a0: " << m_Coeffs.a0 << " a1: " << m_Coeffs.a1 << " a2: " << m_Coeffs.a2 << " a3: " << m_Coeffs.a3 << " a4: " << m_Coeffs.a4 << " a5: " << m_Coeffs.a5 << std::endl; 
 
     m_HardwareInfo.targetPosition = target_position;
     m_HardwareInfo.targetVelocity = target_vel;
-    m_ControlDataShMutex->unlock_shared();
+    //m_ControlDataShMutex->unlock_shared();
     m_PositionPID.init(ros::Time::now());
+
+    m_PrevPosTrajCmd = initial_position;
 
 }
 
@@ -96,28 +101,33 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
         positionTracker = 0.0;
         return std::nullopt;
     }
-    else if(m_HardwareInfo.targetPosition == current_pos){
+    /* else if(inRange<double>(current_pos, m_HardwareInfo.targetPosition, 0.5)){
         m_PreviousUpdateTime = currTime;
-    }
+        return std::nullopt;
+    } */
     const auto tc_alt = static_cast<double>(currTime.toSec()); // Current time in nanoseconds
     const auto tc = (currTime - m_PreviousUpdateTime).toSec();
 /*     ROS_INFO("Current time: %f", tc);
  */    Commands newCmd;
 
     double posRef = m_Coeffs.a0 + (m_Coeffs.a1 * (tc)) + (m_Coeffs.a2 * (tc*tc)) + (m_Coeffs.a3 * (tc*tc*tc)) + (m_Coeffs.a4 * (tc*tc*tc*tc)) + (m_Coeffs.a5 * (tc*tc*tc*tc*tc)); 
+    double posRefUnlimited = posRef;
+    posRefUnlimited = posRefUnlimited - m_PrevPosTrajCmd;
+    ROS_INFO("Traj pos cmd: %f", posRefUnlimited);
     double velRef = m_Coeffs.a1 + (2.0 * m_Coeffs.a2 *(tc)) + (3.0 * m_Coeffs.a3 * (tc*tc)) + (4.0 * m_Coeffs.a4 * (tc*tc*tc)) + (5.0 * m_Coeffs.a5 * (tc*tc*tc*tc));
     double accRef = (2.0 * m_Coeffs.a2) + (6.0 * m_Coeffs.a3 * (tc)) + (12.0 * m_Coeffs.a4 * (tc*tc)) + (20.0 * m_Coeffs.a5 * (tc*tc*tc));
     
+    ROS_INFO("Traj vel cmd: %f", velRef * (60.0 / (M_PI * 2.0)) * 24.685);  
     newCmd.targetWithoutControl = velRef;
 
-    const double pidOutput = m_PositionPID.pid(currTime, current_pos, positionTracker);
+    const double pidOutput = m_PositionPID.pid(currTime, current_pos, posRef);
     velRef += pidOutput;
     
     ROS_INFO("PID output: %f", pidOutput);
 
-    if(std::abs(posRef) > m_Limits.posLimit){
+    if(std::abs(posRefUnlimited) > m_Limits.posLimit){
         
-        (posRef < 0 ? posRef = -1.0 * m_Limits.posLimit : posRef = m_Limits.posLimit);
+        (posRefUnlimited < 0 ? posRefUnlimited = -1.0 * m_Limits.posLimit : posRefUnlimited = m_Limits.posLimit);
     }
     
     if(std::abs(velRef) > m_Limits.velLimit){
@@ -129,14 +139,14 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
         
         (accRef < 0 ? accRef = -1.0 * m_Limits.accelLimit : accRef = m_Limits.accelLimit );
     }
-    newCmd.pos = posRef;
+    newCmd.pos = posRefUnlimited;
     newCmd.vel = velRef;
     newCmd.acc = accRef;
     
     if(!(positionTracker >= m_HardwareInfo.targetPosition)){
-        positionTracker += posRef;
+        positionTracker += posRefUnlimited;
     }
-    newCmd.setPoint = positionTracker;
+    newCmd.setPoint = posRef;
     return newCmd;
 }
 
@@ -144,21 +154,37 @@ void PositionController::PID::init(
     ros::Time init_time
 )
 {
-    updateTime = init_time;
+    m_UpdateTime = init_time;
 }
 
-template<typename T>
-T PositionController::PID::pid(ros::Time current_time, T actual, T target)
+/* template<typename T>
+T PositionController::PID::pid(const double& dt, T actual, T target)
 {
-    const double dt = (current_time - updateTime).toSec();
+    ROS_INFO("dT: %f", dt);
 
     const double error = target - actual;
-    sumOfErrors = error * dt;
+    sumOfErrors += error * dt;
     const double errorRate = (error - prevError) / dt;
     double output = (Kp * error) + (Ki * sumOfErrors) + (Kd * errorRate);
     
     prevError = error;
-    updateTime = current_time;
+
+    return output;
+} */
+
+template<typename T>
+T PositionController::PID::pid(const ros::Time& current_time, T actual, T target)
+{
+    const double dt = current_time.toSec() - m_UpdateTime.toSec();
+    const auto per = ros::Duration(current_time - m_UpdateTime);
+    m_UpdateTime = current_time;
+    
+    const double error = target - actual;
+    sumOfErrors += error * dt;
+    const double errorRate = (error - prevError) / dt;
+    double output = (Kp * error) + (Ki * sumOfErrors) + (Kd * errorRate);
+    
+    prevError = error;
 
     return output;
 }
@@ -549,7 +575,7 @@ void LifterHardwareInterface::read()
 
     if(lifterVel){
         m_LifterJoint.currentVel = motorVelocityToJointVelocity(lifterVel.value());
-        m_HardwareInfoMsg.current_vel = -1 * lifterVel.value();
+        m_HardwareInfoMsg.current_vel = lifterVel.value();
     }  
 
     const auto lifterSlaveStateStrOpt =  m_CommInterface->getSlaveStateString("lifter_domain", "somanet_node");
@@ -573,24 +599,24 @@ void LifterHardwareInterface::write()
  */    
     if(m_PositionController.isActive()){
 
-        if(m_PositionController.getCurrentTarget() == m_LifterJoint.currentPos){
+        /* if(inRange<double>(m_LifterJoint.currentPos, m_PositionController.getCurrentTarget(), 0.5)){
             hamal_custom_interfaces::LifterOperationResult lifterOpRes;
             lifterOpRes.target_reached = true;
             m_LifterCommandActionServer->setSucceeded(lifterOpRes);
 
-        }
+        } */
 
         const auto cmds = m_PositionController.getCommands(m_LifterJoint.currentPos, m_LifterJoint.currentVel);
         if(cmds){
             m_HardwareInfoMsg.target_pos = cmds.value().pos;
             lifterTargetVel = cmds.value().vel;
-            m_HardwareInfoMsg.target_without_control = cmds.value().targetWithoutControl * (60.0 / (M_PI * 2.0)) * 24.685;
+            m_HardwareInfoMsg.target_without_control = (int32_t)cmds.value().targetWithoutControl * (60.0 / (M_PI * 2.0)) * 24.685;
             m_HardwareInfoMsg.setpoint = cmds.value().setPoint;
             hamal_custom_interfaces::LifterOperationFeedback lifterCmdFeedback;
             lifterCmdFeedback.current_position = m_LifterJoint.currentPos;
             lifterCmdFeedback.target_command = m_PositionController.getCurrentTarget();
             m_LifterCommandActionServer->publishFeedback(lifterCmdFeedback);
-            m_PositionController.m_PositionPID.reset();
+            //m_PositionController.m_PositionPID.reset();
         }
         else{
             
@@ -624,7 +650,7 @@ void LifterHardwareInterface::execHomingCb()
 
 void LifterHardwareInterface::lifterCommandCb()
 {
-    m_ControlDataShMutex->lock();
+    //m_ControlDataShMutex->lock();
     const auto goal = m_LifterCommandActionServer->acceptNewGoal();
     m_PositionController.calculateControlParams(
         m_LifterJoint.currentPos,
@@ -634,11 +660,11 @@ void LifterHardwareInterface::lifterCommandCb()
         0.0,
         0.0
     );
-
+    //m_ControlDataShMutex->unlock();
     m_PositionController.setToActiveState();
     m_PositionController.updateUpdateTime();
 
-    m_ControlDataShMutex->unlock();
+    
 }
 
 int main(int argc, char** argv)

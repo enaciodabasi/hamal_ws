@@ -38,6 +38,12 @@
 using LifterCommandActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::LifterOperationAction>;
 using HomingActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::HomingOperationAction>;
 
+template<typename T>
+bool inline inRange(const T& check_val, const T& target_val, const T& range)
+{
+    return (check_val < (target_val + range)) && (check_val > (target_val - range));
+}
+
 enum class HomingStatus
 {
     Unknown,
@@ -141,6 +147,8 @@ class PositionController
         const double& target_acc = 0.0
     );
 
+    double m_PrevPosTrajCmd = 0.0; 
+
     std::optional<Commands> getCommands(double current_pos, double current_vel);    
 
     void updateUpdateTime(){
@@ -172,7 +180,7 @@ class PositionController
         double prevError;
         double sumOfErrors;
 
-        ros::Time updateTime;
+        ros::Time m_UpdateTime;
 
         void setParams(
             const double kp,
@@ -186,7 +194,10 @@ class PositionController
         }
 
         template<typename T>
-        T pid(ros::Time current_time, T actual, T target);
+        T pid(const ros::Time& current_time, T actual, T target);
+
+        /* template<typename T>
+        T pid(const double& dt, T actual, T target); */
 
         void init(
             ros::Time init_time
@@ -196,7 +207,7 @@ class PositionController
         {
             prevError = 0.0;
             sumOfErrors = 0.0;
-            updateTime = ros::Time(0.0);
+            m_UpdateTime = ros::Time(0.0);
         }
 
         PID()
@@ -204,7 +215,7 @@ class PositionController
             Kp = 0;
             Ki = 0;
             Kd = 0;
-            updateTime = ros::Time(0.0);
+            m_UpdateTime = ros::Time(0.0);
         }
     };
 
@@ -312,12 +323,12 @@ class LifterHardwareInterface : public hardware_interface::RobotHW
     
     struct{
         std::string m_LifterJointName;
-        double currentPos;
-        double currentVel;
-        double currentAcc;
-        double targetPos;
-        double targetVel;
-        double targetAcc;
+        double currentPos = 0.0;
+        double currentVel = 0.0;
+        double currentAcc = 0.0;
+        double targetPos = 0.0;
+        double targetVel = 0.0;
+        double targetAcc = 0.0;
     } m_LifterJoint;
 
     std::string m_CommConfigPath;    
