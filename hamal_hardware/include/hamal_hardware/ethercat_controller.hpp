@@ -14,15 +14,16 @@
 #define ETHERCAT_CONTROLLER_HPP_
 
 #include "ethercat_interface/controller.hpp"
-
-#include "hamal_hardware/hamal_hardware_defs.hpp"
-
+#include "hamal_hardware/homing_helper.hpp"
+/* #include "hamal_hardware/hamal_hardware_defs.hpp"
+ */
 class HamalEthercatController : public ethercat_interface::controller::Controller
 {
     public:
 
     HamalEthercatController(
         const std::string& config_file_path,
+        std::shared_ptr<HomingHelper> homing_helper_ptr,
         bool enable_dc = true
     );
 
@@ -30,10 +31,10 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     bool m_EthercatLoopFlag = true;
 
-    /* inline void setLifterControlType(const ControlType& control_type)
+    inline void setLifterControlType(const ControlType& control_type)
     {
         m_LifterControlType = control_type;
-    } */
+    }
 
     void stopEcThread()
     {
@@ -52,11 +53,11 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     private:
 
-    /* ControlType m_LifterControlType; */
+    ControlType m_LifterControlType;
 
-    bool m_EnableDC = false;
-    
-    
+    std::shared_ptr<HomingHelper> m_HomingHelperPtr;
+
+    bool m_EnableDC = true;
 
     void cyclicTask() override;
 

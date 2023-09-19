@@ -18,6 +18,7 @@
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/posvelacc_command_interface.h>
 #include <controller_manager/controller_manager.h>
+#include <actionlib/server/simple_action_server.h>
 
 #include <unordered_map>
 #include <optional>
@@ -25,9 +26,16 @@
 #include <variant>
 
 #include "hamal_hardware/ethercat_controller.hpp"
+#include "hamal_hardware/homing_helper.hpp"
+#include "hamal_custom_interfaces/HomingInfo.h"
+#include "hamal_custom_interfaces/HomingOperationAction.h"
+#include "hamal_custom_interfaces/LifterOperationAction.h"
 
 namespace hamal
 {
+
+    using HomingActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::HomingOperationAction>;
+    using LifterOperationActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::LifterOperationAction>;
 /*     using LifterInterface = std::variant<hardware_interface::PositionJointInterface, hardware_interface::VelocityJointInterface>;
  */
     enum LifterInterfaceType
@@ -59,6 +67,7 @@ namespace hamal
         double targetVelocity;
         double targetPosition;
         double targetAccel;
+        ControlType controlType = ControlType::Velocity;
     };
 
     class HardwareInterface : public hardware_interface::RobotHW
@@ -112,6 +121,12 @@ namespace hamal
 
         hardware_interface::PosVelAccJointInterface m_LifterJointInterface;
 
+        std::shared_ptr<HomingHelper> m_LifterHomingHelper;
+
+        std::unique_ptr<HomingActionServer> m_HomingServer;
+
+/*         std::unique_ptr<LifterOperationActionServer> m_LifterOperationServer;
+ */
         /* std::optional<hardware_interface::PositionJointInterface> m_LifterPositionInterface;
 
         std::string m_LifterJointName = "";
@@ -136,6 +151,10 @@ namespace hamal
 
         void write();
 
+        void executeHomingCallback();
+
+/*         void lifterOperationCallback();
+ */
         /**
          * @brief Turns motor position [increments] coming from EtherCAT to joint position [rad].
          * 

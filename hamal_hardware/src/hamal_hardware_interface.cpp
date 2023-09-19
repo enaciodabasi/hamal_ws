@@ -21,9 +21,12 @@ namespace hamal
             this,
             m_NodeHandle
         );
+        
+        m_LifterHomingHelper = std::make_shared<HomingHelper>();
 
         m_EthercatController = std::make_unique<HamalEthercatController>(
             m_EthercatConfigFilePath,
+            m_LifterHomingHelper,
             true
         );
 
@@ -32,14 +35,14 @@ namespace hamal
         {
             ros::shutdown();
         }
-        /* if(m_LifterInterfaceType == LifterInterfaceType::Position)
+        if(m_JointsMap.at(m_LifterJointName).controlType == ControlType::Position)
         {
             m_EthercatController->setLifterControlType(ControlType::Position);
         }
-        else if(m_LifterInterfaceType == LifterInterfaceType::Velocity)
+        else if(m_JointsMap.at(m_LifterJointName).controlType == ControlType::Velocity)
         {
             m_EthercatController->setLifterControlType(ControlType::Velocity);
-        } */
+        }
         
         // Register Joint State and Command Interfaces
         for(auto& [joint_name, joint_handle] : m_JointsMap)
@@ -54,7 +57,7 @@ namespace hamal
 
             m_JointStateInterface.registerHandle(jointStateHandle);
 
-            /* if(joint_name == m_LifterJointName)
+            if(joint_name == m_LifterJointName)
             {
                 hardware_interface::PosVelAccJointHandle posVelAccCommandHandle(
                     jointStateHandle,
@@ -66,7 +69,7 @@ namespace hamal
                 m_LifterJointInterface.registerHandle(posVelAccCommandHandle);
 
                 continue;
-            } */
+            }
 
             hardware_interface::JointHandle velCommandHandle(
                 jointStateHandle,
@@ -79,11 +82,29 @@ namespace hamal
 
         this->registerInterface(&m_JointStateInterface);
         this->registerInterface(&m_VelJointInterface);
-/*         this->registerInterface(&m_LifterJointInterface);
- */
+        this->registerInterface(&m_LifterJointInterface);
+
+        m_HomingServer = std::make_unique<HomingActionServer>(
+            m_NodeHandle,
+            "lifter_homing_server",
+            false
+        );
+        m_HomingServer->registerGoalCallback(
+            boost::bind(&HardwareInterface::executeHomingCallback, this)
+        );
+
+        /* m_LifterOperationServer = std::make_unique<LifterOperationActionServer>(
+            m_NodeHandle,
+            "lifter_command_server",
+            false
+        );
+        m_LifterOperationServer->registerGoalCallback(
+            boost::bind(&HardwareInterface::lifterOperationCallback, this)
+        ); */
 
         m_EthercatController->startTask();
 
+        m_HomingServer->start();
     }
 
     HardwareInterface::~HardwareInterface()
@@ -110,6 +131,53 @@ namespace hamal
 
             write();
 
+            if(m_LifterHomingHelper->isHomingActive){
+                
+                if(m_HomingServer->isPreemptRequested()){
+                    m_HomingServer->setPreempted();
+                }
+
+                const auto homingStatus = m_LifterHomingHelper->getCurrentHomingStatus();
+                const auto homingStatusStr = HomingStatusStrings.find(homingStatus);
+                switch (homingStatus)
+                {
+                case HomingStatus::HomingIsPerformed :
+                case HomingStatus::HomingIsInterruptedOrNotStarted :
+                case HomingStatus::HomingConfirmedTargetNotReached :
+                {
+
+                    hamal_custom_interfaces::HomingOperationFeedback homingFb;
+                    homingFb.homingStatus = homingStatusStr->second;
+
+                    m_HomingServer->publishFeedback(homingFb);
+
+                    break;
+                }
+                case HomingStatus::HomingCompleted :
+                {
+                    hamal_custom_interfaces::HomingOperationResult homingRes;
+                    homingRes.status = homingStatusStr->second;
+                    homingRes.homingDone = true;
+                    m_HomingServer->setSucceeded(homingRes);
+                    m_LifterHomingHelper.reset();
+                    break;
+                }
+                case HomingStatus::ErrorDetectedMotorStillRunning :
+                case HomingStatus::ErrorDuringHomingMotorAtStandstill :
+                {
+                    hamal_custom_interfaces::HomingOperationResult homingRes;
+                    homingRes.status = homingStatusStr->second;
+                    homingRes.homingDone = false;
+                    m_HomingServer->setAborted(homingRes);
+                    m_LifterHomingHelper->reset();
+                    break;
+                }
+                default:
+                    break;
+                }
+
+            }
+
             rate.sleep();
 
         }
@@ -120,24 +188,24 @@ namespace hamal
     void HardwareInterface::configure()
     {
 
-        if((m_NodeHandle.hasParam("/hamal/hardware_interface/left_wheel")) && (m_NodeHandle.hasParam("/hamal/hardware_interface/right_wheel")))
+        if(
+            (m_NodeHandle.hasParam("/hamal/hardware_interface/left_wheel")) && 
+            (m_NodeHandle.hasParam("/hamal/hardware_interface/right_wheel")) &&
+            (m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
+        )
         {
             m_NodeHandle.getParam("/hamal/hardware_interface/left_wheel", m_LeftWheelJointName);
             m_JointsMap[m_LeftWheelJointName] = JointHandle(m_LeftWheelJointName);
             m_NodeHandle.getParam("/hamal/hardware_interface/right_wheel", m_RightWheelJointName);
-            m_JointsMap[m_RightWheelJointName] = JointHandle(m_RightWheelJointName);
+            m_JointsMap[m_RightWheelJointName] = JointHandle(m_RightWheelJointName);    
+            m_NodeHandle.getParam("/hamal/hardware_interface/lifter_joint", m_LifterJointName);
+            m_JointsMap[m_LifterJointName]  = JointHandle(m_LifterJointName);
             
-
-            /* if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_joint"))
-            {    
-                m_NodeHandle.getParam("/hamal/hardware_interface/lifter_joint", m_LifterJointName);
-                m_JointsMap[m_LifterJointName]  = JointHandle(m_LifterJointName);
-            } */
             
         }
         else
         {
-            ROS_ERROR("No joint name was found in the config file.");
+            ROS_ERROR("One or more joint names are missing in the configuration file.");
             if(ros::ok())
                 ros::shutdown();
         }
@@ -166,20 +234,20 @@ namespace hamal
             m_NodeHandle.getParam("/hamal/hardware_interface/ethercat_config_path", m_EthercatConfigFilePath);
         }
 
-        /* if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_interface_type"))
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/lifter_control_type"))
         {
-            std::string lifterInterfaceType;
-            m_NodeHandle.getParam("/hamal/hardware_interface/lifter_interface_type", lifterInterfaceType);
+            std::string lifterControlType;
+            m_NodeHandle.getParam("/hamal/hardware_interface/lifter_control_type", lifterControlType);
         
-            if(lifterInterfaceType == "position")
+            if(lifterControlType == "position")
             {
-                m_LifterInterfaceType = LifterInterfaceType::Position;
+                m_JointsMap.at(m_LifterJointName).controlType = ControlType::Position;
             }
-            else if(lifterInterfaceType == "velocity")
+            else if(lifterControlType == "velocity")
             {
-                m_LifterInterfaceType = LifterInterfaceType::Velocity;
+                m_JointsMap.at(m_LifterJointName).controlType = ControlType::Velocity;
             }
-        } */
+        }
 
         if(m_NodeHandle.hasParam("/hamal/hardware_interface/reduction"))
         {
@@ -227,12 +295,47 @@ namespace hamal
     {
         const auto rightWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
         const auto leftWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
-
-        /* std::string s = "Target Velocity: " + std::to_string(jointVelocityToMotorVelocity(leftWheelTargetVel)) + "[rad/s]\n";
-        ROS_INFO(s.c_str()); */
+        
+        double lifterTarget = 0.0;
+        std::string targetsPdoName;
+        const ControlType lifterControlType = m_JointsMap.at(m_LifterJointName).controlType;
+        if(lifterControlType == ControlType::Position){
+            double targetCmd = m_JointsMap.at(m_LifterJointName).targetPosition;
+            lifterTarget = jointPositionToMotorPosition(targetCmd);
+            targetsPdoName = "target_position";
+        }
+        else if(lifterControlType == ControlType::Velocity){
+            double targetCmd = m_JointsMap.at(m_LifterJointName).targetVelocity;
+            lifterTarget = jointVelocityToMotorVelocity(targetCmd);
+            targetsPdoName = "target_velocity";
+        }
 
         m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
         m_EthercatController->setData<int32_t>("somanet_node_2", "target_velocity", (jointVelocityToMotorVelocity(rightWheelTargetVel) * -1));
+        if(!targetsPdoName.empty())
+            m_EthercatController->setData<int32_t>("somanet_node_0", targetsPdoName, lifterTarget);
+        
+    }
+
+    void HardwareInterface::executeHomingCallback()
+    {
+        const auto homingGoal = m_HomingServer->acceptNewGoal();
+        const auto homingInfo = homingGoal->homingInfo;
+        if(homingInfo.switchSearchSpeed != 0){
+            m_LifterHomingHelper->switchSearchSpeed = homingInfo.switchSearchSpeed;
+        }
+        if(homingInfo.zeroSearchSpeed != 0){
+            m_LifterHomingHelper->zeroSearchSpeed = homingInfo.zeroSearchSpeed;
+        }
+        if(homingInfo.homingAccel != 0){
+            m_LifterHomingHelper->homingAccel = homingInfo.homingAccel;
+        }
+        if(homingInfo.homingMethod != 0){
+            m_LifterHomingHelper->homingMethod = homingInfo.homingMethod;
+        }
+
+        m_LifterHomingHelper->isHomingActive = true;
+        
     }
 }
 
