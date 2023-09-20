@@ -35,7 +35,6 @@ namespace hamal
 {
 
     using HomingActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::HomingOperationAction>;
-    using LifterOperationActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::LifterOperationAction>;
 /*     using LifterInterface = std::variant<hardware_interface::PositionJointInterface, hardware_interface::VelocityJointInterface>;
  */
     enum LifterInterfaceType

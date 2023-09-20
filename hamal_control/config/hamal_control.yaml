@@ -61,8 +61,11 @@ hamal:
     type: hamal_lifter_controller/HamalLifterController
     lifter_joint_name: "lifter_joint"
     controller_rate: 50.0
-    max_velocity: 1.5
-    max_accel: 0.3
+    max_position: 1.0
+    max_velocity: 3.0
+    max_accel: 6.0
+    tolerance: 0.05
+
 
   # diff_drive_controller:
   #  type: hamal_diff_drive_controller/HamalDiffDriveController

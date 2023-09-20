@@ -31,48 +31,102 @@
 #include <memory>
 #include <optional>
 
+using LifterOperationActionServer = actionlib::SimpleActionServer<hamal_custom_interfaces::LifterOperationAction>;
+
 using LifterAction = hamal_custom_interfaces::LifterOperationAction;
 using LifterResult = hamal_custom_interfaces::LifterOperationResult;
 using LifterFeedback = hamal_custom_interfaces::LifterOperationFeedback;
 
-struct FifthOrderCoeffs
+constexpr auto ProfileTimeErrorStr = "Elapsed time is longer than the desired profile time. Aborting...";
+constexpr auto OperationSuccessStr = "Target successfuly reached.";
+template<typename T>
+bool inRange(const T& check_val, const T& target_val, const T& range)
 {
-    double a0;
-    double a1;
-    double a2;
-    double a3;
-    double a4;
-    double a5;
-
-    FifthOrderCoeffs()
-    {
-        a1 = 0;
-        a2 = 0;
-        a3 = 0;
-        a4 = 0;
-        a5 = 0;
-        a0 = 0;
-    }
-};
-
-struct Commands
-{
-    double position;
-    double velocity;
-    double accel;
-
-    Commands()
-    {
-        position = 0.0;
-        velocity = 0.0;
-        accel = 0.0;
-    }
-};
+    return (check_val < (target_val + range)) && (check_val > (target_val - range));
+}
 
 namespace hamal_lifter_controller
 {
+
+    struct PID
+    {
+
+        double Kp;
+        double Ki;
+        double Kd;
+
+        double prevError;
+        double sumOfErrors;
+
+        ros::Time m_UpdateTime;
+
+        void setParams(
+            const double kp,
+            const double ki,
+            const double kd
+        )
+        {
+            Kp = kp;
+            Ki = ki;
+            Kd = kd;
+        }
+
+        template<typename T>
+        T pid(const ros::Time& current_time, T actual, T target);
+
+        void init(
+            ros::Time init_time
+        );
+
+        void reset()
+        {
+            prevError = 0.0;
+            sumOfErrors = 0.0;
+            m_UpdateTime = ros::Time(0.0);
+        }
+
+        PID()
+        {
+            Kp = 0;
+            Ki = 0;
+            Kd = 0;
+            m_UpdateTime = ros::Time(0.0);
+        }
+    }; 
+
     class HamalLifterController : public controller_interface::Controller<hardware_interface::PosVelAccJointInterface>
     {
+        private:
+
+        struct Coefficients{
+            double a0;
+            double a1;
+            double a2;
+            double a3;
+            double a4;
+            double a5;
+
+            Coefficients()
+            {
+                a0 = 0.0;
+                a1 = 0.0;
+                a2 = 0.0;
+                a3 = 0.0;
+                a4 = 0.0;
+                a5 = 0.0;
+            }
+
+            void reset()
+            {
+                a0 = 0.0;
+                a1 = 0.0;
+                a2 = 0.0;
+                a3 = 0.0;
+                a4 = 0.0;
+                a5 = 0.0;
+            }
+        };
+
         public:
 
         HamalLifterController();
@@ -80,85 +134,104 @@ namespace hamal_lifter_controller
         ~HamalLifterController();
 
         bool init(
-            hardware_interface::PosVelAccJointInterface* pos_vel_acc_interface, 
-            ros::NodeHandle& base_nh, 
+            hardware_interface::PosVelAccJointInterface* lifter_control_interface,
+            ros::NodeHandle& base_nh,
             ros::NodeHandle& controller_nh
         );
 
-        void update(const ros::Time& time, const ros::Duration& period);
+        void starting(const ros::Time& time);
 
-        void starting(const ros::Time &time);
+        void update(const ros::Time& time, const ros::Duration& period);
 
         void stopping(const ros::Time& time);
 
-        void setTargetPosition(double target_position)
+
+        void setLimits(double pos_limit, double vel_limit, double accel_limit)
         {
-            m_TargetPosition = target_position;
+            m_Limits.posLimit = pos_limit;
+            m_Limits.velLimit = vel_limit;
+            m_Limits.accelLimit = accel_limit;
+        }
+
+        void updateUpdateTime(){
+            m_PreviousUpdateTime = ros::Time::now();
         }
 
         private:
 
-        ros::Publisher m_PointPublisher;
+        std::unique_ptr<LifterOperationActionServer> m_LifterOperationServer;
 
-        std::string m_ControllerName;
+        double m_PrevPosTrajCmd = 0.0; 
+
+    /*     std::optional<Commands> getCommands(double current_pos, double current_vel);    
+     */
 
         std::string m_LifterJointName;
 
-        double m_ControllerRate;
-        ros::Duration m_ControllerPeriod;
-
         hardware_interface::PosVelAccJointHandle m_LifterJointHandle;
 
-        double m_StartPosition = 0.0;
+        bool m_NewGoalArrived = false;
+        bool m_GoalActive = false;
+        bool m_GoalDone = false;
+        bool m_GoalError = false;
+        Coefficients m_GoalCoefficients;    
+        hamal_custom_interfaces::LifterOperationGoal* m_CurrentActionGoalPtr;
 
-        double m_TargetPosition = 0.0;
+        PID m_PositionPID;
 
-        double m_TargetVelocity = 0.0;
+        double positionTracker = 0.0;
 
-        double m_TargetAccel = 0.0;
+        struct{ 
+            double posLimit = 0.0;
+            double velLimit = 0.0;
+            double accelLimit = 0.0;
+        } m_Limits;
 
-        double m_TargetTime = 0.0;
+        double m_PositionTolerance;
 
-        ros::Time m_StartTime;
-        ros::Time m_PreviousTime;
+        double m_ControllerFrequency;
+        std::unique_ptr<ros::Rate> m_ControllerRate;
 
-        double m_MaxPos = 0.0;
-        double m_MaxVel = 0.0;
-        double m_MaxAccel = 0.0;
+        ros::Time m_PreviousUpdateTime;
 
-        struct{
-            double Kp;
-            double Ki;
-            double Kd;
-        }m_PidParams;
+        ros::Duration m_MaxProfileTime;
 
-        PID m_VelocityController;
-
-        std::shared_ptr<actionlib::SimpleActionServer<LifterAction>> m_LifterActionServer;
-
-        bool m_IsGoalNew = true;
-
-        Commands computeCommands(
-            const double& current_time
+        const Coefficients calculateControlParams(
+            const double& initial_position,
+            const double& initial_velocity,
+            const double& initial_acceleration,
+            const double& target_position,
+            const double& target_vel = 0.0,
+            const double& target_acc = 0.0
         );
 
-        const double calculateRequiredOperationDuration();
+        const Coefficients calculateControlParams(
+            double profile_time,
+            const double& initial_position,
+            const double& initial_velocity,
+            const double& initial_acceleration,
+            const double& target_position,
+            const double& target_vel = 0.0,
+            const double& target_acc = 0.0
+        );
 
-        void checkLimits(Commands& commands);
+        void cleanup();
 
-        void lifterActionGoalCallback();
+        void lifterActionCallback();
+
+        double linearDistanceToLifterRotation(const double& lifter_rotation)
+        {
+
+        }
+
+        double lifterRotationToLinearDistance(const double& linear_distance)
+        {
+
+        }
+
 
     };
 
-    const FifthOrderCoeffs fifthOrderPolyCoeffs(
-            const double& start_pos,
-            const double& final_pos,
-            const double& start_vel,
-            const double& final_vel,
-            const double& start_acc,
-            const double& final_acc,
-            const double& target_time,
-            const double& current_time
-    );
-}
+    }
+
 #endif // LIFTER_CONTROLLER_HPP_
