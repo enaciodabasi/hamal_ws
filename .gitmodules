@@ -1,0 +1,3 @@
+[submodule "ethercat_interface"]
+	path = ethercat_interface
+	url = https://github.com/enaciodabasi/ethercat_interface
