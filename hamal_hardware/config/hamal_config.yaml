@@ -138,37 +138,52 @@ pdo_names:
   - "op_mode"
   - "target_position"
   - "target_velocity"
+  - "homing_method"
+  - "homing_speed"
+  - "homing_speed2"
+  - "homing_accel"
   - "status_word"
-  - "op_mode_display"
   - "actual_position"
-  - "error_code"
   - "actual_velocity"
+  - "error_code"
+  - "op_mode_display"
 pdo_types:
   - uint16
+  - uint8
+  - int32
+  - int32
   - int8
+  - uint32
+  - uint32
+  - uint32
+  - uint16
   - int32
   - int32
   - uint16
   - int8
-  - int32
-  - uint16
-  - int32
-
 pdo_entry_info:
   indexes:
     - 0x6040
     - 0x6060
     - 0x607A
     - 0x60ff
+    - 0x6098
+    - 0x6099
+    - 0x6099
+    - 0x609A
     - 0x6041
-    - 0x6061
     - 0x6064
-    - 0x603F
     - 0x606c
+    - 0x603F
+    - 0x6061
   subindexes:
     - 0x00
     - 0x00
     - 0x00
+    - 0x00
+    - 0x00
+    - 0x01
+    - 0x02
     - 0x00
     - 0x00
     - 0x00
@@ -180,18 +195,21 @@ pdo_entry_info:
     - 8
     - 32
     - 32
-    - 16
     - 8
     - 32
+    - 32
+    - 32
     - 16
     - 32
-
+    - 32
+    - 16
+    - 8
   use_default_pdo_mapping: false
   rxpdo_address: 0x1600
   txpdo_address: 0x1A00
   rxpdo_indexes:
    - 0x1600
-  rxpdo_size: 4
+  rxpdo_size: 8
   txpdo_indexes:
     - 0x1A00
   txpdo_size: 5
@@ -218,7 +236,7 @@ slave_sync_info:
     - enable
     - disable
 dc_info:
-  assign_activate: 0x300
+  assign_activate: 0x0300
   sync0_cycle: 2000000
   sync0_shift: 1000000
   sync1_cycle: 2000000

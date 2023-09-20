@@ -92,6 +92,7 @@ void HamalEthercatController::cyclicTask()
             m_Master->write<uint32_t>("domain_0", "somanet_node_0", "homing_speed", m_HomingHelperPtr->switchSearchSpeed);
             m_Master->write<uint32_t>("domain_0", "somanet_node_0", "homing_speed2", m_HomingHelperPtr->zeroSearchSpeed);
             m_Master->write<uint32_t>("domain_0", "somanet_node_0", "homing_accel", m_HomingHelperPtr->homingAccel);
+            
             m_HomingHelperPtr->isHomingSetupDone = true;
             m_HomingHelperPtr->isHomingInProgress = true;
         }
@@ -140,11 +141,12 @@ void HamalEthercatController::cyclicTask()
         {
             auto leftTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
             auto rightTargetVelOpt = getData<int32_t>("somanet_node_2", "target_velocity");
-
-            if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt)
+            auto lifterTargetVelOpt = getData<int32_t>("somanet_node_0", "target_velocity");
+            if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt && lifterTargetVelOpt)
             {
-                m_Master->write("domain_0", "somanet_node_1", "target_velocity", leftTargetVelOpt.value());
-                m_Master->write("domain_0", "somanet_node_2", "target_velocity", rightTargetVelOpt.value());
+                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", leftTargetVelOpt.value());
+                m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", rightTargetVelOpt.value());
+                m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", lifterTargetVelOpt.value());
             }
            
         }
@@ -165,7 +167,7 @@ void HamalEthercatController::cyclicTask()
                     ethercat_interface::utilities::setBitAtIndex(ctrlWord, 4);
                 }
                 if(m_HomingHelperPtr->previousCtrlWord != ctrlWord){
-                    m_Master->write<uint16_t>("lifter_domain", "somanet_node", "ctrl_word", ctrlWord);
+                    m_Master->write<uint16_t>("domain_0", "somanet_node_0", "ctrl_word", ctrlWord);
                 }
                 if(ethercat_interface::utilities::isBitSet(statusWord, 13)){
                     m_HomingHelperPtr->homingErrorBit = true;
@@ -186,6 +188,8 @@ void HamalEthercatController::cyclicTask()
                     m_HomingHelperPtr->targetReachedBit = false;
                 }
                 m_HomingHelperPtr->previousCtrlWord = ctrlWord;
+
+                std::cout << "Homing in progress\n";
             }
         }
         else if(!slavesEnabled){

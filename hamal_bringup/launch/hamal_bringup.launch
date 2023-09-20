@@ -42,10 +42,10 @@
           </group>
     </include> -->
 
-    <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
-
-    <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
-
+<!--     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
+ -->
+<!--     <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
+ -->
     <group if="$(arg manual_enabled)">
 
         <node pkg="joy" type="joy_node" name="joy_node">

@@ -159,7 +159,7 @@ namespace hamal
                     homingRes.status = homingStatusStr->second;
                     homingRes.homingDone = true;
                     m_HomingServer->setSucceeded(homingRes);
-                    m_LifterHomingHelper.reset();
+                    m_LifterHomingHelper->reset();
                     break;
                 }
                 case HomingStatus::ErrorDetectedMotorStillRunning :
@@ -289,6 +289,10 @@ namespace hamal
             m_JointsMap.at(m_RightWheelJointName).velocity = motorVelocityToJointVelocity(rightWheelVelocity.value());
         }
 
+        std::cout << "Lifter: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_0").value() << std::endl;
+        std::cout << "Left Motor: "  << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_1").value() << std::endl;
+        std::cout << "Right Motor: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_2").value() << std::endl;
+
     }
 
     void HardwareInterface::write()
@@ -296,7 +300,7 @@ namespace hamal
         const auto rightWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
         const auto leftWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
         
-        double lifterTarget = 0.0;
+        double lifterTarget = 200.0;
         std::string targetsPdoName;
         const ControlType lifterControlType = m_JointsMap.at(m_LifterJointName).controlType;
         if(lifterControlType == ControlType::Position){

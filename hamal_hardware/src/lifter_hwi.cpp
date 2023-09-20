@@ -119,7 +119,7 @@ std::optional<Commands> PositionController::getCommands(double current_pos, doub
     
     ROS_INFO("Traj vel cmd: %f", velRef * (60.0 / (M_PI * 2.0)) * 24.685);  
     newCmd.targetWithoutControl = velRef;
-
+    
     const double pidOutput = m_PositionPID.pid(currTime, current_pos, posRef);
     velRef += pidOutput;
     
