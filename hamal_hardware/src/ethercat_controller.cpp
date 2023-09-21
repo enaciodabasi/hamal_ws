@@ -127,13 +127,13 @@ void HamalEthercatController::cyclicTask()
             auto lifterVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_velocity");
 
             if(leftMotorVelOpt){
-                setData<int32_t>("somanet_node_1", "actual_position", leftMotorVelOpt.value());
+                setData<int32_t>("somanet_node_1", "actual_velocity", leftMotorVelOpt.value());
             }
             if(rightMotorVelOpt){
-                setData<int32_t>("somanet_node_2", "actual_position", rightMotorVelOpt.value());
+                setData<int32_t>("somanet_node_2", "actual_velocity", rightMotorVelOpt.value());
             }
             if(lifterVelOpt){
-                setData<int32_t>("somanet_node_0", "actual_position", lifterVelOpt.value());
+                setData<int32_t>("somanet_node_0", "actual_velocity", lifterVelOpt.value());
             }
         }
 

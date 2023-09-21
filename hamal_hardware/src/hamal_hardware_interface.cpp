@@ -278,7 +278,8 @@ namespace hamal
         {
             m_JointsMap.at(m_LeftWheelJointName).position = (motorPositionToJointPosition(leftWheelPosition.value()) * -1.0) * 0.5;
             m_JointsMap.at(m_RightWheelJointName).position = (motorPositionToJointPosition(rightWheelPosition.value())) * 0.5;
-        }
+/*             ROS_INFO("Position: %f", leftWheelPosition.value());
+ */        }
 
         const auto rightWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_1", "actual_velocity");
         const auto leftWheelVelocity = m_EthercatController->getData<int32_t>("somanet_node_2", "actual_velocity");
