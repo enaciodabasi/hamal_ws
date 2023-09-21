@@ -73,6 +73,9 @@ struct HomingHelper
         isHomingInProgress = false;
         isHomingSetupDone = false;
         previousCtrlWord = 0x0;
+        homingErrorBit = false;
+        homingAttainedBit = false;
+        targetReachedBit = false;
     }
 
 };

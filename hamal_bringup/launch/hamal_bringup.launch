@@ -42,8 +42,8 @@
           </group>
     </include> -->
 
-<!--     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
- -->
+    <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
+
 <!--     <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
  -->
     <group if="$(arg manual_enabled)">
