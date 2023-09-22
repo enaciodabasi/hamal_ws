@@ -61,6 +61,7 @@ catkin_make
 
 # 2. Using the software
 
+## 2.1 Project structure
 The ROS workspace consists of several packages that make up the core functionality of the robot:
 
 
@@ -72,3 +73,31 @@ The ROS workspace consists of several packages that make up the core functionali
 - **hamal_mapping** : Contains configuration and launch files for mapping methods. The supported mapping algorithms are: GMapping, HectorSLAM and SLAM Toolbox.
 - **hamal_navigation** : Contains the configuration and launch files for the move_base package.
 - **hamal_bringup** : Using the "hamal_bringup.launch" script, the whole system can be activated.
+
+## 2.2 Setting up the system
+
+The hardware interface requires realtime privileges to run the EtherCAT communication loop in a realtime thread, therefore before opening the communication channels the following command must be executed as root:
+
+```Bash
+sudo su # Enter the password
+ulimit -r 99 # This sets the realtime thread count.
+```
+
+Then the IP of the network interface that is connected to the scanners must be set to the scanners IP range:
+```Bash
+sudo ifconfig ${NETWORK_INTERFACE} 192.168.1.55
+```
+The IP can be different according to the scanners IP.
+Ping the scanners to ensure they are connected:
+```Bash
+ping ${SCANNER_FRONT_IP}
+ping ${SCANNER_REAR_IP}
+```
+
+When everything is set up, the whole system can be started by launching the bringup file:
+```Bash
+# Inside the root bash we used earlier
+roslaunch hamal_bringup hamal_bringup.launch
+```
+
+## 2.2.1 Launch arguments

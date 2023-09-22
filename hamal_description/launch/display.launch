@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model" default="$(find hamal_description)/urdf/moobot.urdf.xacro"/>
+  <arg name="model" default="$(find hamal_description)/urdf/hamal.urdf.xacro"/>
   <arg name="gui" default="true"/>
   <!-- <arg name="rvizconfig" default="$(find hamal_description)/launch/urdf.rviz"/> --> 
  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
