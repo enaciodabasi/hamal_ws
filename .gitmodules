@@ -1,0 +1,3 @@
+[submodule "ros_openimu"]
+	path = ros_openimu
+	url = https://github.com/ROS-Aceinna/ros_openimu.git
