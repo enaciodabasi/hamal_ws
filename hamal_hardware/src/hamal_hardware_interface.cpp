@@ -276,8 +276,8 @@ namespace hamal
 
         if(leftWheelPosition && rightWheelPosition)
         {
-            m_JointsMap.at(m_LeftWheelJointName).position = (motorPositionToJointPosition(leftWheelPosition.value()) * -1.0) * 0.5;
-            m_JointsMap.at(m_RightWheelJointName).position = (motorPositionToJointPosition(rightWheelPosition.value())) * 0.5;
+            m_JointsMap.at(m_LeftWheelJointName).position = (motorPositionToJointPosition(leftWheelPosition.value()) * -1.0) /* * 0.5 */;
+            m_JointsMap.at(m_RightWheelJointName).position = (motorPositionToJointPosition(rightWheelPosition.value())) /* * 0.5 */;
 /*             ROS_INFO("Position: %f", leftWheelPosition.value());
  */        }
 
@@ -286,7 +286,7 @@ namespace hamal
         
         if(leftWheelVelocity && rightWheelVelocity)
         {
-            m_JointsMap.at(m_LeftWheelJointName).velocity = motorVelocityToJointVelocity(leftWheelVelocity.value());
+            m_JointsMap.at(m_LeftWheelJointName).velocity = motorVelocityToJointVelocity(leftWheelVelocity.value()) * -1.0;
             m_JointsMap.at(m_RightWheelJointName).velocity = motorVelocityToJointVelocity(rightWheelVelocity.value());
         }
 
@@ -315,7 +315,8 @@ namespace hamal
             targetsPdoName = "target_velocity";
         }
 
-        m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
+/*         ROS_INFO("Target Vel: %d", jointVelocityToMotorVelocity(leftWheelTargetVel));
+ */        m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
         m_EthercatController->setData<int32_t>("somanet_node_2", "target_velocity", (jointVelocityToMotorVelocity(rightWheelTargetVel) * -1));
         if(!targetsPdoName.empty())
             m_EthercatController->setData<int32_t>("somanet_node_0", targetsPdoName, lifterTarget);

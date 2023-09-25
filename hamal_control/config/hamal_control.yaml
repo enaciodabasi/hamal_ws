@@ -21,8 +21,8 @@ hamal:
     # diff_drive_controller will attempt to read either one or both from the
     # URDF if not specified as a parameter
     wheel_separation : 0.457
-    wheel_radius : 0.210
-    publish_cmd : true
+    wheel_radius : 0.105
+    publish_cmd : false
 
     # Wheel separation and radius multipliers
     wheel_separation_multiplier: 1.0 # default: 1.0
@@ -34,7 +34,7 @@ hamal:
     # Base frame_id #default: base_link
 
     open_loop: false
-    enable_odom_tf: true
+    enable_odom_tf: false
  
     # Velocity and acceleration limitss
     # Whenever a min_* is unspecified, default to -max_*
@@ -44,14 +44,14 @@ hamal:
         max_velocity           : 2.0  # m/s
         min_velocity           : -2.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 1.0 # m/s^2
-        min_acceleration       : -1.0 # m/s^2
+        max_acceleration       : 0.5 # m/s^2
+        min_acceleration       : -0.5 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 1.0  # m/s^3
     angular:
       z:
         has_velocity_limits    : true
-        max_velocity           : 1.96 # rad/s
+        max_velocity           : 3.0 # rad/s
         has_acceleration_limits: true
         max_acceleration       : 0.98  # rad/s^2
         has_jerk_limits        : false

@@ -7,7 +7,7 @@
     <arg name="use_hector" default="false"></arg>
     <arg name="use_slam_toolbox" default="false"></arg>
     <arg name="mode" default="lifelong"></arg>
-    <arg name="model" default="$(find hamal_description)/urdf/moobot.urdf.xacro"></arg> 
+    <arg name="model" default="$(find hamal_description)/urdf/hamal.urdf.xacro"></arg> 
 
     <arg name="joy_config" default="xbox" />
     <arg name="joy_dev" default="/dev/input/js0" />
@@ -43,9 +43,10 @@
     </include> -->
 
     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
+    <include file="$(find hamal_localization)/launch/localization.launch">
+    </include>
+    <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
 
-<!--     <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
- -->
     <group if="$(arg manual_enabled)">
 
         <node pkg="joy" type="joy_node" name="joy_node">
@@ -67,7 +68,5 @@
         <include file="$(find hamal_navigation)/launch/hamal_navigation.launch"></include>    
         
     </group>
-
-
 
 </launch>
