@@ -7,7 +7,8 @@
     <arg name="use_hector" default="false"></arg>
     <arg name="use_slam_toolbox" default="false"></arg>
     <arg name="mode" default="lifelong"></arg>
-    <arg name="model" default="$(find hamal_description)/urdf/hamal.urdf.xacro"></arg> 
+    <arg name="model" default="$(find hamal_description)/urdf/hamal.urdf.xacro"></arg>
+    <arg name="map" default="ayosb_test.yaml"></arg>
 
     <arg name="joy_config" default="xbox" />
     <arg name="joy_dev" default="/dev/input/js0" />
@@ -25,10 +26,7 @@
         <param name="publish_frequency" value="100.0"></param>
     </node>
 
-    <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>
-    
-    <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
-    
+    <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>    
     <!-- <include file="$(find hamal_mapping)/launch/amr_mapping.launch">
         <group if="$(arg use_gmapping)">
             <arg name="use_gmapping" value="true"></arg>
@@ -44,22 +42,24 @@
 
     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
     
-    <group if="$(arg use_slam_toolbox)">
-      <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"></node> -->
-      <include file="$(find hamal_mapping)/launch/slam_toolbox.launch">
-        <arg name="$(arg mode)" value="true"></arg>
-      </include>
-    </group>
-  
-    <group if="$(arg use_gmapping)">
-      <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
-    </group>
-  
-    <group if="$(arg use_hector)">
-      <include file="$(find hamal_mapping)/launch/hector_mapping.launch"/>
-    </group>
+    <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
 
     <group if="$(arg manual_enabled)">
+        <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>
+        <group if="$(arg use_slam_toolbox)">
+        <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"></node> -->
+        <include file="$(find hamal_mapping)/launch/slam_toolbox.launch">
+          <arg name="$(arg mode)" value="true"></arg>
+        </include>
+        </group>
+
+        <group if="$(arg use_gmapping)">
+          <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
+        </group>
+
+        <group if="$(arg use_hector)">
+          <include file="$(find hamal_mapping)/launch/hector_mapping.launch"/>
+        </group>
 
         <!-- <node pkg="joy" type="joy_node" name="joy_node">
             <param name="dev" value="$(arg joy_dev)" />
@@ -75,8 +75,16 @@
         </node> -->
 
     </group>
+
     <group unless="$(arg manual_enabled)">
-        
+      
+      <node 
+        name="map_server"
+        pkg="map_server" 
+        type="map_server" 
+        args="$(find hamal_mapping)/maps/$(arg map_file)"> 
+      </node>
+
       <include file="$(find hamal_localization)/launch/localization.launch"></include>
 
       <include file="$(find hamal_navigation)/launch/hamal_navigation.launch">
