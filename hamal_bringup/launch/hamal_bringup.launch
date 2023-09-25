@@ -43,13 +43,25 @@
     </include> -->
 
     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
-    <include file="$(find hamal_localization)/launch/localization.launch">
-    </include>
-    <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
+    
+    <group if="$(arg use_slam_toolbox)">
+      <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"></node> -->
+      <include file="$(find hamal_mapping)/launch/slam_toolbox.launch">
+        <arg name="$(arg mode)" value="true"></arg>
+      </include>
+    </group>
+  
+    <group if="$(arg use_gmapping)">
+      <include file="$(find hamal_mapping)/launch/gmapping.launch"/>
+    </group>
+  
+    <group if="$(arg use_hector)">
+      <include file="$(find hamal_mapping)/launch/hector_mapping.launch"/>
+    </group>
 
     <group if="$(arg manual_enabled)">
 
-        <node pkg="joy" type="joy_node" name="joy_node">
+        <!-- <node pkg="joy" type="joy_node" name="joy_node">
             <param name="dev" value="$(arg joy_dev)" />
             <param name="deadzone" value="0.3" />
             <param name="autorepeat_rate" value="20" />
@@ -60,12 +72,17 @@
           <rosparam command="load" file="$(arg config_filepath)" />
           <remap from="joy" to="$(arg joy_topic)" />
           <remap from="cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"/>
-        </node>
+        </node> -->
 
     </group>
     <group unless="$(arg manual_enabled)">
         
-        <include file="$(find hamal_navigation)/launch/hamal_navigation.launch"></include>    
+      <include file="$(find hamal_localization)/launch/localization.launch"></include>
+
+      <include file="$(find hamal_navigation)/launch/hamal_navigation.launch">
+        <remap from="/odom" to="/odometry/filtered"></remap>
+        <remap from="/cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"></remap>
+      </include>    
         
     </group>
 
