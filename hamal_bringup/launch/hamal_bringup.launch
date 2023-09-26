@@ -82,7 +82,7 @@
         name="map_server"
         pkg="map_server" 
         type="map_server" 
-        args="$(find hamal_mapping)/maps/$(arg map_file)"> 
+        args="$(find hamal_mapping)/maps/$(arg map)"> 
       </node>
 
       <include file="$(find hamal_localization)/launch/localization.launch"></include>

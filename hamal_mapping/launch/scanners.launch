@@ -8,8 +8,8 @@
     <arg name="frame_id_front"          default="front_scan_link" />
     <arg name="frame_id_rear"           default="rear_scan_link" />
     <arg name="skip"                    default="0" />
-    <arg name="angle_start_front"       default="-2.0" />
-    <arg name="angle_end_front"         default="2.0" />
+    <arg name="angle_start_front"       default="-2.20" />
+    <arg name="angle_end_front"         default="2.20" />
     <arg name="angle_start_rear"        default="-2.1" />
     <arg name="angle_end_rear"          default="2.1" />
     <arg name="time_offset"             default="0.0" />

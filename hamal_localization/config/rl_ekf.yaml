@@ -1,7 +1,7 @@
 frequency: 250
 silent_tf_failure: false
 sensor_timeout: 0.05
-two_d_mode: false
+two_d_mode: true
 transform_time_offset: 0.0
 transform_timeout: 0.0
 print_diagnostics: true
@@ -36,7 +36,7 @@ odom0_differential: false
 odom0_relative: false
 
 ### IMU configuration
-imu0: imu/data_raw
+imu0: imu/data
 imu0_config: [false, false, false,
               false,  false,  true,
               false, false, false,
