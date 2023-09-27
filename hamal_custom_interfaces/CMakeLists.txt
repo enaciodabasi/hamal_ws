@@ -7,6 +7,7 @@ add_message_files(
     FILES
     LifterCommand.msg
     HardwareInfo.msg
+    HardwareInfoArray.msg
     HomingInfo.msg
 )
 

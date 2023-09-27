@@ -15,8 +15,11 @@
 
 #include "ethercat_interface/controller.hpp"
 #include "hamal_hardware/homing_helper.hpp"
+#include <string>
+#include <vector>
 /* #include "hamal_hardware/hamal_hardware_defs.hpp"
  */
+
 class HamalEthercatController : public ethercat_interface::controller::Controller
 {
     public:
@@ -30,6 +33,21 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
     ~HamalEthercatController();
 
     bool m_EthercatLoopFlag = true;
+
+    const std::vector<std::pair<std::string, std::string>> getSlaveStatus() const
+    {
+        const std::string lifterStatus = m_Master->getSlaveStateString("domain_0", "somanet_node_0").value();
+        const std::string leftWheelStatus = m_Master->getSlaveStateString("domain_0", "somanet_node_1").value();
+        const std::string rightWheelStatus = m_Master->getSlaveStateString("domain_0", "somanet_node_2").value();
+
+        
+        return {
+            {"lifter_joint", lifterStatus},
+            {"left_wheel_joint", leftWheelStatus},
+            {"right_wheel_joint", rightWheelStatus}
+        };
+
+    }
 
     inline void setLifterControlType(const ControlType& control_type)
     {

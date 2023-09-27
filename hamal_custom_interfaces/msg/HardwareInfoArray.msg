@@ -1,0 +1,1 @@
+HardwareInfo[] hardware_info_array

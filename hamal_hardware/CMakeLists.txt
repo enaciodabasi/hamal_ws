@@ -70,14 +70,14 @@ add_executable(hamal_hardware
 target_link_libraries(hamal_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads)
 target_link_directories(hamal_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_interface_lib_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
 
-add_executable(lifter_hardware 
-    src/lifter_hwi.cpp
-)
-target_link_libraries(lifter_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads)
-target_link_directories(lifter_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_interface_lib_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
+#add_executable(lifter_hardware 
+#    src/lifter_hwi.cpp
+#)
+#target_link_libraries(lifter_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads)
+#target_link_directories(lifter_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_interface_lib_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
 
 
 install(TARGETS hamal_hardware
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-install(TARGETS lifter_hardware RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#install(TARGETS lifter_hardware RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -102,6 +102,11 @@ namespace hamal
             boost::bind(&HardwareInterface::lifterOperationCallback, this)
         ); */
 
+        m_HardwareInfoPub = m_NodeHandle.advertise<hamal_custom_interfaces::HardwareInfoArray>(
+            "hamal/hardware_info",
+            10
+        );
+
         m_EthercatController->startTask();
 
         m_HomingServer->start();
@@ -178,6 +183,22 @@ namespace hamal
 
             }
 
+            const auto status = m_EthercatController->getSlaveStatus();
+            m_JointsMap.at(m_LifterJointName).hardwareInfo.current_state = status.at(0).second;
+            m_JointsMap.at(m_LeftWheelJointName).hardwareInfo.current_state = status.at(1).second;
+            m_JointsMap.at(m_RightWheelJointName).hardwareInfo.current_state = status.at(2).second;
+
+            std::vector<hamal_custom_interfaces::HardwareInfo> infoArray = {
+                m_JointsMap.at(m_LifterJointName).hardwareInfo,
+                m_JointsMap.at(m_LeftWheelJointName).hardwareInfo,
+                m_JointsMap.at(m_RightWheelJointName).hardwareInfo
+            };
+            hamal_custom_interfaces::HardwareInfoArray infoArrayMsg;
+            infoArrayMsg.hardware_info_array = infoArray;
+            m_HardwareInfoPub.publish((
+                infoArrayMsg
+            ));
+        
             rate.sleep();
 
         }
@@ -276,8 +297,13 @@ namespace hamal
 
         if(leftWheelPosition && rightWheelPosition)
         {
+
             m_JointsMap.at(m_LeftWheelJointName).position = (motorPositionToJointPosition(leftWheelPosition.value()) * -1.0) /* * 0.5 */;
             m_JointsMap.at(m_RightWheelJointName).position = (motorPositionToJointPosition(rightWheelPosition.value())) /* * 0.5 */;
+
+            m_JointsMap.at(m_LeftWheelJointName).hardwareInfo.current_pos = motorPositionToJointPosition(leftWheelPosition.value()) * -1.0;
+            m_JointsMap.at(m_RightWheelJointName).hardwareInfo.current_pos = motorPositionToJointPosition(rightWheelPosition.value());
+
 /*             ROS_INFO("Position: %f", leftWheelPosition.value());
  */        }
 
@@ -288,6 +314,9 @@ namespace hamal
         {
             m_JointsMap.at(m_LeftWheelJointName).velocity = motorVelocityToJointVelocity(leftWheelVelocity.value()) * -1.0;
             m_JointsMap.at(m_RightWheelJointName).velocity = motorVelocityToJointVelocity(rightWheelVelocity.value());
+
+            m_JointsMap.at(m_RightWheelJointName).hardwareInfo.current_pos = rightWheelVelocity.value();
+            m_JointsMap.at(m_LeftWheelJointName).hardwareInfo.current_pos = leftWheelVelocity.value();
         }
 
         //std::cout << "Lifter: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_0").value() << std::endl;
@@ -324,6 +353,9 @@ namespace hamal
         
         m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
         m_EthercatController->setData<int32_t>("somanet_node_2", "target_velocity", (jointVelocityToMotorVelocity(rightWheelTargetVel) * -1));
+        m_JointsMap.at(m_RightWheelJointName).hardwareInfo.target_vel = jointVelocityToMotorVelocity(leftWheelTargetVel);
+        m_JointsMap.at(m_LeftWheelJointName).hardwareInfo.target_vel = (jointVelocityToMotorVelocity(rightWheelTargetVel)) * -1;
+
         if(!targetsPdoName.empty())
             m_EthercatController->setData<int32_t>("somanet_node_0", targetsPdoName, lifterTarget);
         

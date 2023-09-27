@@ -30,6 +30,8 @@
 #include "hamal_custom_interfaces/HomingInfo.h"
 #include "hamal_custom_interfaces/HomingOperationAction.h"
 #include "hamal_custom_interfaces/LifterOperationAction.h"
+#include "hamal_custom_interfaces/HardwareInfo.h"
+#include "hamal_custom_interfaces/HardwareInfoArray.h"
 
 namespace hamal
 {
@@ -56,6 +58,8 @@ namespace hamal
             effort = 0.0;
             targetVelocity = 0.0;
             targetPosition = 0.0;
+
+            hardwareInfo.name = jointName;
         }
 
         std::string jointName;
@@ -67,6 +71,8 @@ namespace hamal
         double targetPosition;
         double targetAccel;
         ControlType controlType = ControlType::Velocity;
+
+        hamal_custom_interfaces::HardwareInfo hardwareInfo;
     };
 
     class HardwareInterface : public hardware_interface::RobotHW
@@ -123,6 +129,9 @@ namespace hamal
         std::shared_ptr<HomingHelper> m_LifterHomingHelper;
 
         std::unique_ptr<HomingActionServer> m_HomingServer;
+
+        ros::Publisher m_HardwareInfoPub;
+        
 
 /*         std::unique_ptr<LifterOperationActionServer> m_LifterOperationServer;
  */

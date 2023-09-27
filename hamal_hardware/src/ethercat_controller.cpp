@@ -145,8 +145,6 @@ void HamalEthercatController::cyclicTask()
             }
         }
         slavesEnabled = m_Master->enableSlaves();
-        if(slavesEnabled)
-            std::cout << "Enabled\n";
 
         if(slavesEnabled && !m_HomingHelperPtr->isHomingActive)
         {
