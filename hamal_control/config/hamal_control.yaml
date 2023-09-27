@@ -55,7 +55,7 @@ hamal:
         has_acceleration_limits: true
         max_acceleration       : 0.5  # rad/s^2
         has_jerk_limits        : false
-        max_jerk               : 3.92 # rad/s^3
+        max_jerk               : 0.25 # rad/s^3
 
   lifter_controller:
     type: hamal_lifter_controller/HamalLifterController

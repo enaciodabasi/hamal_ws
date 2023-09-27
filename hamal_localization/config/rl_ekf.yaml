@@ -1,4 +1,4 @@
-frequency: 250
+frequency: 100
 silent_tf_failure: false
 sensor_timeout: 0.05
 two_d_mode: true
