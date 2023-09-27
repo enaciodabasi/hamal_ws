@@ -43,7 +43,7 @@ if __name__ == "__main__":
     imu_msg = Imu()             # IMU data
     mag_msg = MagneticField()   # Magnetometer data
     
-    rate = rospy.Rate(10)   # 10Hz
+    rate = rospy.Rate(50)   # 10Hz
     seq = 0
     frame_id = 'imu_link'
     convert_rads = math.pi /180

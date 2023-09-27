@@ -23,7 +23,7 @@
         respawn="false"
         output="screen"
     >
-        <param name="publish_frequency" value="100.0"></param>
+        <param name="publish_frequency" value="250.0"></param>
     </node>
 
     <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>    

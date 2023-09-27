@@ -290,14 +290,18 @@ namespace hamal
             m_JointsMap.at(m_RightWheelJointName).velocity = motorVelocityToJointVelocity(rightWheelVelocity.value());
         }
 
-        std::cout << "Lifter: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_0").value() << std::endl;
-        std::cout << "Left Motor: "  << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_1").value() << std::endl;
-        std::cout << "Right Motor: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_2").value() << std::endl;
+        //std::cout << "Lifter: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_0").value() << std::endl;
+        //std::cout << "Left Motor: "  << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_1").value() << std::endl;
+        //std::cout << "Right Motor: " << m_EthercatController->getSlaveStateString("domain_0", "somanet_node_2").value() << std::endl;
 
     }
 
     void HardwareInterface::write()
     {
+
+        if(!m_EthercatController->isEthercatOk()){
+            return;
+        }
         const auto rightWheelTargetVel = m_JointsMap.at(m_LeftWheelJointName).targetVelocity;
         const auto leftWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;
         
@@ -316,7 +320,9 @@ namespace hamal
         }
 
 /*         ROS_INFO("Target Vel: %d", jointVelocityToMotorVelocity(leftWheelTargetVel));
- */        m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
+ */     
+        
+        m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", (jointVelocityToMotorVelocity(leftWheelTargetVel)));
         m_EthercatController->setData<int32_t>("somanet_node_2", "target_velocity", (jointVelocityToMotorVelocity(rightWheelTargetVel) * -1));
         if(!targetsPdoName.empty())
             m_EthercatController->setData<int32_t>("somanet_node_0", targetsPdoName, lifterTarget);

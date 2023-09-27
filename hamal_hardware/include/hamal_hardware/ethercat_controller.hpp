@@ -35,7 +35,10 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
     {
         m_LifterControlType = control_type;
     }
-
+    inline const bool isEthercatOk() const
+    {
+        return m_EthercatOk;
+    }
     void stopEcThread()
     {
         m_EthercatLoopFlag = false;
@@ -58,6 +61,8 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
     std::shared_ptr<HomingHelper> m_HomingHelperPtr;
 
     bool m_EnableDC = true;
+
+    bool m_EthercatOk = false;
 
     void cyclicTask() override;
 

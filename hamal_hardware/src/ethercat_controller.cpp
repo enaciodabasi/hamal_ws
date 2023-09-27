@@ -73,18 +73,25 @@ void HamalEthercatController::cyclicTask()
             "op_mode",
             lifterOpMode
         );
-        m_Master->write<int8_t>(
+        
+        if(const auto opModeDisplayOpt = m_Master->read<int8_t>("domain_0", "somanet_node_1", "op_mode_display")){
+            if(opModeDisplayOpt.value() != 0x09)
+                m_Master->write<int8_t>(
                     "domain_0",
                     "somanet_node_1",
                     "op_mode",
                     0x09
-        );
-        m_Master->write<int8_t>(
-            "domain_0",
-            "somanet_node_2",
-            "op_mode",
-            0x09
-        );
+            );
+        }
+        if(const auto opModeDisplayOpt = m_Master->read<int8_t>("domain_0", "somanet_node_2", "op_mode_display")){
+            if(opModeDisplayOpt.value() != 0x09)
+                m_Master->write<int8_t>(
+                    "domain_0",
+                    "somanet_node_2",
+                    "op_mode",
+                    0x09
+            );
+        }
 
         if(m_HomingHelperPtr->isHomingActive && !m_HomingHelperPtr->isHomingSetupDone){
             m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", 0);
@@ -104,6 +111,7 @@ void HamalEthercatController::cyclicTask()
                 opModeSetCorrect = true;
             }
         }
+        slavesEnabled = m_Master->enableSlaves();
 
         if(slavesEnabled)
         {
@@ -136,6 +144,9 @@ void HamalEthercatController::cyclicTask()
                 setData<int32_t>("somanet_node_0", "actual_velocity", lifterVelOpt.value());
             }
         }
+        slavesEnabled = m_Master->enableSlaves();
+        if(slavesEnabled)
+            std::cout << "Enabled\n";
 
         if(slavesEnabled && !m_HomingHelperPtr->isHomingActive)
         {
@@ -193,6 +204,7 @@ void HamalEthercatController::cyclicTask()
             }
         }
         else if(!slavesEnabled){
+            /* m_Master->enableSlaves(); */
             m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_2", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_0", "target_velocity", 0);
@@ -205,5 +217,6 @@ void HamalEthercatController::cyclicTask()
         }
 
         m_Master->send("domain_0");
+        m_EthercatOk = slavesEnabled;
     }
 }
