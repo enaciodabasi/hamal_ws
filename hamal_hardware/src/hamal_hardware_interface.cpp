@@ -107,6 +107,13 @@ namespace hamal
             10
         );
 
+        m_EthercatController->setLimiterParams(
+            m_LimiterParams.max_vel,
+            m_LimiterParams.min_vel,
+            m_LimiterParams.max_acc,
+            m_LimiterParams.min_acc
+            
+        );
         m_EthercatController->startTask();
 
         m_HomingServer->start();
@@ -198,7 +205,7 @@ namespace hamal
             m_HardwareInfoPub.publish((
                 infoArrayMsg
             ));
-        
+
             rate.sleep();
 
         }
@@ -286,6 +293,19 @@ namespace hamal
         else
         {
             m_Reduction = 20480.0;
+        }
+
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/max_vel")){
+            m_NodeHandle.getParam("/hamal/hardware_interface/max_vel", m_LimiterParams.max_vel);
+        }
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/min_vel")){
+            m_NodeHandle.getParam("/hamal/hardware_interface/min_vel", m_LimiterParams.min_vel);
+        }
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/max_acc")){
+            m_NodeHandle.getParam("/hamal/hardware_interface/max_acc", m_LimiterParams.max_acc);
+        }
+        if(m_NodeHandle.hasParam("/hamal/hardware_interface/min_acc")){
+            m_NodeHandle.getParam("/hamal/hardware_interface/min_acc", m_LimiterParams.min_acc);
         }
 
     }

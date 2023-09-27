@@ -21,7 +21,7 @@ HamalEthercatController::HamalEthercatController(
         m_HomingHelperPtr(homing_helper_ptr), 
         m_EnableDC(enable_dc)
 {
-    
+    m_PrevUpdateTimePoint = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
 }
 
 HamalEthercatController::~HamalEthercatController()
@@ -113,6 +113,10 @@ void HamalEthercatController::cyclicTask()
         }
         slavesEnabled = m_Master->enableSlaves();
 
+        const auto current_time = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
+        const auto elapsed = (m_PrevUpdateTimePoint - current_time).count() / 1000.0;
+        m_PrevUpdateTimePoint = current_time;
+
         if(slavesEnabled)
         {
 
@@ -153,8 +157,13 @@ void HamalEthercatController::cyclicTask()
             auto lifterTargetVelOpt = getData<int32_t>("somanet_node_0", "target_velocity");
             if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt && lifterTargetVelOpt)
             {
-                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", leftTargetVelOpt.value());
-                m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", rightTargetVelOpt.value());
+
+                double leftTargetVel = leftTargetVelOpt.value();
+                double rightTargetVel = rightTargetVelOpt.value();
+                m_LeftMotorLimiter.limit(leftTargetVel, elapsed);
+                m_RightMotorLimiter.limit(rightTargetVel, elapsed);
+                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", leftTargetVel);
+                m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", rightTargetVel);
                 m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", lifterTargetVelOpt.value());
             }
            

@@ -8,7 +8,11 @@ hamal:
     ethercat_config_path: /home/grass/amr_ws/src/hamal_hardware/config/hamal_config.yaml
     #lifter_joint: lifter_joint
     lifter_interface_type: velocity
-
+    max_vel: 3000
+    min_vel: -3000
+    max_acc: 100
+    min_acc: -100
+    
     reduction: 24.685
     #position_increment: 20480.0
     position_increment: 16384.0

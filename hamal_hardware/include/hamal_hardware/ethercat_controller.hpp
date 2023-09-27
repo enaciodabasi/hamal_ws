@@ -15,8 +15,10 @@
 
 #include "ethercat_interface/controller.hpp"
 #include "hamal_hardware/homing_helper.hpp"
+#include "hamal_hardware/rpm_limiter.hpp"
 #include <string>
 #include <vector>
+#include <chrono>
 /* #include "hamal_hardware/hamal_hardware_defs.hpp"
  */
 
@@ -62,6 +64,17 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
         m_EthercatLoopFlag = false;
     }
 
+    void setLimiterParams(
+        double max_vel,
+        double min_vel,
+        double max_acc,
+        double min_acc
+    )
+    {
+        m_LeftMotorLimiter = rpm_limiter(max_vel, min_vel, max_acc, min_acc);
+        m_RightMotorLimiter = rpm_limiter(max_vel, min_vel, max_acc, min_acc);
+    }
+
     void startTask() override
     {
         this->setThreadParams(SCHED_FIFO, 99);
@@ -75,6 +88,12 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
     private:
 
     ControlType m_LifterControlType;
+
+    std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> m_PrevUpdateTimePoint;
+
+    rpm_limiter m_LeftMotorLimiter;
+
+    rpm_limiter m_RightMotorLimiter;
 
     std::shared_ptr<HomingHelper> m_HomingHelperPtr;
 

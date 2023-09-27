@@ -149,6 +149,14 @@ namespace hamal
 
         double m_Increment = 0.0;
 
+        struct
+        {
+            double max_vel = 0.0;
+            double min_vel = 0.0;
+            double max_acc = 0.0;
+            double min_acc = 0.0;
+        } m_LimiterParams;
+
         /**
          * @brief 
          * 
