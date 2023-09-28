@@ -21,11 +21,19 @@ HamalEthercatController::HamalEthercatController(
         m_HomingHelperPtr(homing_helper_ptr), 
         m_EnableDC(enable_dc)
 {
+        /* m_LeftMotorLimiter = rpm_limiter();
+        m_RightMotorLimiter = rpm_limiter(); */
     m_PrevUpdateTimePoint = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
 }
 
 HamalEthercatController::~HamalEthercatController()
 {
+    if(m_LeftMotorLimiter){
+        delete m_LeftMotorLimiter;
+    }
+    if(m_RightMotorLimiter){
+        delete m_RightMotorLimiter;
+    }
     joinThread();
 }
 
@@ -111,59 +119,60 @@ void HamalEthercatController::cyclicTask()
                 opModeSetCorrect = true;
             }
         }
-        slavesEnabled = m_Master->enableSlaves();
+        // slavesEnabled = m_Master->enableSlaves();
 
-        const auto current_time = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
+        /* const auto current_time = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now());
         const auto elapsed = (m_PrevUpdateTimePoint - current_time).count() / 1000.0;
-        m_PrevUpdateTimePoint = current_time;
+        m_PrevUpdateTimePoint = current_time; */
 
         if(slavesEnabled)
         {
 
-            auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
-            auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_position");
+            auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_position");
+            auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
             auto lifterPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_position");
 
             if(leftMotorPosOpt){
-                setData<int32_t>("somanet_node_1", "actual_position", leftMotorPosOpt.value());
+                setData<int32_t>("somanet_node_2", "actual_position", leftMotorPosOpt.value());
             }
             if(rightMotorPosOpt){
-                setData<int32_t>("somanet_node_2", "actual_position", rightMotorPosOpt.value());
+                setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
             }
             if(lifterPosOpt){
                 setData<int32_t>("somanet_node_0", "actual_position", lifterPosOpt.value());
             }
 
-            auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
-            auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_velocity");
+            auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_velocity");
+            auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
             auto lifterVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_velocity");
 
             if(leftMotorVelOpt){
-                setData<int32_t>("somanet_node_1", "actual_velocity", leftMotorVelOpt.value());
+                setData<int32_t>("somanet_node_2", "actual_velocity", leftMotorVelOpt.value());
             }
             if(rightMotorVelOpt){
-                setData<int32_t>("somanet_node_2", "actual_velocity", rightMotorVelOpt.value());
+                setData<int32_t>("somanet_node_1", "actual_velocity", rightMotorVelOpt.value());
             }
             if(lifterVelOpt){
                 setData<int32_t>("somanet_node_0", "actual_velocity", lifterVelOpt.value());
             }
         }
-        slavesEnabled = m_Master->enableSlaves();
+        // slavesEnabled = m_Master->enableSlaves();
 
         if(slavesEnabled && !m_HomingHelperPtr->isHomingActive)
         {
-            auto leftTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
-            auto rightTargetVelOpt = getData<int32_t>("somanet_node_2", "target_velocity");
+            auto leftTargetVelOpt = getData<int32_t>("somanet_node_2", "target_velocity");
+            auto rightTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
             auto lifterTargetVelOpt = getData<int32_t>("somanet_node_0", "target_velocity");
             if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt && lifterTargetVelOpt)
             {
 
                 double leftTargetVel = leftTargetVelOpt.value();
                 double rightTargetVel = rightTargetVelOpt.value();
-                m_LeftMotorLimiter.limit(leftTargetVel, elapsed);
-                m_RightMotorLimiter.limit(rightTargetVel, elapsed);
-                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", leftTargetVel);
-                m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", rightTargetVel);
+                m_LeftMotorLimiter->limit(leftTargetVel, 0.002);
+                m_RightMotorLimiter->limit(rightTargetVel, 0.002);
+/*                 std::cout << "Left Motor RPM:" << leftTargetVel << "Right Motor RPM" << rightTargetVel << std::endl; 
+ */                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", rightTargetVel);
+                m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", leftTargetVel * -1);
                 m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", lifterTargetVelOpt.value());
             }
            
@@ -212,9 +221,9 @@ void HamalEthercatController::cyclicTask()
         }
         else if(!slavesEnabled){
             /* m_Master->enableSlaves(); */
-            m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
+            /* m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_2", "target_velocity", 0);
-            m_Master->write("domain_0", "somanet_node_0", "target_velocity", 0);
+            m_Master->write("domain_0", "somanet_node_0", "target_velocity", 0); */
         }
 
         if(m_EnableDC)

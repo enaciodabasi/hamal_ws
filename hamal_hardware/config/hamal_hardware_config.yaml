@@ -4,14 +4,14 @@ hamal:
     right_wheel: right_wheel_joint
     lifter_joint: lifter_joint
     lifter_control_type: velocity
-    loop_hz: 50.0
+    loop_hz: 500.0
     ethercat_config_path: /home/grass/amr_ws/src/hamal_hardware/config/hamal_config.yaml
     #lifter_joint: lifter_joint
     lifter_interface_type: velocity
     max_vel: 3000
     min_vel: -3000
-    max_acc: 100
-    min_acc: -100
+    max_acc: 350
+    min_acc: -350
     
     reduction: 24.685
     #position_increment: 20480.0

@@ -141,7 +141,7 @@ namespace hamal
 
         LifterInterfaceType m_LifterInterfaceType; */
         
-        double m_LoopFrequency = 50.0;
+        double m_LoopFrequency = 500.0;
 
         bool m_RosLoopFlag = true;
 

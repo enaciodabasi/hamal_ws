@@ -71,8 +71,8 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
         double min_acc
     )
     {
-        m_LeftMotorLimiter = rpm_limiter(max_vel, min_vel, max_acc, min_acc);
-        m_RightMotorLimiter = rpm_limiter(max_vel, min_vel, max_acc, min_acc);
+        m_LeftMotorLimiter = new rpm_limiter(max_vel, min_vel, max_acc, min_acc);
+        m_RightMotorLimiter = new rpm_limiter(max_vel, min_vel, max_acc, min_acc);
     }
 
     void startTask() override
@@ -91,9 +91,9 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds> m_PrevUpdateTimePoint;
 
-    rpm_limiter m_LeftMotorLimiter;
+    rpm_limiter* m_LeftMotorLimiter;
 
-    rpm_limiter m_RightMotorLimiter;
+    rpm_limiter* m_RightMotorLimiter;
 
     std::shared_ptr<HomingHelper> m_HomingHelperPtr;
 

@@ -34,7 +34,7 @@ hamal:
     #frame_id: base_footprint
 
     open_loop: false
-    enable_odom_tf: false
+    enable_odom_tf: true
  
     # Velocity and acceleration limitss
     # Whenever a min_* is unspecified, default to -max_*
@@ -54,8 +54,8 @@ hamal:
         max_velocity           : 3.0 # rad/s
         has_acceleration_limits: true
         max_acceleration       : 0.5  # rad/s^2
-        has_jerk_limits        : false
-        max_jerk               : 0.25 # rad/s^3
+        has_jerk_limits        : true
+        max_jerk               : 3.0 # rad/s^3
 
   lifter_controller:
     type: hamal_lifter_controller/HamalLifterController
