@@ -28,7 +28,7 @@
     </visual>
   </link>
     <!--link
-    name="base_footprint">
+    name="base_link">
   </link>
     <joint
     name="footprint_joint"
@@ -37,7 +37,7 @@
       xyz="0 0 0.04"
       rpy="0 0 0" />
     <parent
-      link="base_footprint" />
+      link="base_link" />
     <child
       link="base_link" />
   </joint> -->

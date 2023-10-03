@@ -16,6 +16,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <hamal_custom_interfaces/ManualMoveCommand.h>
 #include <actionlib/client/simple_action_client.h>
 #include <geometry_msgs/Quaternion.h>
 #include <nav_msgs/Odometry.h>
@@ -34,6 +35,8 @@ inline const double radToDeg(const double& rad)
 }
 
 void getInputDegree(const std_msgs::Float64::ConstPtr& degree_command);
+
+void manualMoveCommandCallback(const hamal_custom_interfaces::ManualMoveCommand::ConstPtr& command);
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg);
 

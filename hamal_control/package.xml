@@ -37,6 +37,9 @@
   <exec_depend>tf2_geometry_mexec_depends</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>move_base_msgs</exec_depend>
+  
+  <build_depend>hamal_custom_interfaces</build_depend>
+  <exec_depend>hamal_custom_interfaces</exec_depend>
   <export>
 
 

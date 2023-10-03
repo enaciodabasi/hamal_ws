@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     tf2_geometry_msgs
     geometry_msgs
     move_base_msgs
+    hamal_custom_interfaces
 )
 
 find_package(Boost REQUIRED)

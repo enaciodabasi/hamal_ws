@@ -9,6 +9,7 @@ add_message_files(
     HardwareInfo.msg
     HardwareInfoArray.msg
     HomingInfo.msg
+    ManualMoveCommand.msg
 )
 
 add_action_files(
