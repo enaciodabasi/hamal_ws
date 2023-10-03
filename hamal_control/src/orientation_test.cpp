@@ -71,7 +71,7 @@ int main(int argc, char** argv)
             ROS_INFO("Target yaw: %f", radCmd);
 
             goal.target_pose.pose.orientation = quatMsg;
-            goal.target_pose.header.frame_id = "base_link";
+            goal.target_pose.header.frame_id = "base_footprint";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = 0.0;
             goal.target_pose.pose.position.y = 0.0;

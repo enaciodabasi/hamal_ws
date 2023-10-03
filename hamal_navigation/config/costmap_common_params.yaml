@@ -17,5 +17,7 @@ obstacles_layer:
   scan: {sensor_frame: base_link, data_type: LaserScan, topic: /scan, marking: true, clearing: true, obstacle_range: 2.5, raytrace_range: 3.0}
 
 inflater_layer:
- inflation_radius: 1.75
- cost_scaling_factor: 2.58
+ #inflation_radius: 1.75
+ #cost_scaling_factor: 2.58
+ inflation_radius: 1.0
+ cost_scaling_factor: 2.0

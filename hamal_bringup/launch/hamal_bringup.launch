@@ -23,7 +23,7 @@
         respawn="false"
         output="screen"
     >
-        <param name="publish_frequency" value="250.0"></param>
+        <param name="publish_frequency" value="100.0"></param>
     </node>
 
     <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>    
@@ -43,6 +43,7 @@
     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
     
     <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
+    
 
     <group if="$(arg manual_enabled)">
         <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>
@@ -77,7 +78,7 @@
     </group>
 
     <group unless="$(arg manual_enabled)">
-      
+      <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>
       <node 
         name="map_server"
         pkg="map_server" 
@@ -88,7 +89,7 @@
       <include file="$(find hamal_localization)/launch/localization.launch"></include>
 
       <include file="$(find hamal_navigation)/launch/hamal_navigation.launch">
-        <remap from="/odom" to="/odometry/filtered"></remap>
+        <remap from="/odom" to="/hamal/mobile_base_controller/odom"></remap>
         <remap from="/cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"></remap>
       </include>    
         

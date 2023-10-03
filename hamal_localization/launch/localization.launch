@@ -41,8 +41,8 @@
         <rosparam command="load" file="$(find hamal_localization)/config/rl_ekf.yaml" />
     
        
-    </node> -->
-
+    </node>
+ -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
       <!-- Publish scans from best pose at a max of 10 Hz -->
       <param name="odom_model_type" value="diff"/>

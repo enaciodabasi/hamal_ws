@@ -82,24 +82,39 @@ void HamalEthercatController::cyclicTask()
             lifterOpMode
         );
         
-        if(const auto opModeDisplayOpt = m_Master->read<int8_t>("domain_0", "somanet_node_1", "op_mode_display")){
-            if(opModeDisplayOpt.value() != 0x09)
-                m_Master->write<int8_t>(
-                    "domain_0",
-                    "somanet_node_1",
-                    "op_mode",
-                    0x09
-            );
-        }
-        if(const auto opModeDisplayOpt = m_Master->read<int8_t>("domain_0", "somanet_node_2", "op_mode_display")){
-            if(opModeDisplayOpt.value() != 0x09)
-                m_Master->write<int8_t>(
-                    "domain_0",
-                    "somanet_node_2",
-                    "op_mode",
-                    0x09
-            );
-        }
+        m_Master->write<int8_t>(
+            "domain_0",
+            "somanet_node_1",
+            "op_mode",
+            0x09
+        );
+
+        m_Master->write<int8_t>(
+            "domain_0",
+            "somanet_node_2",
+            "op_mode",
+            0x09
+        );
+
+        //if(const auto opModeDisplayOpt = m_Master->read<int8_t>("domain_0", "somanet_node_1", "op_mode_display")){
+        //    if(opModeDisplayOpt.value() != 0x09)
+        //        m_Master->write<int8_t>(
+        //            "domain_0",
+        //            "somanet_node_1",
+        //            "op_mode",
+        //            0x09
+        //    );
+        //}
+        //if(const auto opModeDisplayOpt = m_Master->read<int8_t>("domain_0", "somanet_node_2", "op_mode_display")
+        //){
+        //    if(opModeDisplayOpt.value() != 0x09)
+        //        m_Master->write<int8_t>(
+        //            "domain_0",
+        //            "somanet_node_2",
+        //            "op_mode",
+        //            0x09
+        //    );
+        //}
 
         if(m_HomingHelperPtr->isHomingActive && !m_HomingHelperPtr->isHomingSetupDone){
             m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", 0);
