@@ -56,6 +56,10 @@ int main(int argc, char** argv)
     ros::Subscriber cmdSub;
     cmdSub = nh.subscribe("/manual_move", 10, manualMoveCommandCallback);
 
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener(tfBuffer);
+    geometry_msgs::TransformStamped baseLinkToMapTransform;
+
     ros::Rate rate(50.0); // Run at 50 Hz.
     
     MoveBaseClient client("move_base", true);
@@ -79,6 +83,13 @@ int main(int argc, char** argv)
         
 
         if(commandPtr){
+            
+            baseLinkToMapTransform = tfBuffer.lookupTransform(
+                "map",
+                "base_link",
+                ros::Time(0),
+                ros::Duration(0.5)
+            );
 
             move_base_msgs::MoveBaseGoal goal;
             
@@ -92,18 +103,26 @@ int main(int argc, char** argv)
                 goal.target_pose.pose.orientation = quatMsg;
             }
             else{
-                goal.target_pose.pose.orientation = odomMsg.pose.pose.orientation;
+                goal.target_pose.pose.orientation.x = 0.0;
+                goal.target_pose.pose.orientation.y = 0.0;
+                goal.target_pose.pose.orientation.z = 0.0;
+                goal.target_pose.pose.orientation.w = 1.0;
             }
          
             //goal.target_pose.pose.orientation.x = 0.0;
             //goal.target_pose.pose.orientation.y = 0.0;
             //goal.target_pose.pose.orientation.z = 0.0;
             //goal.target_pose.pose.orientation.w = 1.0;   
-            goal.target_pose.header.frame_id = "odom";
+            goal.target_pose.header.frame_id = "base_link";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = commandPtr->x;
             goal.target_pose.pose.position.y = 0.0;
             goal.target_pose.pose.position.z = 0.0;
+
+            auto robotPose = goal.target_pose;
+            tf2::doTransform(robotPose, robotPose, baseLinkToMapTransform);
+            goal.target_pose = robotPose;
+            goal.target_pose.header.frame_id = "map";
             targetYaw = commandPtr->degree;
             startX = odomMsg.pose.pose.position.x;
             targetDistanceToTravelInX = commandPtr->x;
