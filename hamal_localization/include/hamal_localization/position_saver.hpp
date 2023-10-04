@@ -21,6 +21,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <yaml-cpp/yaml.h>
+#include <boost/array.hpp>
 
 /**
  * @brief Holds data name and value pairs
@@ -36,9 +37,13 @@
    w: 
  */
 
-void turnPoseMsgToYAML(
+void turnPoseMsgToYamlNode(
     YAML::Node& existing_yaml_node,
     const geometry_msgs::PoseWithCovarianceStamped& pose_msg
+);
+
+const geometry_msgs::PoseWithCovarianceStamped turnYamlNodeToPose(
+  const YAML::Node& existing_yaml_node
 );
 
 #endif
