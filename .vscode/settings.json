@@ -80,6 +80,7 @@
         "codecvt": "cpp",
         "forward_list": "cpp",
         "future": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "*.ipp": "cpp"
     }
 }
