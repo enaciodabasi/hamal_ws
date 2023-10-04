@@ -80,23 +80,26 @@ int main(int argc, char** argv)
 
         if(commandPtr){
 
-
-            const double radCmd = degToRad(commandPtr->degree);
-            tf2::Quaternion quat;
-            quat.setRPY(0.0, 0.0, radCmd);
-            geometry_msgs::Quaternion quatMsg;
-            quatMsg = tf2::toMsg(quat);
-            
             move_base_msgs::MoveBaseGoal goal;
-
-/*             goal.target_pose.pose.orientation = quatMsg;
-
- */         
-            goal.target_pose.pose.orientation.x = 0.0;
-            goal.target_pose.pose.orientation.y = 0.0;
-            goal.target_pose.pose.orientation.z = 0.0;
-            goal.target_pose.pose.orientation.w = 1.0;   
-            goal.target_pose.header.frame_id = "base_link";
+            
+            const double radCmd = degToRad(commandPtr->degree);
+            
+            if(radCmd != 0){
+                tf2::Quaternion quat;
+                quat.setRPY(0.0, 0.0, radCmd);
+                geometry_msgs::Quaternion quatMsg;
+                quatMsg = tf2::toMsg(quat);
+                goal.target_pose.pose.orientation = quatMsg;
+            }
+            else{
+                goal.target_pose.pose.orientation = odomMsg.pose.pose.orientation;
+            }
+         
+            //goal.target_pose.pose.orientation.x = 0.0;
+            //goal.target_pose.pose.orientation.y = 0.0;
+            //goal.target_pose.pose.orientation.z = 0.0;
+            //goal.target_pose.pose.orientation.w = 1.0;   
+            goal.target_pose.header.frame_id = "odom";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = commandPtr->x;
             goal.target_pose.pose.position.y = 0.0;
