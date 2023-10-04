@@ -96,10 +96,10 @@ DWAPlannerROS:
 
   sim_period: 0.1
 
-  xy_goal_tolerance: 0.2
-  yaw_goal_tolerance: 0.01
+  xy_goal_tolerance: 0.1
+  yaw_goal_tolerance: 0.2
   latch_xy_goal_tolerance: true
 
   theta_stopped_vel: 0.001
   trans_stopped_vel: 0.001
-  controller_frequency: 20.0
+  #controller_frequency: 20.0

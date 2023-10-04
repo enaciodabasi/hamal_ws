@@ -38,6 +38,7 @@ void manualMoveCommandCallback(const hamal_custom_interfaces::ManualMoveCommand:
     auto& cmd = *commandPtr;
     cmd.degree = command->degree;
     cmd.x = command->x;
+    ROS_WARN("Got command: x: %f [m] | yaw: %f[deg]", cmd.x, cmd.degree);
 }
 
 int main(int argc, char** argv)
@@ -68,12 +69,14 @@ int main(int argc, char** argv)
         ROS_ERROR("Could not connect to the move_base action server.");
         return -1;
     } */
+
+    double targetYaw = 0.0;
+    double targetDistanceToTravelInX = 0.0;
+    double startX = 0.0;
     
     while(ros::ok())
     {
-        double targetYaw = 0.0;
-        double targetDistanceToTravelInX = 0.0;
-        double startX = 0.0;
+        
 
         if(commandPtr){
 
@@ -86,7 +89,13 @@ int main(int argc, char** argv)
             
             move_base_msgs::MoveBaseGoal goal;
 
-            goal.target_pose.pose.orientation = quatMsg;
+/*             goal.target_pose.pose.orientation = quatMsg;
+
+ */         
+            goal.target_pose.pose.orientation.x = 0.0;
+            goal.target_pose.pose.orientation.y = 0.0;
+            goal.target_pose.pose.orientation.z = 0.0;
+            goal.target_pose.pose.orientation.w = 1.0;   
             goal.target_pose.header.frame_id = "base_link";
             goal.target_pose.header.stamp = ros::Time::now();
             goal.target_pose.pose.position.x = commandPtr->x;
@@ -96,6 +105,8 @@ int main(int argc, char** argv)
             startX = odomMsg.pose.pose.position.x;
             targetDistanceToTravelInX = commandPtr->x;
             //startX = commandPtr->x;
+            client.sendGoal(goal);
+            delete commandPtr;
             commandPtr = nullptr;
         }
 
