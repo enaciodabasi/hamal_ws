@@ -49,6 +49,22 @@ const geometry_msgs::PoseWithCovarianceStamped turnYamlNodeToPose(
     poseMsg.pose.pose.orientation.z = existing_yaml_node["robot_position"]["orientation"]["z"].as<double>(); 
     poseMsg.pose.pose.orientation.w = existing_yaml_node["robot_position"]["orientation"]["w"].as<double>();
 
+    auto covarianceMatrix = existing_yaml_node["robot_position"]["covariance"].as<std::vector<double>>();
+
+    auto covArrOpt = [&covarianceMatrix]() -> std::optional<boost::array<double, 36>> {
+        if(covarianceMatrix.size() == 36){
+            boost::array<double, 36> covArr;
+            boost::range::copy(covarianceMatrix, covArr.begin());
+            return covArr;
+        }
+
+        return std::nullopt; 
+    }();
+    
+    if(covArrOpt){
+        poseMsg.pose.covariance = covArrOpt.value();
+    }
+
     return poseMsg;
 }
 

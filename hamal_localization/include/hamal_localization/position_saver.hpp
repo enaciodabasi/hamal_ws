@@ -16,12 +16,14 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include <ros/ros.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <yaml-cpp/yaml.h>
 #include <boost/array.hpp>
+#include <boost/range/algorithm.hpp>
 
 /**
  * @brief Holds data name and value pairs
