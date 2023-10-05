@@ -8,10 +8,14 @@
     <arg name="frame_id_front"          default="front_scan_link" />
     <arg name="frame_id_rear"           default="rear_scan_link" />
     <arg name="skip"                    default="0" />
-    <arg name="angle_start_front"       default="-2.20" />
+    <!-- <arg name="angle_start_front"       default="-2.20" />
     <arg name="angle_end_front"         default="2.20" />
     <arg name="angle_start_rear"        default="-2.1" />
-    <arg name="angle_end_rear"          default="2.1" />
+    <arg name="angle_end_rear"          default="2.1" /> -->
+    <arg name="angle_start_front"       default="-2.1" />
+    <arg name="angle_end_front"         default="1.2" />
+    <arg name="angle_start_rear"        default="-2.2" />
+    <arg name="angle_end_rear"          default="1.45" />
     <arg name="time_offset"             default="0.0" />
     <arg name="min_intensities"         default="0.0" doc="minimal intensity for a laserscan point" />
     <arg name="channel_enabled"         default="True" />

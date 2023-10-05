@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     tf2_ros::TransformListener tfListener(tfBuffer);
     geometry_msgs::TransformStamped baseLinkToMapTransform;
 
-    ros::Rate rate(50.0); // Run at 50 Hz.
+    ros::Rate rate(10.0); // Run at 50 Hz.
     
     MoveBaseClient client("move_base", true);
     

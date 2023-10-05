@@ -99,6 +99,7 @@ int main(int argc, char** argv)
 
     ros::Rate rate(10.0);
     ros::Rate checkSubRate(50.0);
+    bool initialPosePublished = false;
     while(initialPosePub.getNumSubscribers() == 0)
     {   
         ROS_INFO("No subs for initial pose.");
@@ -106,10 +107,14 @@ int main(int argc, char** argv)
 
     if(initialPosePub.getNumSubscribers() != 0){
         initialPosePub.publish(turnYamlNodeToPose(baseFile));
+        initialPosePublished = true;
     }
 
     while(ros::ok())
     {
+        if(!initialPosePublished){
+            continue;
+        }
         ros::spinOnce();
         //if(!positionArrived){
         //    continue;

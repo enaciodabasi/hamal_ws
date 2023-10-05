@@ -77,9 +77,8 @@
       <param name="use_map_topic" value="true"></param>
     </node>
 
-    <node pkg="hamal_localization" type="position_saver" name="position_saver">
-      <!-- <param name="position_file_path" value="/home/grass/amr_ws/src/robot_localization/pos_logs/pos_log.yaml"></param> -->
+    <!-- <node pkg="hamal_localization" type="position_saver" name="position_saver">
       <rosparam command="load" file="$(find hamal_localization)/config/pos_saver_config.yaml" />
-    </node>
+    </node> -->
     
 </launch>
