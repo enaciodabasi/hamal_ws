@@ -147,7 +147,11 @@ namespace hamal
 
         double m_Reduction = 0.0;
 
+        double m_LifterMotorReduction = 0.0;
+
         double m_Increment = 0.0;
+
+        double m_LifterIncrement = 0.0;
 
         struct
         {

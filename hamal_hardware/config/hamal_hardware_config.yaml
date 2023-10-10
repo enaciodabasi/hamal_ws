@@ -17,6 +17,9 @@ hamal:
     #position_increment: 20480.0
     position_increment: 16384.0
 
+    lifter_reduction: 1.0
+    lifter_position_increment: 4096.0
+
   lifter_hardware_interface:
     lifter_joint: lifter_joint
     ethercat_config_path: /home/grass/amr_ws/src/hamal_hardware/config/lifter_config.yaml
