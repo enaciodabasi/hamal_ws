@@ -11,6 +11,8 @@
 
 #include "hamal_hardware/ethercat_controller.hpp"
 
+static int stateSwitchCounter = 0;
+
 HamalEthercatController::HamalEthercatController(
     const std::string& config_file_path,
     std::shared_ptr<HomingHelper> homing_helper_ptr,
@@ -60,9 +62,14 @@ void HamalEthercatController::cyclicTask()
         /* m_Master->updateDomainStates();
         m_Master->updateMasterState();
         m_Master->updateSlaveStates(); */
-        
-        bool slavesEnabled = m_Master->enableSlaves();
-
+        bool slavesEnabled = false;
+        if(stateSwitchCounter == 10){
+            slavesEnabled = m_Master->enableSlaves();
+            stateSwitchCounter = 0;
+        }
+        else{
+            stateSwitchCounter += 1;
+        }
         int8_t lifterOpMode = [
                         homingActive = m_HomingHelperPtr->isHomingActive,
                         lifterControlType = this->m_LifterControlType

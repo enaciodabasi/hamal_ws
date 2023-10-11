@@ -10,8 +10,8 @@ hamal:
     lifter_interface_type: velocity
     max_vel: 3000
     min_vel: -3000
-    max_acc: 350
-    min_acc: -350
+    max_acc: 1000
+    min_acc: -1000
     
     reduction: 24.685
     #position_increment: 20480.0

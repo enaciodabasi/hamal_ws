@@ -27,6 +27,8 @@
     </node>
 
     <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>    
+    <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
+
     <!-- <include file="$(find hamal_mapping)/launch/amr_mapping.launch">
         <group if="$(arg use_gmapping)">
             <arg name="use_gmapping" value="true"></arg>
@@ -40,10 +42,7 @@
           </group>
     </include> -->
 
-    <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
-    
-    <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
-    
+    <include file="$(find hamal_mapping)/launch/scanners.launch"></include>    
 
     <group if="$(arg manual_enabled)">
         <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>

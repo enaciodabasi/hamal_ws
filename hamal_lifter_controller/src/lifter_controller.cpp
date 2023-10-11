@@ -39,7 +39,7 @@ namespace hamal_lifter_controller
         m_LifterJointHandle = lifter_control_interface->getHandle(m_LifterJointName);
 
         controller_nh.param("controller_frequency", m_ControllerFrequency, 50.0);
-        m_ControllerRate = std::make_unique<ros::Rate>(1.0 / m_ControllerFrequency);
+        m_ControllerRate = std::make_unique<ros::Rate>(m_ControllerFrequency);
 
         controller_nh.param("max_position", m_Limits.posLimit, 1.0);
         controller_nh.param("max_velocity", m_Limits.velLimit, 3.0);

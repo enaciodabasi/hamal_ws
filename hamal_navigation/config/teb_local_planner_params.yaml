@@ -1,26 +1,33 @@
 TebLocalPlannerROS:
 
-  odom_topic: /odom
+  odom_topic: /hamal/mobile_base_controller/odom
   #odom_topic: /rtabmap/odom
   map_frame: map
       
   # Trajectory
-    
   teb_autosize: True
+  min_samples: 3
   dt_ref: 0.3 #0.2
   dt_hysteresis: 0.1
-  global_plan_overwrite_orientation: True
+  global_plan_overwrite_orientation: false
   max_global_plan_lookahead_dist: 3.0
   feasibility_check_no_poses: 5
-    
-  # Robot
-          
-  max_vel_x: 0.40 #0.25 
-  max_vel_x_backwards: 0.4 #0.2
-  max_vel_theta: 1.0 #0.5
-  acc_lim_x: 0.5 # 0.2
-  acc_lim_theta: 0.6283 #0.5, 0.26
-  min_turning_radius: 0.0
+  global_plan_viapoint_sep: -1.0 # negative = disabled
+  force_reinit_new_goal_dist: 1.0
+  shrink_horizon_backup: true
+  shrink_horizon_min_duration: 10.0
+  allow_init_with_backwards_motion: true
+  exact_arc_length: false
+
+  # Robot limits:
+  max_vel_x: 0.90 #0.25 
+  max_vel_x_backwards: 0.9 #0.2
+  max_vel_theta: 1.0
+  max_vel_y: 0.0
+  acc_lim_x: 0.5
+  acc_lim_theta: 0.4
+  acc_lim_y: 0.0
+  min_turning_radius: 0.0 # 0 for differential drive robot.
   footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
     type: "polygon" #"circular" 
     #radius: 0.38 # for type "circular"
@@ -34,17 +41,17 @@ TebLocalPlannerROS:
 
   # GoalTolerance
       
-  xy_goal_tolerance: 0.2 #0.2
-  yaw_goal_tolerance: 0.1571
-  free_goal_vel: False
+  xy_goal_tolerance: 0.05 #0.2
+  yaw_goal_tolerance: 0.05
+  free_goal_vel: false
       
   # Obstacles
       
-  min_obstacle_dist: 0.05
-  inflation_dist: 0.0
+  min_obstacle_dist: 0.3
+  inflation_dist: 0.6 # Must be larger than min_obstacle_dist
   dynamic_obstacle_inflation_dist: 0.05
-  include_costmap_obstacles: True
-  costmap_obstacles_behind_robot_dist: 0.1
+  include_costmap_obstacles: true
+  costmap_obstacles_behind_robot_dist: 1.0
   obstacle_poses_affected: 25 #30
   costmap_converter_plugin: ""
   costmap_converter_spin_thread: True
@@ -54,40 +61,40 @@ TebLocalPlannerROS:
       
   no_inner_iterations: 5 #5
   no_outer_iterations: 4 #4
-  optimization_activate: True
-  optimization_verbose: False
+  optimization_activate: true
+  optimization_verbose: false
   penalty_epsilon: 0.1
   weight_max_vel_x: 2 #2
   weight_max_vel_theta: 1 #1
-  weight_acc_lim_x: 1 # 1
-  weight_acc_lim_theta: 1 # 1
+  weight_acc_lim_x: 2.0 # 1
+  weight_acc_lim_theta: 2.0 # 1
   weight_kinematics_nh: 1000 #1000
-  weight_kinematics_forward_drive: 1000 #1000
-  weight_kinematics_turning_radius: 1 #1 #only for car-like robots
+  weight_kinematics_forward_drive: 1.0 #1000
+  weight_kinematics_turning_radius: 0 #1 #only for car-like robots
   weight_optimaltime: 1.0 #1
   weight_obstacle: 50 #50
   weight_viapoint: 5.0 #5.0 #1.0
   weight_inflation: 0.1 #0.1
   weight_dynamic_obstacle: 10 # not in use yet
-  selection_alternative_time_cost: False # not in use yet
+  selection_alternative_time_cost: false # not in use yet
 
   # Homotopy Class Planner
 
-  enable_homotopy_class_planning: False #True
-  enable_multithreading: True
-  simple_exploration: False
-  max_number_classes: 2 #4
+  enable_homotopy_class_planning: true #True
+  enable_multithreading: true
+  simple_exploration: false
+  max_number_classes: 4 #4
   roadmap_graph_no_samples: 15
   roadmap_graph_area_width: 5
   h_signature_prescaler: 0.5
   h_signature_threshold: 0.1
   obstacle_keypoint_offset: 0.1
   obstacle_heading_threshold: 0.45
-  visualize_hc_graph: False
+  visualize_hc_graph: false
 
   #ViaPoints
   global_plan_viapoint_sep: 0.5 #negative if none
-  via_points_ordered: False #adhere to order of via points
+  via_points_ordered: false #adhere to order of via points
 
   #Feedback
   publish_feedback: true #false
