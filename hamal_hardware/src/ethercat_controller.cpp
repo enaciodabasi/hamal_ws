@@ -62,14 +62,8 @@ void HamalEthercatController::cyclicTask()
         /* m_Master->updateDomainStates();
         m_Master->updateMasterState();
         m_Master->updateSlaveStates(); */
-        bool slavesEnabled = false;
-        if(stateSwitchCounter == 10){
-            slavesEnabled = m_Master->enableSlaves();
-            stateSwitchCounter = 0;
-        }
-        else{
-            stateSwitchCounter += 1;
-        }
+        
+        bool slavesEnabled = m_Master->enableSlaves();
         int8_t lifterOpMode = [
                         homingActive = m_HomingHelperPtr->isHomingActive,
                         lifterControlType = this->m_LifterControlType
@@ -242,6 +236,7 @@ void HamalEthercatController::cyclicTask()
             }
         }
         else if(!slavesEnabled){
+            std::cout << "Slaves are not enabled" << std::endl;
             /* m_Master->enableSlaves(); */
             /* m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_2", "target_velocity", 0);
@@ -257,4 +252,6 @@ void HamalEthercatController::cyclicTask()
         m_Master->send("domain_0");
         m_EthercatOk = slavesEnabled;
     }
+
+    
 }
