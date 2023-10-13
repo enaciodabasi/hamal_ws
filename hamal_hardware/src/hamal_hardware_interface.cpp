@@ -144,7 +144,7 @@ namespace hamal
             write();
 
             if(m_LifterHomingHelper->isHomingActive){
-                
+                ROS_INFO("Homing is active");
                 if(m_HomingServer->isPreemptRequested()){
                     m_HomingServer->setPreempted();
                 }
@@ -157,12 +157,20 @@ namespace hamal
                 case HomingStatus::HomingIsInterruptedOrNotStarted :
                 case HomingStatus::HomingConfirmedTargetNotReached :
                 {
+                    
+                    if(inRange<double>(m_JointsMap.at(m_LifterJointName).position, 0.0, 0.5)){
+                        hamal_custom_interfaces::HomingOperationResult homingRes;
+                        homingRes.status = homingStatusStr->second;
+                        homingRes.homingDone = true;
+                        m_HomingServer->setSucceeded(homingRes);
+                        m_LifterHomingHelper->reset();
+                    }
+                    else{
+                        hamal_custom_interfaces::HomingOperationFeedback homingFb;
+                        homingFb.homingStatus = homingStatusStr->second;
 
-                    hamal_custom_interfaces::HomingOperationFeedback homingFb;
-                    homingFb.homingStatus = homingStatusStr->second;
-
-                    m_HomingServer->publishFeedback(homingFb);
-
+                        m_HomingServer->publishFeedback(homingFb);
+                    }
                     break;
                 }
                 case HomingStatus::HomingCompleted :
@@ -408,7 +416,7 @@ namespace hamal
         m_JointsMap.at(m_LeftWheelJointName).hardwareInfo.target_vel = (jointVelocityToMotorVelocity(leftWheelTargetVel));
 
         if(!targetsPdoName.empty()){
-            m_EthercatController->setData<int32_t>("somanet_node_0", targetsPdoName, lifterTarget);
+            m_EthercatController->setData<int32_t>("somanet_node_0", "target_velocity", tempLifterTarget);
             m_JointsMap.at(m_LifterJointName).hardwareInfo.target_vel = tempLifterTarget; 
         }
     }

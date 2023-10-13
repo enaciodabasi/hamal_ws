@@ -75,6 +75,12 @@ namespace hamal
         hamal_custom_interfaces::HardwareInfo hardwareInfo;
     };
 
+    template<typename T>
+    bool inRange(const T& check_val, const T& target_val, const T& range)
+    {
+    return (check_val < (target_val + range)) && (check_val > (target_val - range));
+    }
+
     class HardwareInterface : public hardware_interface::RobotHW
     {
         public:

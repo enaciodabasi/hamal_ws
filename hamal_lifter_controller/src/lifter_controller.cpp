@@ -109,6 +109,11 @@ namespace hamal_lifter_controller
         }
         else if(m_GoalActive){
 
+            if(!m_LifterOperationServer->isActive()){
+                m_LifterJointHandle.setCommandPosition(0.0);
+                m_LifterJointHandle.setCommandVelocity(0.0);
+                m_LifterJointHandle.setCommandAcceleration(0.0);
+            }else{
             const auto tc = time - m_PreviousUpdateTime; // tc: Current Time
             
             // If elapsed time is longer than maximum profile time:
@@ -144,6 +149,7 @@ namespace hamal_lifter_controller
             m_LifterJointHandle.setCommandVelocity(velRef);
             m_LifterJointHandle.setCommandAcceleration(accRef);
 
+        }
         }
         else if(m_GoalDone){ // Clean up.
             cleanup();

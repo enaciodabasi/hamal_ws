@@ -155,7 +155,7 @@ void HamalEthercatController::cyclicTask()
                 setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
             }
             if(lifterPosOpt){
-                setData<int32_t>("somanet_node_0", "actual_position", lifterPosOpt.value());
+                setData<int32_t>("somanet_node_0", "actual_position", lifterPosOpt.value() * -1);
             }
 
             auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_velocity");
@@ -189,7 +189,7 @@ void HamalEthercatController::cyclicTask()
 /*                 std::cout << "Left Motor RPM:" << leftTargetVel << "Right Motor RPM" << rightTargetVel << std::endl; 
  */                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", rightTargetVel);
                 m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", leftTargetVel * -1);
-                m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", lifterTargetVelOpt.value());
+                m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", (lifterTargetVelOpt.value() * -1));
             }
            
         }
@@ -231,16 +231,14 @@ void HamalEthercatController::cyclicTask()
                     m_HomingHelperPtr->targetReachedBit = false;
                 }
                 m_HomingHelperPtr->previousCtrlWord = ctrlWord;
-
-                std::cout << "Homing in progress\n";
             }
         }
         else if(!slavesEnabled){
-            std::cout << "Slaves are not enabled" << std::endl;
-            /* m_Master->enableSlaves(); */
-            /* m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
+/*             std::cout << "Slaves are not enabled" << std::endl;
+ */            /* m_Master->enableSlaves(); */
+            m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_2", "target_velocity", 0);
-            m_Master->write("domain_0", "somanet_node_0", "target_velocity", 0); */
+            m_Master->write("domain_0", "somanet_node_0", "target_velocity", 0);
         }
 
         if(m_EnableDC)
