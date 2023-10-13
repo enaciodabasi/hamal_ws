@@ -10,6 +10,7 @@ add_message_files(
     HardwareInfoArray.msg
     HomingInfo.msg
     ManualMoveCommand.msg
+    BmsStatus.msg
 )
 
 add_action_files(

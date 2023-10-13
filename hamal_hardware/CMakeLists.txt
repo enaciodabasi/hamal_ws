@@ -82,4 +82,6 @@ target_link_directories(hamal_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_
 install(TARGETS hamal_hardware
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+catkin_install_python(PROGRAMS scripts/bms_node.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 #install(TARGETS lifter_hardware RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
