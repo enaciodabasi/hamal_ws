@@ -113,7 +113,27 @@ namespace hamal_lifter_controller
                 m_LifterJointHandle.setCommandPosition(0.0);
                 m_LifterJointHandle.setCommandVelocity(0.0);
                 m_LifterJointHandle.setCommandAcceleration(0.0);
-            }else{
+                m_GoalError = true;
+            }
+            else if(
+                const double currentJointPosition = m_LifterJointHandle.getPosition(),
+                currentPositionGoal = m_CurrentActionGoalPtr->target_position;
+                inRange(currentJointPosition, currentPositionGoal, m_PositionTolerance)    
+            ){
+                
+                
+                m_LifterJointHandle.setCommandPosition(0.0);
+                m_LifterJointHandle.setCommandVelocity(0.0);
+                m_LifterJointHandle.setCommandAcceleration(0.0);
+                LifterResult succRes;
+                succRes.status_str = "Target position with tolerance" + std::to_string(m_PositionTolerance) + " reached.";
+                succRes.target_reached = true;
+                m_LifterOperationServer->setSucceeded(succRes);
+                m_GoalActive = false;
+                m_GoalDone = true;
+            }
+            else{
+
             const auto tc = time - m_PreviousUpdateTime; // tc: Current Time
             
             // If elapsed time is longer than maximum profile time:
@@ -153,14 +173,12 @@ namespace hamal_lifter_controller
         }
         else if(m_GoalDone){ // Clean up.
             cleanup();
+            
         }
         else if(m_GoalError){
             cleanup();
         }
-        else{
-
-        }
-
+        
         m_ControllerRate->sleep();
 
     }

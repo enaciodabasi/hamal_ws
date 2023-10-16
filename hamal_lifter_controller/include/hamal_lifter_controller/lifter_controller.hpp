@@ -219,7 +219,7 @@ namespace hamal_lifter_controller
 
         void lifterActionCallback();
 
-        double linearDistanceToLifterRotation(const double& lifter_rotation)
+        /* double linearDistanceToLifterRotation(const double& lifter_rotation)
         {
 
         }
@@ -227,7 +227,7 @@ namespace hamal_lifter_controller
         double lifterRotationToLinearDistance(const double& linear_distance)
         {
 
-        }
+        } */
 
 
     };
