@@ -76,11 +76,21 @@ The ROS workspace consists of several packages that make up the core functionali
 
 ## 2.2 Setting up the system
 
+## 2.2.0 Setup
 The hardware interface requires realtime privileges to run the EtherCAT communication loop in a realtime thread, therefore before opening the communication channels the following command must be executed as root:
 
 ```Bash
 sudo su # Enter the password
 ulimit -r 99 # This sets the realtime thread count.
+```
+
+The hamal_bringup package contains a script to setup the ROS environment, to use it create a symlink to the .sh file in the **hamal_bringup/scripts** directory inside the parent workspace directory for ease of use: 
+```Bash
+ln -s /home/$USER/hamal_ws/set_env /home/$USER/hamal_ws/src/hamal_bringup/scripts/set_env.sh
+
+## Source the bash script with the required arguments
+## Arguments can be seen with calling the script via the --help argument.
+source set_env -m ${MASTER_IP} -w ${WORKSPACE_NAME}
 ```
 
 Then the IP of the network interface that is connected to the scanners must be set to the scanners IP range:
@@ -101,3 +111,16 @@ roslaunch hamal_bringup hamal_bringup.launch
 ```
 
 ## 2.2.1 Launch arguments
+
+The main launch file is hamal_bringup.launch, which calls the individual launch files inside other packages.
+The launch file can be called with the following arguments:
+
+- **manual_enabled:** If manual mode is enabled, only the hardware, wheel and lifter controllers and the selected mapping nodes are launched. This parameter defaults to false, which in turn makes the launch file to launch the navigation package without any SLAM methods.
+- **use_gmapping:** Launches the GMapping node.
+- **use_hector:** Launches the Hector node.
+- **use_slamtoolbox:** Launches SLAM toolbox with the selected mode
+  - **mode:** SLAM toolbox modes: lifelong, localization, offline, online_async, online_sync
+- **model:** AMRs URDF name.
+- **map:** Path to the static map file. 
+
+## 2.2.2 
