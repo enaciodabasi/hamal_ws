@@ -93,7 +93,7 @@ TebLocalPlannerROS:
   visualize_hc_graph: false
 
   #ViaPoints
-  global_plan_viapoint_sep: 0.5 #negative if none
+  #global_plan_viapoint_sep: 0.5 #negative if none
   via_points_ordered: false #adhere to order of via points
 
   #Feedback

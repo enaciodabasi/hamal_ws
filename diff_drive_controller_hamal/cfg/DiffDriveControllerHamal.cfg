@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+PACKAGE = 'diff_drive_controller_hamal'
+
+from dynamic_reconfigure.parameter_generator_catkin import ParameterGenerator, bool_t, double_t
+
+gen = ParameterGenerator()
+
+# Kinematic parameters related
+gen.add("left_wheel_radius_multiplier", double_t, 0, "Left wheel radius multiplier.", 1.0, 0.5, 1.5)
+gen.add("right_wheel_radius_multiplier", double_t, 0, "Right wheel radius multiplier.", 1.0, 0.5, 1.5)
+gen.add("wheel_separation_multiplier", double_t, 0, "Wheel separation multiplier.", 1.0, 0.5, 1.5)
+
+gen.add("max_vel_x", double_t, 0, "Maximum velocity in the x direction", 1.0, 0.0, 1.5)
+gen.add("min_vel_x", double_t, 0, "Minimum velocity in the x direction", -1.0, -1.0, 0.0)
+
+gen.add("max_acc_x", double_t, 0, "Maximum acceleration in the x direction", 0.5, 0.0, 1.0)
+gen.add("min_acc_x", double_t, 0, "Minimum acceleration in the x direction", -0.5, -1.0, 0.0)
+
+gen.add("max_jerk_x", double_t, 0, "Maximum jerk in the x direction", 1.0, 0.0, 1.0)
+gen.add("min_jerk_x", double_t, 0, "Maximum jerk in the x direction", -1.0, -1.0, 0.0)
+
+gen.add("max_vel_z", double_t, 0, "Maximum velocity in the z direction", 1.0, 0.0, 1.5)
+gen.add("min_vel_z", double_t, 0, "Minimum velocity in the z direction", -1.0, -1.5, 0.0)
+
+gen.add("max_acc_z", double_t, 0, "Maximum acceleration in the z direction", 0.5, 0.0, 1.0)
+gen.add("min_acc_z", double_t, 0, "Minimum acceleration in the z direction", -0.5, -1.0, 0.0)
+
+gen.add("max_jerk_z", double_t, 0, "Maximum jerk in the z direction", 1.0, 0.0, 1.0)
+gen.add("min_jerk_z", double_t, 0, "Maximum jerk in the z direction", -1.0, -1.0, 0.0)
+
+
+# Publication related
+gen.add("publish_rate", double_t, 0, "Publish rate of odom.", 50.0, 0.0, 2000.0)
+gen.add("enable_odom_tf", bool_t, 0, "Publish odom frame to tf.", True)
+
+exit(gen.generate(PACKAGE, "diff_drive_controller_hamal", "DiffDriveControllerHamal"))

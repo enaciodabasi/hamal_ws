@@ -19,7 +19,10 @@
         "/home/grass/hamal_ws/devel/include/**",
         "/home/naci/hamal_ws/devel/include/**",
         "/home/grass/hamal_ws/src/hamal_hardware/include/**",
-        "/home/grass/hamal_ws/src/hamal_lifter_controller/include/**"
+        "/home/grass/hamal_ws/src/hamal_lifter_controller/include/**",
+        "/home/grass/amr_ws/src/diff_drive_controller_hamal/include/**",
+        "/home/naci/hamal_ws/src/diff_drive_controller_hamal/include/**",
+        "/home/naci/hamal_ws/src/diff_drive_controller_hamal/include/diff_drive_controller_hamal/odometry.h"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

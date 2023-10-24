@@ -5,7 +5,7 @@ hamal:
     publish_rate: 100 
 
   mobile_base_controller:
-    type        : diff_drive_controller/DiffDriveController
+    type        : diff_drive_controller_hamal/DiffDriveControllerHamal
     left_wheel  : 'left_wheel_joint'
     right_wheel : 'right_wheel_joint'
     publish_rate: 100               # default: 50
