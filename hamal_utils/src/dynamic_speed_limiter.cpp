@@ -34,8 +34,8 @@ void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
         return;
     }
 
-    syncTebParamsCb();
-    syncControllerParamsCb();
+    //syncTebParamsCb();
+    //syncControllerParamsCb();
 
     auto& tebConf = *tebConfPtr;
     auto& controllerConf = *controllerConfPtr;
@@ -129,6 +129,26 @@ int main(int argc, char** argv)
         1,
         &speedLimitRatioCallback
     );
+
+    ros::Subscriber tebConfigUpdateSub = nh.subscribe<dynamic_reconfigure::Config>(
+        "/move_base/TebLocalPlannerROS/parameter_updates",
+        1,
+        [&](const dynamic_reconfigure::Config::ConstPtr& config){
+            auto conf = *config;
+            tebConf.__fromMessage__(conf);
+        }
+    );
+    
+    ros::Subscriber controllerConfigSub = nh.subscribe<dynamic_reconfigure::Config>(
+        "/hamal/mobile_base_controller/parameter_updates",
+        1,
+        [&](const dynamic_reconfigure::Config::ConstPtr& config){
+            auto conf = *config;
+            controllerConf.__fromMessage__(conf);
+        }
+    );
+
+    
 
     syncTebParamsCb = std::bind(syncTebParams, nh, tebConf);
     syncControllerParamsCb = std::bind(syncControllerParams, nh, controllerConf);
