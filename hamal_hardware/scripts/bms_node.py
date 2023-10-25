@@ -15,7 +15,7 @@ PortName = None
 def GetPortList():
     ports = list(port_list.comports())
     for port, desc, hwid in sorted(ports):
-        print("{}: {} [{}]".format(port, desc, hwid))
+        #print("{}: {} [{}]".format(port, desc, hwid))
         return str(port)
 
 
@@ -43,7 +43,7 @@ def GetSerialData(Ser):
         TemperatureList = []
         Cell_TemperatureList =[]          
         SerialData = str(Ser.readline())
-        # print(SerialData)
+        # #print(SerialData)
         if SerialData[2] == 'V':
             TempVoltage = SerialData
             VoltageList = TextSplit("V=:\\rb'", TempVoltage)
@@ -60,7 +60,7 @@ def GetSerialData(Ser):
             bms_msg.charger_voltage = VoltageList [2] 
             bms_msg.cell_voltage=Cell_VoltageList
             CleanList(VoltageList)
-            print(f'Voltage List -> {VoltageList}\n')
+            #print(f'Voltage List -> {VoltageList}\n')
             # rospy.loginfo('Voltage-> ' + str(VoltageList))
         elif SerialData[2] == 'A':
             TempCurrent = SerialData
@@ -76,7 +76,7 @@ def GetSerialData(Ser):
             bms_msg.current_charger = CurrentList[4] / 100   # Charger dan gelen akım (A)           
             bms_msg.current_load = CurrentList[5] / 100      # Sistemin Çektiği Akım (A)
             CleanList(CurrentList)
-            print(f'Current List -> {CurrentList}\n')
+            #print(f'Current List -> {CurrentList}\n')
             # rospy.loginfo('Current-> ' + str(CurrentList))
 
         elif SerialData[2] == 'T':
@@ -90,7 +90,7 @@ def GetSerialData(Ser):
             bms_msg.temperature_bms = TemperatureList[0]
             bms_msg.temperature_cell=Cell_TemperatureList
             CleanList(TemperatureList)
-            print(f'Temperature List -> {TemperatureList}\n')
+            #print(f'Temperature List -> {TemperatureList}\n')
             # rospy.loginfo('Temperature-> ' + str(TemperatureList))
 
         # BMS_info()
@@ -135,7 +135,7 @@ def Main():  # Main Function
     global PortName, battery_publisher
     PortName = GetPortList()
     if SetPortConfig() == -1:
-        print("Cannot Open Serial Port...")
+        #print("Cannot Open Serial Port...")
         exit()
     else:
         rospy.init_node('bms_status_node')

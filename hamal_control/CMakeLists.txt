@@ -3,7 +3,7 @@ project(hamal_control)
 
 find_package(catkin REQUIRED COMPONENTS 
     controller_manager
-    hamal_diff_drive_controller
+    diff_drive_controller_hamal
     hamal_lifter_controller
     hardware_interface
     roscpp
@@ -22,7 +22,7 @@ find_package(Boost REQUIRED)
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
-    CATKIN_DEPENDS controller_manager hamal_diff_drive_controller roscpp actionlib control_msgs std_msgs
+    CATKIN_DEPENDS controller_manager diff_drive_controller_hamal roscpp actionlib control_msgs std_msgs
     DEPENDS Boost
 )
 

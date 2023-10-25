@@ -817,7 +817,7 @@ namespace diff_drive_controller_hamal{
 
 /*     limiter_lin_.max_velocity = dynamic_params.
  */
-    publish_period_ = ros::Duration(1.0 / dynamic_params.publish_rate);
+    //publish_period_ = ros::Duration(1.0 / dynamic_params.publish_rate);
     enable_odom_tf_ = dynamic_params.enable_odom_tf;
   }
 

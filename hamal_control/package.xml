@@ -9,7 +9,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>controller_manager</build_depend>
-  <build_depend>hamal_diff_drive_controller</build_depend>
+  <build_depend>diff_drive_controller_hamal</build_depend>
   <build_depend>hamal_lifter_controller</build_depend>
   <build_depend>hardware_interface</build_depend>
   <build_depend>roscpp</build_depend>
@@ -17,14 +17,14 @@
   <build_depend>control_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_export_depend>controller_manager</build_export_depend>
-  <build_export_depend>hamal_diff_drive_controller</build_export_depend>
+  <build_export_depend>diff_drive_controller_hamal</build_export_depend>
   <build_export_depend>hamal_lifter_controller</build_export_depend>
   <build_export_depend>hardware_interface</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>joint_state_controller</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>hamal_diff_drive_controller</exec_depend>
+  <exec_depend>diff_drive_controller_hamal</exec_depend>
   <exec_depend>hamal_lifter_controller</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>roscpp</exec_depend>

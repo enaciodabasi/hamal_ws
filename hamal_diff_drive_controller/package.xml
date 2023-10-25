@@ -22,6 +22,6 @@
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <controller_interface plugin="${prefix}/hamal_diff_drive_controller_plugins.xml"></controller_interface>
+    <controller_interface plugin="${prefix}/diff_drive_controller_hamal_plugins.xml"></controller_interface>
   </export>
 </package>

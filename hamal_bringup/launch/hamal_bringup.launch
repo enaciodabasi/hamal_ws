@@ -91,7 +91,15 @@
         <remap from="/odom" to="/hamal/mobile_base_controller/odom"></remap>
         <remap from="/cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"></remap>
       </include>    
-        
+
     </group>
+
+    <node
+      name="dynamic_speed_limiter"
+      pkg="hamal_utils"
+      type="dynamic_speed_limiter"
+      output="screen"
+    >  
+    </node>
 
 </launch>

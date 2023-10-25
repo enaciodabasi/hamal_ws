@@ -46,6 +46,6 @@
   <test_depend>xacro</test_depend>
 
   <export>
-    <controller_interface plugin="${prefix}/diff_drive_controller_plugins.xml"/>
+    <controller_interface plugin="${prefix}/diff_drive_controller_hamal_plugins.xml"/>
   </export>
 </package>

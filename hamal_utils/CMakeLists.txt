@@ -24,7 +24,7 @@ include_directories(
 # ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(dynamic_speed_limiter src/dynamic_speed_limiter)
+add_executable(dynamic_speed_limiter src/dynamic_speed_limiter.cpp)
 target_link_libraries(dynamic_speed_limiter ${catkin_LIBRARIES})
 target_include_directories(dynamic_speed_limiter PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 

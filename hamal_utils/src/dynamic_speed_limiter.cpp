@@ -42,32 +42,32 @@ void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
 
     const double multiplier = (speed_limit_ratio->ratio) / 100.0;
 
-    tebConf.max_vel_x /=  multiplier;
-    tebConf.max_vel_x_backwards /=  multiplier;
-    tebConf.max_vel_y /=  multiplier;
-    tebConf.max_vel_theta /=  multiplier;
+    tebConf.max_vel_x *=  multiplier;
+    tebConf.max_vel_x_backwards *=  multiplier;
+    tebConf.max_vel_y *=  multiplier;
+    tebConf.max_vel_theta *=  multiplier;
 
-    tebConf.acc_lim_x /= multiplier;
-    tebConf.acc_lim_y /= multiplier;
-    tebConf.acc_lim_theta /= multiplier;
+    tebConf.acc_lim_x *= multiplier;
+    tebConf.acc_lim_y *= multiplier;
+    tebConf.acc_lim_theta *= multiplier;
 
-    controllerConf.max_vel_x /= multiplier;
-    controllerConf.min_vel_x /= multiplier;
+    controllerConf.max_vel_x *= multiplier;
+    controllerConf.min_vel_x *= multiplier;
 
-    controllerConf.max_vel_z /= multiplier;
-    controllerConf.min_vel_z /= multiplier;
+    controllerConf.max_vel_z *= multiplier;
+    controllerConf.min_vel_z *= multiplier;
     
-    controllerConf.max_acc_x /= multiplier;
-    controllerConf.min_acc_x /= multiplier;
+    controllerConf.max_acc_x *= multiplier;
+    controllerConf.min_acc_x *= multiplier;
 
-    controllerConf.max_acc_z /= multiplier;
-    controllerConf.min_acc_z /= multiplier;
+    controllerConf.max_acc_z *= multiplier;
+    controllerConf.min_acc_z *= multiplier;
 
-    controllerConf.max_jerk_x /= multiplier;
-    controllerConf.min_jerk_x /= multiplier;
+    controllerConf.max_jerk_x *= multiplier;
+    controllerConf.min_jerk_x *= multiplier;
 
-    controllerConf.max_jerk_z /= multiplier;
-    controllerConf.min_jerk_z /= multiplier;
+    controllerConf.max_jerk_z *= multiplier;
+    controllerConf.min_jerk_z *= multiplier;
 
     dynamic_reconfigure::Client<diff_drive_controller_hamal::DiffDriveControllerHamalConfig> controllerConfigClient(
         "/hamal/mobile_base_controller",
@@ -80,7 +80,7 @@ void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
     );  
 
     dynamic_reconfigure::Client<teb_local_planner::TebLocalPlannerReconfigureConfig> tebConfigClient(
-        "/teb_local_planner",
+        "/move_base/TebLocalPlannerROS",
         [&](const teb_local_planner::TebLocalPlannerReconfigureConfig&){
             ROS_INFO("diff_drive_controller_hamal velocity parameters have been changed");
         },
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 {
 
     ros::init(argc, argv, "dynamic_speed_limiter");
-
+    
     teb_local_planner::TebLocalPlannerReconfigureConfig tebConf;
     diff_drive_controller_hamal::DiffDriveControllerHamalConfig controllerConf;
 
@@ -124,20 +124,19 @@ int main(int argc, char** argv)
     controllerConfPtr = &controllerConf;
 
     ros::NodeHandle nh;
-
-    syncTebParamsCb = std::bind(syncTebParams, nh, tebConf);
-    syncControllerParamsCb = std::bind(syncControllerParams, nh, controllerConf);
-
-    nh.subscribe(
+    ros::Subscriber ratioSub = nh.subscribe(
         "/speed_limit_ratio",
         1,
         &speedLimitRatioCallback
     );
 
-    ros::spin();
+    syncTebParamsCb = std::bind(syncTebParams, nh, tebConf);
+    syncControllerParamsCb = std::bind(syncControllerParams, nh, controllerConf);
 
-    ros::waitForShutdown();
+    while(ros::ok()){
 
+        ros::spinOnce();
+    }
     //if(tebConfPtr)
     //    delete tebConfPtr;
     //if(controllerConfPtr)
