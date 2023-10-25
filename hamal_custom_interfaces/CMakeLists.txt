@@ -11,6 +11,7 @@ add_message_files(
     HomingInfo.msg
     ManualMoveCommand.msg
     BmsStatus.msg
+    SpeedLimitRatio.msg
 )
 
 add_action_files(
