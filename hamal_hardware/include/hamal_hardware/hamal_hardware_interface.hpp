@@ -32,6 +32,7 @@
 #include "hamal_custom_interfaces/LifterOperationAction.h"
 #include "hamal_custom_interfaces/HardwareInfo.h"
 #include "hamal_custom_interfaces/HardwareInfoArray.h"
+#include "hamal_custom_interfaces/HardwareStatus.h"
 
 namespace hamal
 {

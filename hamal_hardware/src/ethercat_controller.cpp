@@ -176,7 +176,8 @@ void HamalEthercatController::cyclicTask()
 
         if(slavesEnabled && !m_HomingHelperPtr->isHomingActive)
         {
-            auto leftTargetVelOpt = getData<int32_t>("somanet_node_2", "target_velocity");
+/*             std::cout << "Slaves enabled\n";
+ */            auto leftTargetVelOpt = getData<int32_t>("somanet_node_2", "target_velocity");
             auto rightTargetVelOpt = getData<int32_t>("somanet_node_1", "target_velocity");
             auto lifterTargetVelOpt = getData<int32_t>("somanet_node_0", "target_velocity");
             if(leftTargetVelOpt != std::nullopt && rightTargetVelOpt && lifterTargetVelOpt)
@@ -184,13 +185,14 @@ void HamalEthercatController::cyclicTask()
 
                 double leftTargetVel = leftTargetVelOpt.value();
                 double rightTargetVel = rightTargetVelOpt.value();
-                m_LeftMotorLimiter->limit(leftTargetVel, 0.002);
-                m_RightMotorLimiter->limit(rightTargetVel, 0.002);
+                /* m_LeftMotorLimiter->limit(leftTargetVel, 0.002);
+                m_RightMotorLimiter->limit(rightTargetVel, 0.002); */
 /*                 std::cout << "Left Motor RPM:" << leftTargetVel << "Right Motor RPM" << rightTargetVel << std::endl; 
  */                m_Master->write<int32_t>("domain_0", "somanet_node_1", "target_velocity", rightTargetVel);
                 m_Master->write<int32_t>("domain_0", "somanet_node_2", "target_velocity", leftTargetVel * -1);
                 m_Master->write<int32_t>("domain_0", "somanet_node_0", "target_velocity", (lifterTargetVelOpt.value() * -1));
-            }
+/*                 std::cout << "Target Vels: " << rightTargetVel << " | " <<  (leftTargetVel*-1) << std::endl;
+ */            }
            
         }
         else if(slavesEnabled && m_HomingHelperPtr->isHomingActive && m_HomingHelperPtr->isHomingInProgress && opModeSetCorrect){
@@ -236,6 +238,8 @@ void HamalEthercatController::cyclicTask()
         else if(!slavesEnabled){
 /*             std::cout << "Slaves are not enabled" << std::endl;
  */            /* m_Master->enableSlaves(); */
+/*             std::cout << "Slaves are not enabled\n";
+ */
             m_Master->write("domain_0", "somanet_node_1", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_2", "target_velocity", 0);
             m_Master->write("domain_0", "somanet_node_0", "target_velocity", 0);

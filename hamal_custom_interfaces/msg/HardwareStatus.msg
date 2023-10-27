@@ -1,0 +1,2 @@
+HardwareInfoArray slave_info
+bool ec_system_status

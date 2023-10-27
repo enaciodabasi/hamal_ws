@@ -385,6 +385,9 @@ namespace hamal
     {
 
         if(!m_EthercatController->isEthercatOk()){
+/*             std::cout << "Setting data to 0\n";
+ */         m_EthercatController->setData<int32_t>("somanet_node_2", "target_velocity", 0);
+            m_EthercatController->setData<int32_t>("somanet_node_1", "target_velocity", 0);
             return;
         }
         const auto rightWheelTargetVel = m_JointsMap.at(m_RightWheelJointName).targetVelocity;

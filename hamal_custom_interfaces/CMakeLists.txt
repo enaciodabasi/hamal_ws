@@ -12,6 +12,7 @@ add_message_files(
     ManualMoveCommand.msg
     BmsStatus.msg
     SpeedLimitRatio.msg
+    HardwareStatus.msg
 )
 
 add_action_files(
