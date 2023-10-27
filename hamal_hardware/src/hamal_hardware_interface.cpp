@@ -102,7 +102,7 @@ namespace hamal
             boost::bind(&HardwareInterface::lifterOperationCallback, this)
         ); */
 
-        m_HardwareInfoPub = m_NodeHandle.advertise<hamal_custom_interfaces::HardwareInfoArray>(
+        m_HardwareInfoPub = m_NodeHandle.advertise<hamal_custom_interfaces::HardwareStatus>(
             "hamal/hardware_info",
             10
         );
@@ -208,10 +208,12 @@ namespace hamal
                 m_JointsMap.at(m_LeftWheelJointName).hardwareInfo,
                 m_JointsMap.at(m_RightWheelJointName).hardwareInfo
             };
-            hamal_custom_interfaces::HardwareInfoArray infoArrayMsg;
-            infoArrayMsg.hardware_info_array = infoArray;
+            hamal_custom_interfaces::HardwareStatus hardwareStatus;
+            
+            hardwareStatus.slave_info.hardware_info_array = infoArray;
+            hardwareStatus.ec_system_status = m_EthercatController->isEthercatOk();
             m_HardwareInfoPub.publish((
-                infoArrayMsg
+                hardwareStatus
             ));
 
             rate.sleep();
