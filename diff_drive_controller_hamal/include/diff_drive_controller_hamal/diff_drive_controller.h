@@ -52,6 +52,7 @@
 #include <realtime_tools/realtime_buffer.h>
 #include <realtime_tools/realtime_publisher.h>
 #include <tf/tfMessage.h>
+#include <hamal_custom_interfaces/HardwareStatus.h>
 
 namespace diff_drive_controller_hamal{
 
@@ -186,6 +187,9 @@ namespace diff_drive_controller_hamal{
 
     /// Publish wheel data:
     bool publish_wheel_joint_controller_state_;
+
+    ros::Subscriber m_HardwareStatusSub;
+    bool m_IsHardwareOk = false;
 
     // A struct to hold dynamic parameters
     // set from dynamic_reconfigure server
@@ -337,6 +341,8 @@ namespace diff_drive_controller_hamal{
                           double wheel_separation,
                           double left_wheel_radius,
                           double right_wheel_radius);
+
+    void hardwareStatusCb(const hamal_custom_interfaces::HardwareStatus::ConstPtr& hardware_status_msg);
   };
 
 } // namespace diff_drive_controller

@@ -355,6 +355,14 @@ namespace diff_drive_controller_hamal{
 
     sub_command_ = controller_nh.subscribe("cmd_vel", 1, &DiffDriveControllerHamal::cmdVelCallback, this);
 
+    m_HardwareStatusSub = controller_nh.subscribe<hamal_custom_interfaces::HardwareStatus>(
+      "/hamal/hardware_status",
+      10,
+      [&](const hamal_custom_interfaces::HardwareStatus::ConstPtr& hardware_status_msg){
+        this->m_IsHardwareOk = (bool)hardware_status_msg->ec_system_status;
+      }
+    );
+
     // Initialize dynamic parameters
     DynamicParams dynamic_params;
     dynamic_params.left_wheel_radius_multiplier  = left_wheel_radius_multiplier_;
@@ -492,7 +500,7 @@ namespace diff_drive_controller_hamal{
     const double dt = (time - curr_cmd.stamp).toSec();
 
     // Brake if cmd_vel has timeout:
-    if (dt > cmd_vel_timeout_)
+    if (dt > cmd_vel_timeout_ || m_IsHardwareOk)
     {
       curr_cmd.lin = 0.0;
       curr_cmd.ang = 0.0;

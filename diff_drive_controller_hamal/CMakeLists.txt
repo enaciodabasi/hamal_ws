@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
     realtime_tools
     tf
     urdf
+    hamal_custom_interfaces
 )
 
 find_package(Boost REQUIRED)
@@ -31,6 +32,7 @@ catkin_package(
     nav_msgs
     realtime_tools
     tf
+    hamal_custom_interfaces
   LIBRARIES ${PROJECT_NAME}
   DEPENDS Boost
 )

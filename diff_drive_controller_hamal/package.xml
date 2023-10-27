@@ -28,6 +28,7 @@
   <depend>nav_msgs</depend>
   <depend>realtime_tools</depend>
   <depend>tf</depend>
+  <depend>hamal_custom_interfaces</depend>
 
   <build_depend>boost</build_depend>
   <build_depend>pluginlib</build_depend>
