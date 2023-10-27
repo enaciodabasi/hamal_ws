@@ -103,7 +103,7 @@ namespace hamal
         ); */
 
         m_HardwareInfoPub = m_NodeHandle.advertise<hamal_custom_interfaces::HardwareStatus>(
-            "hamal/hardware_info",
+            "/hamal/hardware_status",
             10
         );
 

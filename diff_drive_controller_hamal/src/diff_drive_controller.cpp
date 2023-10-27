@@ -500,7 +500,7 @@ namespace diff_drive_controller_hamal{
     const double dt = (time - curr_cmd.stamp).toSec();
 
     // Brake if cmd_vel has timeout:
-    if (dt > cmd_vel_timeout_ || m_IsHardwareOk)
+    if (dt > cmd_vel_timeout_ || !m_IsHardwareOk)
     {
       curr_cmd.lin = 0.0;
       curr_cmd.ang = 0.0;
@@ -529,11 +529,19 @@ namespace diff_drive_controller_hamal{
     const double vel_right = (curr_cmd.lin + curr_cmd.ang * ws / 2.0)/rwr;
 
     // Set wheels velocities:
-    for (size_t i = 0; i < wheel_joints_size_; ++i)
+    if(m_IsHardwareOk){
+      for (size_t i = 0; i < wheel_joints_size_; ++i)
+      {
+        left_wheel_joints_[i].setCommand(vel_left);
+        right_wheel_joints_[i].setCommand(vel_right);
+      }
+    }
+
+    /* for (size_t i = 0; i < wheel_joints_size_; ++i)
     {
       left_wheel_joints_[i].setCommand(vel_left);
       right_wheel_joints_[i].setCommand(vel_right);
-    }
+    } */
 
     publishWheelData(time, period, curr_cmd, ws, lwr, rwr);
     time_previous_ = time;
