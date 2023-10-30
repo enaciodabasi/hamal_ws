@@ -22,7 +22,7 @@ hamal:
     # URDF if not specified as a parameter
     wheel_separation : 0.457
     wheel_radius : 0.105
-    publish_cmd : false
+    publish_cmd : true
 
     # Wheel separation and radius multipliers
     wheel_separation_multiplier: 1.0 # default: 1.0
@@ -44,8 +44,8 @@ hamal:
         max_velocity           : 1.0  # m/s
         min_velocity           : -1.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 0.5 # m/s^2
-        min_acceleration       : -0.5 # m/s^2
+        max_acceleration       : 0.25 # m/s^2
+        min_acceleration       : -0.25 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 1.0  # m/s^3
     angular:
@@ -53,7 +53,7 @@ hamal:
         has_velocity_limits    : true
         max_velocity           : 1.0 # rad/s
         has_acceleration_limits: true
-        max_acceleration       : 0.5  # rad/s^2
+        max_acceleration       : 0.25  # rad/s^2
         has_jerk_limits        : false
         max_jerk               : 3.0 # rad/s^3
 

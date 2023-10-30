@@ -16,12 +16,13 @@ namespace vel_smoother
     Limits::Limits()
         : max(0.0), min(0.0)
     {
-
+        
     }
 
     VelocitySmoother::VelocitySmoother()
     {
-
+        m_CommandTimeout = ros::Duration(0.5);
+        m_LastCommandReceiveTime = ros::Time(0.0);
     }
 
     VelocitySmoother::~VelocitySmoother()
@@ -35,6 +36,11 @@ namespace vel_smoother
         const double& dt
     )
     {
+
+        if((ros::Time::now() - m_LastCommandReceiveTime) > m_CommandTimeout){
+            twist_cmd = geometry_msgs::Twist();
+        }
+
         applyAbsoluteVelLimits(twist_cmd);
 
         const double scaleFactor = calculateScaleFactor(twist_cmd, curr_twist, dt);
@@ -60,13 +66,15 @@ namespace vel_smoother
             ),
             scaleFactor
         );
+
+        m_LastCommandReceiveTime = ros::Time::now();
         
     }
 
     void VelocitySmoother::applyAbsoluteVelLimits(geometry_msgs::Twist& twist)
     {
         twist.linear.x = std::clamp(twist.linear.x, m_AbsoluteVelLimitsX.min, m_AbsoluteVelLimitsX.max);
-        twist.linear.y = std::clamp(twist.angular.z, m_AbsoluteVelLimitsZ.min, m_AbsoluteVelLimitsZ.min);
+        twist.angular.z = std::clamp(twist.angular.z, m_AbsoluteVelLimitsZ.min, m_AbsoluteVelLimitsZ.max);
     }
 
     double VelocitySmoother::calculateScaleFactor(
@@ -81,9 +89,9 @@ namespace vel_smoother
             const double& acc,
             const double& decc) -> double {
 
-                double dv_max, dv_min = 0.0;
+                //double dv_max, dv_min = 0.0;
 
-                std::tie(dv_min, dv_max) = VelocitySmoother::findMinMaxVelDiff(v_cmd, v_curr, dt, acc, decc);
+                auto [dv_min, dv_max] = VelocitySmoother::findMinMaxVelDiff(v_cmd, v_curr, dt, acc, decc);
 
                 const double dV = v_cmd - v_curr;
                 if(dV > dv_max){
@@ -101,8 +109,8 @@ namespace vel_smoother
         double currScaleFactor = -1.0;
 
         currScaleFactor = findScaleFactor(
-            curr_twist.linear.x,
             twist.linear.x,
+            curr_twist.linear.x,
             m_AccLimitsX.max,
             m_AccLimitsX.min
         );
@@ -112,8 +120,8 @@ namespace vel_smoother
 
 
         currScaleFactor = findScaleFactor(
-            curr_twist.angular.z,
             twist.angular.z,
+            curr_twist.angular.z,
             m_AccLimitsZ.max,
             m_AccLimitsZ.min
         );

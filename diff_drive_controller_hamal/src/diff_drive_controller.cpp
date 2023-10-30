@@ -535,14 +535,17 @@ namespace diff_drive_controller_hamal{
     currTwist.linear.x = odometry_.getLinear();
     currTwist.angular.z = odometry_.getAngular();
 
-    m_VelocitySmoother.smooth(currTwistCmd, currTwist, cmd_dt);
-
+    //m_VelocitySmoother.smooth(currTwistCmd, currTwist, (50.0));
+    //ROS_INFO("Current W: %f", currTwist.angular.z);
 
     limiter_lin_.limit(curr_cmd.lin, last0_cmd_.lin, last1_cmd_.lin, cmd_dt);
     limiter_ang_.limit(curr_cmd.ang, last0_cmd_.ang, last1_cmd_.ang, cmd_dt);
 
     last1_cmd_ = last0_cmd_;
     last0_cmd_ = curr_cmd;
+
+    //curr_cmd.lin = currTwistCmd.linear.x;
+    //curr_cmd.ang = currTwistCmd.angular.z;
 
     // Publish limited velocity:
     if (publish_cmd_ && cmd_vel_pub_ && cmd_vel_pub_->trylock())

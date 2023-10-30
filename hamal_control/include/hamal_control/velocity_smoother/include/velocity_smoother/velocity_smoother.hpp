@@ -13,7 +13,9 @@
 #define VELOCITY_SMOOTHER_HPP_
 
 #include <algorithm>
+#include <iostream>
 #include <geometry_msgs/Twist.h>
+#include <ros/ros.h>
 
 //template<typename T>
 //struct Commands
@@ -54,6 +56,16 @@ namespace vel_smoother
 
         ~VelocitySmoother();
 
+        auto getLimitsX() const
+        {
+            return std::make_pair(m_AbsoluteVelLimitsX, m_AccLimitsX);
+        }
+
+        auto getLimitsZ() const
+        {
+            return std::make_pair(m_AbsoluteVelLimitsZ, m_AccLimitsZ);
+        }
+
         void setLimitsX(const Limits& vel_limits, const Limits& acc_limits)
         {
             m_AbsoluteVelLimitsX = vel_limits;
@@ -85,6 +97,9 @@ namespace vel_smoother
         double m_DeadbandZ = 0.0;
 
         geometry_msgs::Twist m_LastTwist;
+
+        ros::Duration m_CommandTimeout;
+        ros::Time m_LastCommandReceiveTime;
 
         void applyAbsoluteVelLimits(geometry_msgs::Twist& twist);
 
