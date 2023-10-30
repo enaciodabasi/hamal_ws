@@ -251,6 +251,24 @@ namespace diff_drive_controller_hamal{
     controller_nh.param("enable_odom_tf", enable_odom_tf_, enable_odom_tf_);
     ROS_INFO_STREAM_NAMED(name_, "Publishing to tf is " << (enable_odom_tf_?"enabled":"disabled"));
 
+    vel_smoother::Limits velLimitsX;
+    vel_smoother::Limits velLimitsZ;
+    vel_smoother::Limits accLimitsX;
+    vel_smoother::Limits accLimitsZ;
+
+    controller_nh.param("linear/x/max_velocity"     , velLimitsX.max,  velLimitsX.max);
+    controller_nh.param("linear/x/min_velocity"     , velLimitsX.min, -velLimitsX.max);
+    controller_nh.param("linear/x/max_acceleration" , accLimitsX.max,  accLimitsX.max);
+    controller_nh.param("linear/x/min_acceleration" , accLimitsX.min, -accLimitsX.max);
+
+    controller_nh.param("angular/z/max_velocity"    , velLimitsZ.max,  velLimitsZ.max);
+    controller_nh.param("angular/z/min_velocity"    , velLimitsZ.min, -velLimitsZ.max);
+    controller_nh.param("angular/z/max_acceleration", accLimitsZ.max,  accLimitsZ.max);
+    controller_nh.param("angular/z/min_acceleration", accLimitsZ.min, -accLimitsZ.max);
+
+    m_VelocitySmoother.setLimitsX(velLimitsX, accLimitsX);
+    m_VelocitySmoother.setLimitsZ(velLimitsZ, accLimitsZ);
+
     // Velocity and acceleration limits:
     controller_nh.param("linear/x/has_velocity_limits"    , limiter_lin_.has_velocity_limits    , limiter_lin_.has_velocity_limits    );
     controller_nh.param("linear/x/has_acceleration_limits", limiter_lin_.has_acceleration_limits, limiter_lin_.has_acceleration_limits);
@@ -508,6 +526,17 @@ namespace diff_drive_controller_hamal{
 
     // Limit velocities and accelerations:
     const double cmd_dt(period.toSec());
+
+    geometry_msgs::Twist currTwistCmd;
+    currTwistCmd.linear.x = curr_cmd.lin;
+    currTwistCmd.angular.z = curr_cmd.ang;
+    
+    geometry_msgs::Twist currTwist;
+    currTwist.linear.x = odometry_.getLinear();
+    currTwist.angular.z = odometry_.getAngular();
+
+    m_VelocitySmoother.smooth(currTwistCmd, currTwist, cmd_dt);
+
 
     limiter_lin_.limit(curr_cmd.lin, last0_cmd_.lin, last1_cmd_.lin, cmd_dt);
     limiter_ang_.limit(curr_cmd.ang, last0_cmd_.ang, last1_cmd_.ang, cmd_dt);

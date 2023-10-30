@@ -4,8 +4,8 @@ project(hamal_hardware)
 set(CMAKE_CXX_STANDARD 17)
 
 set(ethercat_interface_lib /usr/local/lib/libethercat_interface.so)
-set(ethercat_interface_lib_INCLUDE_DIRS /home/grass/ethercat_interface/include/)
-#set(ethercat_interface_lib_INCLUDE_DIRS /home/naci/Projects/igh_master/include)
+#set(ethercat_interface_lib_INCLUDE_DIRS /home/grass/ethercat_interface/include/)
+set(ethercat_interface_lib_INCLUDE_DIRS /home/naci/Projects/igh_master/include)
 set(etherlab /usr/local/lib/libethercat.so)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
     diff_drive_controller
     hamal_custom_interfaces
     actionlib
+    hamal_control
 )
 
 find_package(yaml-cpp REQUIRED) 
@@ -69,7 +70,7 @@ add_executable(hamal_hardware
     src/rpm_limiter.cpp
     #include/hamal_hardware/rpm_limiter.hpp
     )
-target_link_libraries(hamal_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads)
+target_link_libraries(hamal_hardware ${catkin_LIBRARIES} ${ethercat_interface_lib} ${etherlab} ${YAML_CPP_LIBRARIES} Threads::Threads odometry_calculations)
 target_link_directories(hamal_hardware PUBLIC ${catkin_INCLUDE_DIRS} ${ethercat_interface_lib_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
 
 #add_executable(lifter_hardware 

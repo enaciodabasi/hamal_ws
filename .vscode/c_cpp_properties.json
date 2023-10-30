@@ -9,6 +9,7 @@
         "/home/naci/hamal_ws/devel/include/*",
         "/opt/ros/noetic/include/**",
         "/home/naci/hamal_ws/src/hamal_control/include/**",
+        "/home/naci/hamal_ws/src/hamal_control/include/hamal_control/velocity_smoother/**",
         "/home/naci/hamal_ws/src/hamal_diff_drive_controller/include/**",
         "/home/naci/hamal_ws/src/hamal_lifter_controller/include/**",
         "/home/naci/hamal_ws/src/hamal_localization/include/**",

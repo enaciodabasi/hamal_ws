@@ -53,7 +53,7 @@
 #include <realtime_tools/realtime_publisher.h>
 #include <tf/tfMessage.h>
 #include <hamal_custom_interfaces/HardwareStatus.h>
-
+#include <velocity_smoother/velocity_smoother.hpp>  
 namespace diff_drive_controller_hamal{
 
   /**
@@ -181,6 +181,8 @@ namespace diff_drive_controller_hamal{
     Commands last0_cmd_;
     SpeedLimiter limiter_lin_;
     SpeedLimiter limiter_ang_;
+
+    vel_smoother::VelocitySmoother m_VelocitySmoother;
 
     /// Publish limited velocity:
     bool publish_cmd_;

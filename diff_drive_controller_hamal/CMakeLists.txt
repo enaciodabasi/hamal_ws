@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(diff_drive_controller_hamal)
 
+set(CMAKE_CXX_STANDARD 17)
+
 # Load catkin and all dependencies required for this package
 find_package(catkin REQUIRED COMPONENTS
     controller_interface
@@ -13,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
     realtime_tools
     tf
     urdf
+    hamal_control
     hamal_custom_interfaces
 )
 
@@ -32,6 +35,7 @@ catkin_package(
     nav_msgs
     realtime_tools
     tf
+    hamal_control
     hamal_custom_interfaces
   LIBRARIES ${PROJECT_NAME}
   DEPENDS Boost
@@ -48,12 +52,18 @@ include_directories(
   include ${Boost_INCLUDE_DIRS}
 )
 
+add_library(odometry_calculations STATIC src/odometry.cpp)
+target_link_libraries(odometry_calculations ${catkin_LIBRARIES})
+install(TARGETS odometry_calculations
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
 add_library(${PROJECT_NAME}
   src/diff_drive_controller.cpp
   src/odometry.cpp
   src/speed_limiter.cpp
 )
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} velocity_smoother)
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 
