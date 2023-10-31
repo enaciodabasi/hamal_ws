@@ -185,6 +185,7 @@ void HamalEthercatController::cyclicTask()
 
                 double leftTargetVel = leftTargetVelOpt.value();
                 double rightTargetVel = rightTargetVelOpt.value();
+                int32_t a;
                 /* m_LeftMotorLimiter->limit(leftTargetVel, 0.002);
                 m_RightMotorLimiter->limit(rightTargetVel, 0.002); */
 /*                 std::cout << "Left Motor RPM:" << leftTargetVel << "Right Motor RPM" << rightTargetVel << std::endl; 
