@@ -53,7 +53,7 @@ hamal:
         has_velocity_limits    : true
         max_velocity           : 1.0 # rad/s
         has_acceleration_limits: true
-        max_acceleration       : 0.25  # rad/s^2
+        max_acceleration       : 0.5  # rad/s^2
         has_jerk_limits        : false
         max_jerk               : 3.0 # rad/s^3
 
