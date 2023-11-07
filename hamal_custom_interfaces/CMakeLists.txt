@@ -23,6 +23,13 @@ add_action_files(
     HomingOperation.action
 )
 
+add_service_files(
+    DIRECTORY
+    srv
+    FILES
+    EmergencyStop.srv
+)
+
 generate_messages(
     DEPENDENCIES
     std_msgs

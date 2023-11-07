@@ -85,6 +85,11 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
         this->updateThreadInfo();
     }
 
+    void setQuickStop(){
+        m_ActivateQuickStop = true;
+    }
+    
+
     private:
 
     ControlType m_LifterControlType;
@@ -101,7 +106,11 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
 
     bool m_EthercatOk = false;
 
+    bool m_ActivateQuickStop = false;
+
     void cyclicTask() override;
+
+    bool activateQuickStop();
 
 };
 

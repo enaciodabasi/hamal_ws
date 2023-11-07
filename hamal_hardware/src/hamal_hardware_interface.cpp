@@ -30,6 +30,20 @@ namespace hamal
             true
         );
 
+        m_EmgStopSrvServer = m_NodeHandle.advertiseService(
+            "/emg_stop_server",
+            &HardwareInterface::emgStopCallback,
+            this
+        );
+
+        //m_EmgStopSrvServer = m_NodeHandle.advertiseService(
+        //    "/emg_stop_server",
+        //    [](hamal_custom_interfaces::EmergencyStop::Request& req, 
+        //        hamal_custom_interfaces::EmergencyStop::Response& rep) -> bool{
+//
+        //    }
+        //);
+
         bool ec_ok = m_EthercatController->setup();
         if(!ec_ok)
         {
@@ -445,6 +459,15 @@ namespace hamal
 
         m_LifterHomingHelper->isHomingActive = true;
         
+    }
+
+    bool HardwareInterface::emgStopCallback(
+        hamal_custom_interfaces::EmergencyStop::Request& req, 
+        hamal_custom_interfaces::EmergencyStop::Response& rep
+    )
+    {
+        
+        m_EthercatController->setQuickStop();
     }
 }
 

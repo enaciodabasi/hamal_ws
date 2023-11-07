@@ -33,6 +33,7 @@
 #include "hamal_custom_interfaces/HardwareInfo.h"
 #include "hamal_custom_interfaces/HardwareInfoArray.h"
 #include "hamal_custom_interfaces/HardwareStatus.h"
+#include "hamal_custom_interfaces/EmergencyStop.h"
 
 namespace hamal
 {
@@ -113,6 +114,8 @@ namespace hamal
          */
         ros::NodeHandle m_NodeHandle;
 
+        ros::ServiceServer m_EmgStopSrvServer;
+
         std::shared_ptr<controller_manager::ControllerManager> m_ControllerManager;
 
         std::unique_ptr<HamalEthercatController> m_EthercatController;
@@ -179,6 +182,11 @@ namespace hamal
         void write();
 
         void executeHomingCallback();
+
+        bool emgStopCallback(
+            hamal_custom_interfaces::EmergencyStop::Request& req, 
+            hamal_custom_interfaces::EmergencyStop::Response& rep
+        );
 
 /*         void lifterOperationCallback();
  */

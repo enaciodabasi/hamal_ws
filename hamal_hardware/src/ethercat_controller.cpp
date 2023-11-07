@@ -39,6 +39,56 @@ HamalEthercatController::~HamalEthercatController()
     joinThread();
 }
 
+bool HamalEthercatController::activateQuickStop()
+{
+    if(m_EthercatOk){
+        
+
+        auto leftMotorCtrlWord = m_Master->getControlWord("domain_0", "somanet_node_2");
+        auto rightMotorCtrlWord = m_Master->getControlWord("domain_0", "somanet_node_1");
+        
+        auto leftMotorStatusWord = m_Master->read<uint16_t>("domain_0", "somanet_node_2", "status_word");
+        auto rightMotorStatusWord = m_Master->read<uint16_t>("domain_0", "somanet_node_1", "status_word");
+        
+        if(leftMotorCtrlWord && rightMotorCtrlWord && rightMotorStatusWord && leftMotorStatusWord){
+            
+            uint16_t leftMotorCtrlWordNew = leftMotorCtrlWord.value();
+            uint16_t rightMotorCtrlWordNew  = rightMotorCtrlWord.value();
+
+            if(!ethercat_interface::utilities::isBitSet(
+                rightMotorStatusWord.value(),
+                5
+            ))
+            {
+                ethercat_interface::utilities::setBitAtIndex(
+                    rightMotorCtrlWordNew,
+                    2
+                );
+            }
+
+            if(!ethercat_interface::utilities::isBitSet(
+                leftMotorStatusWord.value(),
+                5
+            ))
+            {
+                ethercat_interface::utilities::setBitAtIndex(
+                    rightMotorCtrlWordNew,
+                    2
+                );
+            }
+
+            m_Master->write("domain_0", "somanet_node_1", "ctrl_word", rightMotorCtrlWordNew);
+            m_Master->write("domain_0", "somanet_node_2", "ctrl_word", leftMotorCtrlWordNew);
+            
+            m_ActivateQuickStop = false;
+
+            return true;
+        }
+
+        return false;
+    }
+}
+
 void HamalEthercatController::cyclicTask()
 {
     if(m_EnableDC)
@@ -143,6 +193,11 @@ void HamalEthercatController::cyclicTask()
 
         if(slavesEnabled)
         {
+
+            if(m_ActivateQuickStop){
+                activateQuickStop();
+                
+            }
 
             auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_position");
             auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
