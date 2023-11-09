@@ -23,9 +23,7 @@ diff_drive_controller_hamal::DiffDriveControllerHamalConfig* controllerConfPtr;
 SyncFunc<teb_local_planner::TebLocalPlannerReconfigureConfig> syncTebParamsCb;
 SyncFunc<diff_drive_controller_hamal::DiffDriveControllerHamalConfig> syncControllerParamsCb;
 
-constexpr auto clientConfigCb = [](){
-
-};
+static VelParams initialVelParams;
 
 void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
 {   
@@ -42,32 +40,32 @@ void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
 
     const double multiplier = (speed_limit_ratio->ratio) / 100.0;
 
-    tebConf.max_vel_x *=  multiplier;
-    tebConf.max_vel_x_backwards *=  multiplier;
-    tebConf.max_vel_y *=  multiplier;
-    tebConf.max_vel_theta *=  multiplier;
+    tebConf.max_vel_x = initialVelParams.max_vel_x * multiplier;
+    tebConf.max_vel_x_backwards =  initialVelParams.min_vel_x * multiplier;
+    tebConf.max_vel_y =  0.0;
+    tebConf.max_vel_theta =  initialVelParams.max_vel_z * multiplier;
 
-    tebConf.acc_lim_x *= multiplier;
-    tebConf.acc_lim_y *= multiplier;
-    tebConf.acc_lim_theta *= multiplier;
+    tebConf.acc_lim_x =  initialVelParams.max_acc_x * multiplier;
+    tebConf.acc_lim_y = 0.0;
+    tebConf.acc_lim_theta = initialVelParams.max_acc_z * multiplier;
 
-    controllerConf.max_vel_x *= multiplier;
-    controllerConf.min_vel_x *= multiplier;
+    controllerConf.max_vel_x = initialVelParams.max_vel_x * multiplier;
+    controllerConf.min_vel_x = initialVelParams.min_vel_x * multiplier;
 
-    controllerConf.max_vel_z *= multiplier;
-    controllerConf.min_vel_z *= multiplier;
+    controllerConf.max_vel_z = initialVelParams.max_vel_z * multiplier;
+    controllerConf.min_vel_z = initialVelParams.min_vel_z * multiplier;
     
-    controllerConf.max_acc_x *= multiplier;
-    controllerConf.min_acc_x *= multiplier;
+    controllerConf.max_acc_x = initialVelParams.max_acc_x * multiplier;
+    controllerConf.min_acc_x = initialVelParams.min_acc_x * multiplier;
 
-    controllerConf.max_acc_z *= multiplier;
-    controllerConf.min_acc_z *= multiplier;
+    controllerConf.max_acc_z = initialVelParams.max_acc_z * multiplier;
+    controllerConf.min_acc_z = initialVelParams.min_acc_z * multiplier;
 
-    controllerConf.max_jerk_x *= multiplier;
-    controllerConf.min_jerk_x *= multiplier;
+    controllerConf.max_jerk_x = initialVelParams.max_jerk_x * multiplier;
+    controllerConf.min_jerk_x = initialVelParams.min_jerk_x * multiplier;
 
-    controllerConf.max_jerk_z *= multiplier;
-    controllerConf.min_jerk_z *= multiplier;
+    controllerConf.max_jerk_z = initialVelParams.max_jerk_z * multiplier;
+    controllerConf.min_jerk_z = initialVelParams.min_jerk_z * multiplier;
 
     dynamic_reconfigure::Client<diff_drive_controller_hamal::DiffDriveControllerHamalConfig> controllerConfigClient(
         "/hamal/mobile_base_controller",
@@ -95,7 +93,7 @@ void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
 
 }
 
-void syncTebParams(ros::NodeHandle& nh, teb_local_planner::TebLocalPlannerReconfigureConfig& teb_config)
+/* void syncTebParams(ros::NodeHandle& nh, teb_local_planner::TebLocalPlannerReconfigureConfig& teb_config)
 {
     
     //const std::string tebNs{"/teb_local_planner/"};
@@ -110,7 +108,7 @@ void syncControllerParams(ros::NodeHandle& nh, diff_drive_controller_hamal::Diff
     diff_drive_controller_hamal::DiffDriveControllerHamalConfig tempConfig;
     tempConfig.__fromServer__(nh);
     controller_config = std::move(tempConfig);
-}
+} */
 
 int main(int argc, char** argv)
 {
@@ -122,6 +120,8 @@ int main(int argc, char** argv)
 
     tebConfPtr = &tebConf;
     controllerConfPtr = &controllerConf;
+
+    bool tebInitialConf, controllerInitialConfig = true;
 
     ros::NodeHandle nh;
     ros::Subscriber ratioSub = nh.subscribe(
@@ -136,6 +136,20 @@ int main(int argc, char** argv)
         [&](const dynamic_reconfigure::Config::ConstPtr& config){
             auto conf = *config;
             tebConf.__fromMessage__(conf);
+            if(tebInitialConf){
+                
+                initialVelParams.max_vel_x = tebConf.max_vel_x;
+                initialVelParams.min_vel_x = tebConf.max_vel_x_backwards;
+                
+                initialVelParams.max_vel_z = tebConf.max_vel_theta;
+                initialVelParams.min_vel_z = -initialVelParams.max_vel_z;
+
+                initialVelParams.max_acc_x = tebConf.acc_lim_x;
+                
+                initialVelParams.max_acc_z = tebConf.acc_lim_theta;
+
+                tebInitialConf = false;
+            }
         }
     );
     
@@ -145,13 +159,29 @@ int main(int argc, char** argv)
         [&](const dynamic_reconfigure::Config::ConstPtr& config){
             auto conf = *config;
             controllerConf.__fromMessage__(conf);
+            if(controllerInitialConfig){
+
+                initialVelParams.min_acc_x = controllerConf.min_acc_x;
+                initialVelParams.min_acc_z = controllerConf.min_acc_z;
+                
+                initialVelParams.min_vel_x = controllerConf.min_vel_x;
+                initialVelParams.min_vel_z = controllerConf.min_vel_z;
+
+                initialVelParams.max_jerk_x = controllerConf.max_jerk_x;
+                initialVelParams.max_jerk_z = controllerConf.max_jerk_z;
+
+                initialVelParams.min_jerk_x = controllerConf.min_jerk_x;
+                initialVelParams.min_jerk_z = controllerConf.min_jerk_z;
+
+                controllerInitialConfig = false;
+            }
         }
     );
 
     
 
-    syncTebParamsCb = std::bind(syncTebParams, nh, tebConf);
-    syncControllerParamsCb = std::bind(syncControllerParams, nh, controllerConf);
+/*     syncTebParamsCb = std::bind(syncTebParams, nh, tebConf);
+    syncControllerParamsCb = std::bind(syncControllerParams, nh, controllerConf); */
 
     while(ros::ok()){
 

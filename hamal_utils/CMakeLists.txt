@@ -28,6 +28,10 @@ add_executable(dynamic_speed_limiter src/dynamic_speed_limiter.cpp)
 target_link_libraries(dynamic_speed_limiter ${catkin_LIBRARIES})
 target_include_directories(dynamic_speed_limiter PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
+add_library(emg_stop_client SHARED src/emg_stop_client.cpp)
+target_link_libraries(emg_stop_client ${catkin_LIBRARIES})
+target_include_directories(emg_stop_client PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 install(
     TARGETS dynamic_speed_limiter
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

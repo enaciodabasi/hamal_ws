@@ -31,5 +31,26 @@ void syncTebParams(ros::NodeHandle& nh, teb_local_planner::TebLocalPlannerReconf
 
 void syncControllerParams(ros::NodeHandle& nh, diff_drive_controller_hamal::DiffDriveControllerHamalConfig& controller_config);
 
+struct VelParams
+{
+    double max_vel_x;
+    double min_vel_x;
+
+    double max_acc_x;
+    double min_acc_x;
+    
+    double max_jerk_x;
+    double min_jerk_x;
+    
+    double max_vel_z;
+    double min_vel_z;
+    
+    double max_acc_z;
+    double min_acc_z;
+    
+    double max_jerk_z;
+    double min_jerk_z;
+
+};
 
 #endif // DYNAMIC_SPEED_LIMITER_HPP_
