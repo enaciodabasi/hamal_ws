@@ -131,6 +131,7 @@ namespace diff_drive_controller_hamal{
       ros::Time stamp;
 
       Commands() : lin(0.0), ang(0.0), stamp(0.0) {}
+      Commands(double lin, double ang){this->lin = lin; this->ang = ang;}
     };
     realtime_tools::RealtimeBuffer<Commands> command_;
     Commands command_struct_;
@@ -179,6 +180,10 @@ namespace diff_drive_controller_hamal{
     /// Speed limiters:
     Commands last1_cmd_;
     Commands last0_cmd_;
+
+    Commands m_PrevVelActual;
+    Commands m_PrevPrevVelActual;
+
     SpeedLimiter limiter_lin_;
     SpeedLimiter limiter_ang_;
 
