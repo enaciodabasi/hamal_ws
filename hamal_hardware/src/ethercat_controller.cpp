@@ -55,33 +55,31 @@ bool HamalEthercatController::activateQuickStop()
             uint16_t leftMotorCtrlWordNew = leftMotorCtrlWord.value();
             uint16_t rightMotorCtrlWordNew  = rightMotorCtrlWord.value();
 
-            if(!ethercat_interface::utilities::isBitSet(
+            if(ethercat_interface::utilities::isBitSet(
                 rightMotorStatusWord.value(),
                 5
             ))
             {
-                ethercat_interface::utilities::setBitAtIndex(
+                ethercat_interface::utilities::resetBitAtIndex(
                     rightMotorCtrlWordNew,
                     2
                 );
             }
 
-            if(!ethercat_interface::utilities::isBitSet(
+            if(ethercat_interface::utilities::isBitSet(
                 leftMotorStatusWord.value(),
                 5
             ))
             {
-                ethercat_interface::utilities::setBitAtIndex(
-                    rightMotorCtrlWordNew,
+                ethercat_interface::utilities::resetBitAtIndex(
+                    leftMotorCtrlWordNew,
                     2
                 );
             }
 
-            m_Master->write("domain_0", "somanet_node_1", "ctrl_word", rightMotorCtrlWordNew);
-            m_Master->write("domain_0", "somanet_node_2", "ctrl_word", leftMotorCtrlWordNew);
-            
+            m_Master->write<uint16_t>("domain_0", "somanet_node_1", "ctrl_word", rightMotorCtrlWordNew);
+            m_Master->write<uint16_t>("domain_0", "somanet_node_2", "ctrl_word", leftMotorCtrlWordNew);
             m_ActivateQuickStop = false;
-
             return true;
         }
 

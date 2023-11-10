@@ -16,7 +16,7 @@ TebLocalPlannerROS:
   force_reinit_new_goal_dist: 1.0
   shrink_horizon_backup: true
   shrink_horizon_min_duration: 10.0
-  allow_init_with_backwards_motion: true
+  allow_init_with_backwards_motion: false
   exact_arc_length: false
 
   # Robot limits:

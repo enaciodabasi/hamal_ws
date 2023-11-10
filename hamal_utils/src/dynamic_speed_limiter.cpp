@@ -41,7 +41,7 @@ void speedLimitRatioCallback(const SpeedLimitRatio::ConstPtr& speed_limit_ratio)
     const double multiplier = (speed_limit_ratio->ratio) / 100.0;
 
     tebConf.max_vel_x = initialVelParams.max_vel_x * multiplier;
-    tebConf.max_vel_x_backwards =  initialVelParams.min_vel_x * multiplier;
+    tebConf.max_vel_x_backwards = (-1.0 ) * initialVelParams.min_vel_x * multiplier;
     tebConf.max_vel_y =  0.0;
     tebConf.max_vel_theta =  initialVelParams.max_vel_z * multiplier;
 
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
             if(tebInitialConf){
                 
                 initialVelParams.max_vel_x = tebConf.max_vel_x;
-                initialVelParams.min_vel_x = tebConf.max_vel_x_backwards;
+                initialVelParams.min_vel_x = -1.0 * tebConf.max_vel_x_backwards;
                 
                 initialVelParams.max_vel_z = tebConf.max_vel_theta;
                 initialVelParams.min_vel_z = -initialVelParams.max_vel_z;
