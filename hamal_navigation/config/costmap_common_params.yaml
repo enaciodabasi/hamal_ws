@@ -1,6 +1,6 @@
 footprint: [[-1,-0.55],[-1,0.55],[1,0.55],[1,-0.55]]
 
-obstacle_range: 2.5
+obstacle_range: 3.5
 #max_obstacle_height: 2.0
 raytrace_range: 3.0
 #inflation_radius: 0.55
@@ -14,7 +14,7 @@ plugins:
 
 obstacles_layer:
   observation_sources: scan
-  scan: {sensor_frame: base_link, data_type: LaserScan, topic: /scan, marking: true, clearing: true, obstacle_range: 2.5, raytrace_range: 3.0 , expected_update_rate: 12.5}
+  scan: {sensor_frame: base_link, data_type: LaserScan, topic: /scan, marking: true, clearing: true, obstacle_range: 3.5, raytrace_range: 3.0 , expected_update_rate: 12.5}
 
 inflater_layer:
  #inflation_radius: 1.75

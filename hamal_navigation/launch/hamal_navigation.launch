@@ -2,7 +2,7 @@
 
 <launch>
 
-    <arg name="use_dwa_planner" default="false"></arg>
+    <arg name="use_dwa_planner" default="true"></arg>
 
     <group if="$(arg use_dwa_planner)">
         <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">

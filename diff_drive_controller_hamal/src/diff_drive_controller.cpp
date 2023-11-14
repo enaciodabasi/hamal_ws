@@ -525,9 +525,10 @@ namespace diff_drive_controller_hamal{
     }
 
     // Limit velocities and accelerations:
-    const double cmd_dt(period.toSec());
-    ROS_INFO("Controller period: %f seconds.", cmd_dt);
-
+    double cmd_dt(period.toSec());
+    
+/*     ROS_INFO("Controller period: %f seconds.", cmd_dt);
+ */
     geometry_msgs::Twist currTwistCmd;
     currTwistCmd.linear.x = curr_cmd.lin;
     currTwistCmd.angular.z = curr_cmd.ang;
@@ -538,9 +539,12 @@ namespace diff_drive_controller_hamal{
 
     //m_VelocitySmoother.smooth(currTwistCmd, currTwist, (50.0));
     //ROS_INFO("Current W: %f", currTwist.angular.z);
-
-    limiter_lin_.limit(curr_cmd.lin, m_PrevVelActual.lin, m_PrevPrevVelActual.lin, cmd_dt);
-    limiter_ang_.limit(curr_cmd.ang, m_PrevVelActual.ang, m_PrevPrevVelActual.ang, cmd_dt);
+    
+    /* limiter_lin_.limit(curr_cmd.lin, odometry_.getLinear(), m_PrevPrevVelActual.lin, cmd_dt);
+    limiter_ang_.limit(curr_cmd.ang, odometry_.getAngular(), m_PrevPrevVelActual.ang, cmd_dt);
+    ROS_INFO("Current linear Vel: %f | Target Linear Vel: %f", odometry_.getLinear(), curr_cmd.lin); */
+    limiter_lin_.limit(curr_cmd.lin, last0_cmd_.lin, last1_cmd_.lin, cmd_dt);
+    limiter_ang_.limit(curr_cmd.ang, last0_cmd_.ang, last1_cmd_.ang, cmd_dt);
 
     last1_cmd_ = last0_cmd_;
     m_PrevPrevVelActual = m_PrevVelActual;

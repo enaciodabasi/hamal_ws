@@ -141,20 +141,20 @@ namespace hamal
     void HardwareInterface::update()
     {   
         
-        ros::Rate rate(m_LoopFrequency);
-
+        ros::Rate rate(50.0);
         ros::Time prevTime = ros::Time::now();
-
+        
         while(ros::ok() && m_RosLoopFlag)
         {
-            // Read
+/*             ros::spinOnce();
+ */            // Read
             read();
             // Update CM
             ros::Time current = ros::Time::now();
             ros::Duration period = ros::Duration(current - prevTime);
             m_ControllerManager->update(current, period);
             prevTime = current;
-
+            ROS_INFO("Hardware Interface main loop duration: %f", period.toSec());
             write();
 
             if(m_LifterHomingHelper->isHomingActive){
@@ -229,8 +229,9 @@ namespace hamal
             m_HardwareInfoPub.publish((
                 hardwareStatus
             ));
-
             rate.sleep();
+/*                         ros::spinOnce();
+ */
 
         }
 
@@ -477,13 +478,14 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "hamal_hw");
     ros::NodeHandle nh;
     hamal::HardwareInterface hw(nh);
-    ros::AsyncSpinner asyncSpinner(5);
-    
+    ros::AsyncSpinner asyncSpinner(1);
     asyncSpinner.start();
 
     hw.update();
 
-    ros::waitForShutdown();
+/*     spinner.spin();
+ */
+    /* ros::shutdown(); */
 
     return 0;
 }

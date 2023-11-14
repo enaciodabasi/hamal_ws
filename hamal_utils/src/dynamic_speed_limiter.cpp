@@ -179,13 +179,14 @@ int main(int argc, char** argv)
     );
 
     
-
+    ros::Rate r(10.0);
 /*     syncTebParamsCb = std::bind(syncTebParams, nh, tebConf);
     syncControllerParamsCb = std::bind(syncControllerParams, nh, controllerConf); */
 
     while(ros::ok()){
 
         ros::spinOnce();
+        r.sleep();
     }
     //if(tebConfPtr)
     //    delete tebConfPtr;

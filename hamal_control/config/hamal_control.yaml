@@ -8,7 +8,7 @@ hamal:
     type        : diff_drive_controller_hamal/DiffDriveControllerHamal
     left_wheel  : 'left_wheel_joint'
     right_wheel : 'right_wheel_joint'
-    publish_rate: 100               # default: 50
+    publish_rate: 500               # default: 50
     pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
     #pose_covariance_diagonal : [0.001, 0.001, 1000000.0, 1000000.0, 1000000.0, 1000.0]
