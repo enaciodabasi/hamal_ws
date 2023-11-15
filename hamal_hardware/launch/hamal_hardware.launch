@@ -12,6 +12,6 @@
         <node pkg="hamal_hardware" name="hamal_hardware" type="hamal_hardware" output="screen"></node>
     </group>
 
-    <node pkg="hamal_hardware" type="bms_node.py" name="bms_node" output="screen"/>
-    
+<!--     <node pkg="hamal_hardware" type="bms_node.py" name="bms_node" output="screen"/>
+ -->    
 </launch>

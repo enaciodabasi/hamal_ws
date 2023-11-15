@@ -106,8 +106,8 @@ namespace hamal
          * @brief 
          * 
          */
-        void update(const ros::TimerEvent& event);
-
+        //void update(const ros::TimerEvent& event);
+        void update();
         private:
 
         /**

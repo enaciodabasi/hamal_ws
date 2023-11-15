@@ -14,7 +14,9 @@
 namespace hamal
 {
     HardwareInterface::HardwareInterface(ros::NodeHandle& nh)
-    {
+    {   
+
+        m_NodeHandle = nh;
         configure();
 
         m_ControllerManager = std::make_shared<controller_manager::ControllerManager>(
@@ -132,23 +134,25 @@ namespace hamal
 
         m_HomingServer->start();
         m_LastUpdateTime = ros::Time::now();
-        m_UpdateTimer = m_NodeHandle.createTimer(
+       /*  m_UpdateTimer = m_NodeHandle.createTimer(
             ros::Duration(1.0 / m_LoopFrequency),
             &HardwareInterface::update,
-            this,
-            false,
-            true
+            this
         );
+
+        m_UpdateTimer.start(); */
+
+
     }
 
     HardwareInterface::~HardwareInterface()
     {
-
+        m_EthercatController->m_EthercatLoopFlag = false; 
     }
 
-    void HardwareInterface::update(const ros::TimerEvent& event)
+    void HardwareInterface::update()
     {   
-        
+        /* ROS_INFO("INSIDE TIMER");
         if(!m_RosLoopFlag){
             return;
         }
@@ -159,8 +163,7 @@ namespace hamal
             ros::Duration period = current - m_LastUpdateTime;
             m_LastUpdateTime = current;
             m_ControllerManager->update(current, period);
-/*             ROS_INFO("Hardware Interface main loop duration: %f", period.toSec());
- */            write();
+           write();
 
             if(m_LifterHomingHelper->isHomingActive){
                 ROS_INFO("Homing is active");
@@ -233,12 +236,32 @@ namespace hamal
             hardwareStatus.ec_system_status = m_EthercatController->isEthercatOk();
             m_HardwareInfoPub.publish((
                 hardwareStatus
-            ));
-/* 
-        ros::Rate rate(m_LoopFrequency);
+            )); */
+
+        const int maxPrio = sched_get_priority_max(SCHED_FIFO);
+    if(maxPrio != -1){
+        pthread_t currentThread = pthread_self();
+        struct sched_param threadSchedParams;
+        threadSchedParams.sched_priority = maxPrio;
+        int suc = pthread_setschedparam(currentThread, SCHED_FIFO, &threadSchedParams);
+        if(suc != 0){
+            ROS_WARN("Can't set main hardware thread to realtime.");
+        }
+
+        int pol = 99;
+        suc = pthread_getschedparam(currentThread, &pol, &threadSchedParams);
+        if(suc != 0){
+            ROS_WARN("Could not set main hardware thread to realtime.");
+        }
+        if(pol != SCHED_FIFO){
+            ROS_WARN("Can't set main hardware thread's scheduling to FIFO.");
+        }
+
+    }
+        ros::Rate rate(500.0);
         ros::Time prevTime = ros::Time::now();
         
-        while(ros::ok() && m_RosLoopFlag)
+        while(ros::ok())
         {
             // Read
             read();
@@ -326,7 +349,7 @@ namespace hamal
 
         }
 
-        m_EthercatController->m_EthercatLoopFlag = false; */
+        m_EthercatController->m_EthercatLoopFlag = false;
     }
 
     void HardwareInterface::configure()
@@ -551,6 +574,8 @@ namespace hamal
         }
 
         m_LifterHomingHelper->isHomingActive = true;
+
+        return;
         
     }
 
@@ -561,40 +586,23 @@ namespace hamal
     {
         ROS_INFO("EMG_CALLBACK");
         m_EthercatController->setQuickStop();
+        return true;
     }
 }
 
 int main(int argc, char** argv)
 {
 
-    ros::init(argc, argv, "hamal_hw");
+    ros::init(argc, argv, "hamal_hardware");
     ros::NodeHandle nh;
     hamal::HardwareInterface hw(nh);
-/*     ros::AsyncSpinner asyncSpinner(1);
- */    
-    const int maxPrio = sched_get_priority_max(SCHED_FIFO);
-    if(maxPrio != -1){
-        pthread_t currentThread = pthread_self();
-        struct sched_param threadSchedParams;
-        threadSchedParams.sched_priority = maxPrio;
-        int suc = pthread_setschedparam(currentThread, SCHED_FIFO, &threadSchedParams);
-        if(suc != 0){
-            ROS_WARN("Can't set main hardware thread to realtime.");
-        }
+    //ros::AsyncSpinner asyncSpinner(1);
+     ros::MultiThreadedSpinner spinner(4);
+    
+    std::thread t(std::bind(&hamal::HardwareInterface::update, &hw));
 
-        int pol = 0;
-        suc = pthread_getschedparam(currentThread, &pol, &threadSchedParams);
-        if(suc != 0){
-            ROS_WARN("Could not set main hardware thread to realtime.");
-        }
-        if(pol != SCHED_FIFO){
-            ROS_WARN("Can't set main hardware thread's scheduling to FIFO.");
-        }
-
-    }
-
-/*     asyncSpinner.start();
- */    
+    spinner.spin();
+    t.join();
 /*     asyncSpinner.stop();
  *//*     spinner.spin();
  */
