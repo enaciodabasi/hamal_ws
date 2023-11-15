@@ -141,7 +141,7 @@ namespace hamal
     void HardwareInterface::update()
     {   
         
-        ros::Rate rate(50.0);
+        ros::Rate rate(m_LoopFrequency);
         ros::Time prevTime = ros::Time::now();
         
         while(ros::ok() && m_RosLoopFlag)
@@ -154,8 +154,8 @@ namespace hamal
             ros::Duration period = ros::Duration(current - prevTime);
             m_ControllerManager->update(current, period);
             prevTime = current;
-            ROS_INFO("Hardware Interface main loop duration: %f", period.toSec());
-            write();
+/*             ROS_INFO("Hardware Interface main loop duration: %f", period.toSec());
+ */            write();
 
             if(m_LifterHomingHelper->isHomingActive){
                 ROS_INFO("Homing is active");
@@ -229,6 +229,7 @@ namespace hamal
             m_HardwareInfoPub.publish((
                 hardwareStatus
             ));
+
             rate.sleep();
 /*                         ros::spinOnce();
  */
@@ -443,6 +444,7 @@ namespace hamal
 
     void HardwareInterface::executeHomingCallback()
     {
+        ROS_INFO("HOMING CALLBACK");
         const auto homingGoal = m_HomingServer->acceptNewGoal();
         const auto homingInfo = homingGoal->homingInfo;
         if(homingInfo.switchSearchSpeed != 0){
@@ -467,7 +469,7 @@ namespace hamal
         hamal_custom_interfaces::EmergencyStop::Response& rep
     )
     {
-        
+        ROS_INFO("EMG_CALLBACK");
         m_EthercatController->setQuickStop();
     }
 }
@@ -478,12 +480,13 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "hamal_hw");
     ros::NodeHandle nh;
     hamal::HardwareInterface hw(nh);
-    ros::AsyncSpinner asyncSpinner(1);
-    
+/*     ros::AsyncSpinner asyncSpinner(1);
+ */    
     const int maxPrio = sched_get_priority_max(SCHED_FIFO);
     if(maxPrio != -1){
         pthread_t currentThread = pthread_self();
-        sched_param threadSchedParams;
+        struct sched_param threadSchedParams;
+        threadSchedParams.sched_priority = maxPrio;
         int suc = pthread_setschedparam(currentThread, SCHED_FIFO, &threadSchedParams);
         if(suc != 0){
             ROS_WARN("Can't set main hardware thread to realtime.");
@@ -500,10 +503,10 @@ int main(int argc, char** argv)
 
     }
 
-    asyncSpinner.start();
-    hw.update();
-    asyncSpinner.stop();
-/*     spinner.spin();
+/*     asyncSpinner.start();
+ */    hw.update();
+/*     asyncSpinner.stop();
+ *//*     spinner.spin();
  */
     /* ros::shutdown(); */
 
