@@ -479,10 +479,30 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     hamal::HardwareInterface hw(nh);
     ros::AsyncSpinner asyncSpinner(1);
+    
+    const int maxPrio = sched_get_priority_max(SCHED_FIFO);
+    if(maxPrio != -1){
+        pthread_t currentThread = pthread_self();
+        sched_param threadSchedParams;
+        int suc = pthread_setschedparam(currentThread, SCHED_FIFO, &threadSchedParams);
+        if(suc != 0){
+            ROS_WARN("Can't set main hardware thread to realtime.");
+        }
+
+        int pol = 0;
+        suc = pthread_getschedparam(currentThread, &pol, &threadSchedParams);
+        if(suc != 0){
+            ROS_WARN("Could not set main hardware thread to realtime.");
+        }
+        if(pol != SCHED_FIFO){
+            ROS_WARN("Can't set main hardware thread's scheduling to FIFO.");
+        }
+
+    }
+
     asyncSpinner.start();
-
     hw.update();
-
+    asyncSpinner.stop();
 /*     spinner.spin();
  */
     /* ros::shutdown(); */

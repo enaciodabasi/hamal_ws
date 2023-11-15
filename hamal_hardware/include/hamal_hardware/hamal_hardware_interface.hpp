@@ -25,6 +25,8 @@
 #include <memory>
 #include <variant>
 
+#include <pthread.h>
+
 #include "hamal_hardware/ethercat_controller.hpp"
 #include "hamal_hardware/homing_helper.hpp"
 #include "hamal_custom_interfaces/HomingInfo.h"
