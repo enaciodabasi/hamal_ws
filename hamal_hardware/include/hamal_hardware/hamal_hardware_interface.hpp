@@ -106,7 +106,7 @@ namespace hamal
          * @brief 
          * 
          */
-        void update();
+        void update(const ros::TimerEvent& event);
 
         private:
 
@@ -117,6 +117,9 @@ namespace hamal
         ros::NodeHandle m_NodeHandle;
 
         ros::ServiceServer m_EmgStopSrvServer;
+
+        ros::Timer m_UpdateTimer;
+        ros::Time m_LastUpdateTime;
 
         std::shared_ptr<controller_manager::ControllerManager> m_ControllerManager;
 

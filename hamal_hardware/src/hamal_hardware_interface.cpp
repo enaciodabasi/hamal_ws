@@ -131,6 +131,14 @@ namespace hamal
         m_EthercatController->startTask();
 
         m_HomingServer->start();
+        m_LastUpdateTime = ros::Time::now();
+        m_UpdateTimer = m_NodeHandle.createTimer(
+            ros::Duration(1.0 / m_LoopFrequency),
+            &HardwareInterface::update,
+            this,
+            false,
+            true
+        );
     }
 
     HardwareInterface::~HardwareInterface()
@@ -138,22 +146,19 @@ namespace hamal
 
     }
 
-    void HardwareInterface::update()
+    void HardwareInterface::update(const ros::TimerEvent& event)
     {   
         
-        ros::Rate rate(m_LoopFrequency);
-        ros::Time prevTime = ros::Time::now();
-        
-        while(ros::ok() && m_RosLoopFlag)
-        {
-/*             ros::spinOnce();
- */            // Read
-            read();
+        if(!m_RosLoopFlag){
+            return;
+        }
+
+        read();
             // Update CM
             ros::Time current = ros::Time::now();
-            ros::Duration period = ros::Duration(current - prevTime);
+            ros::Duration period = current - m_LastUpdateTime;
+            m_LastUpdateTime = current;
             m_ControllerManager->update(current, period);
-            prevTime = current;
 /*             ROS_INFO("Hardware Interface main loop duration: %f", period.toSec());
  */            write();
 
@@ -229,14 +234,99 @@ namespace hamal
             m_HardwareInfoPub.publish((
                 hardwareStatus
             ));
+/* 
+        ros::Rate rate(m_LoopFrequency);
+        ros::Time prevTime = ros::Time::now();
+        
+        while(ros::ok() && m_RosLoopFlag)
+        {
+            // Read
+            read();
+            // Update CM
+            ros::Time current = ros::Time::now();
+            ros::Duration period = ros::Duration(current - prevTime);
+            m_ControllerManager->update(current, period);
+            prevTime = current;
+           write();
+
+            if(m_LifterHomingHelper->isHomingActive){
+                ROS_INFO("Homing is active");
+                if(m_HomingServer->isPreemptRequested()){
+                    m_HomingServer->setPreempted();
+                }
+
+                const auto homingStatus = m_LifterHomingHelper->getCurrentHomingStatus();
+                const auto homingStatusStr = HomingStatusStrings.find(homingStatus);
+                switch (homingStatus)
+                {
+                case HomingStatus::HomingIsPerformed :
+                case HomingStatus::HomingIsInterruptedOrNotStarted :
+                case HomingStatus::HomingConfirmedTargetNotReached :
+                {
+                    
+                    if(inRange<double>(m_JointsMap.at(m_LifterJointName).position, 0.0, 0.5)){
+                        hamal_custom_interfaces::HomingOperationResult homingRes;
+                        homingRes.status = homingStatusStr->second;
+                        homingRes.homingDone = true;
+                        m_HomingServer->setSucceeded(homingRes);
+                        m_LifterHomingHelper->reset();
+                    }
+                    else{
+                        hamal_custom_interfaces::HomingOperationFeedback homingFb;
+                        homingFb.homingStatus = homingStatusStr->second;
+
+                        m_HomingServer->publishFeedback(homingFb);
+                    }
+                    break;
+                }
+                case HomingStatus::HomingCompleted :
+                {
+                    hamal_custom_interfaces::HomingOperationResult homingRes;
+                    homingRes.status = homingStatusStr->second;
+                    homingRes.homingDone = true;
+                    m_HomingServer->setSucceeded(homingRes);
+                    m_LifterHomingHelper->reset();
+                    break;
+                }
+                case HomingStatus::ErrorDetectedMotorStillRunning :
+                case HomingStatus::ErrorDuringHomingMotorAtStandstill :
+                {
+                    hamal_custom_interfaces::HomingOperationResult homingRes;
+                    homingRes.status = homingStatusStr->second;
+                    homingRes.homingDone = false;
+                    m_HomingServer->setAborted(homingRes);
+                    m_LifterHomingHelper->reset();
+                    break;
+                }
+                default:
+                    break;
+                }
+
+            }
+
+            const auto status = m_EthercatController->getSlaveStatus();
+            m_JointsMap.at(m_LifterJointName).hardwareInfo.current_state = status.at(0).second;
+            m_JointsMap.at(m_LeftWheelJointName).hardwareInfo.current_state = status.at(1).second;
+            m_JointsMap.at(m_RightWheelJointName).hardwareInfo.current_state = status.at(2).second;
+
+            std::vector<hamal_custom_interfaces::HardwareInfo> infoArray = {
+                m_JointsMap.at(m_LifterJointName).hardwareInfo,
+                m_JointsMap.at(m_LeftWheelJointName).hardwareInfo,
+                m_JointsMap.at(m_RightWheelJointName).hardwareInfo
+            };
+            hamal_custom_interfaces::HardwareStatus hardwareStatus;
+            
+            hardwareStatus.slave_info.hardware_info_array = infoArray;
+            hardwareStatus.ec_system_status = m_EthercatController->isEthercatOk();
+            m_HardwareInfoPub.publish((
+                hardwareStatus
+            ));
 
             rate.sleep();
-/*                         ros::spinOnce();
- */
 
         }
 
-        m_EthercatController->m_EthercatLoopFlag = false;
+        m_EthercatController->m_EthercatLoopFlag = false; */
     }
 
     void HardwareInterface::configure()
@@ -504,7 +594,7 @@ int main(int argc, char** argv)
     }
 
 /*     asyncSpinner.start();
- */    hw.update();
+ */    
 /*     asyncSpinner.stop();
  *//*     spinner.spin();
  */
