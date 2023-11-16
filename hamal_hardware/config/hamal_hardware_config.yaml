@@ -5,7 +5,7 @@ hamal:
     lifter_joint: lifter_joint
     lifter_control_type: velocity
     loop_hz: 500.0
-    ethercat_config_path: /home/grass/amr_ws/src/hamal_hardware/config/hamal_config.yaml
+    ethercat_config_path: /home/rnd/hamal_ws/src/hamal_hardware/config/hamal_config.yaml
     #lifter_joint: lifter_joint
     lifter_interface_type: velocity
     max_vel: 3000

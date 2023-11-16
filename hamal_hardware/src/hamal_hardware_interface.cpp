@@ -258,7 +258,7 @@ namespace hamal
         }
 
     }
-        ros::Rate rate(500.0);
+        ros::Rate rate(m_LoopFrequency);
         ros::Time prevTime = ros::Time::now();
         
         while(ros::ok())
@@ -269,7 +269,7 @@ namespace hamal
             ros::Time current = ros::Time::now();
             ros::Duration period = ros::Duration(current - prevTime);
             m_ControllerManager->update(current, period);
-            prevTime = current;
+            prevTime = current; 
            write();
 
             if(m_LifterHomingHelper->isHomingActive){
