@@ -15,7 +15,9 @@
   <depend>teb_local_planner</depend>
   <depend>dynamic_reconfigure</depend>
   <depend>hamal_custom_interfaces</depend>
-
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
   <export>
 
   </export>
