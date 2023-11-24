@@ -43,6 +43,11 @@ add_library(velocity_smoother STATIC src/velocity_smoother/src/velocity_smoother
 target_link_libraries(velocity_smoother ${catkin_LIBRARIES})
 target_include_directories(velocity_smoother PUBLIC ${catkin_INCLUDE_DIRS} include/hamal_control/velocity_smoother/include/)
 
+
+add_executable(trapezoidal_profile src/trapezoid_move.cpp)
+target_link_libraries(trapezoidal_profile ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_include_directories(trapezoidal_profile PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
+
 # install(TARGETS lifter_controller_client
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
