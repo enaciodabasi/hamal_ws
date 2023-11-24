@@ -16,6 +16,11 @@ EmgClientBase::EmgClientBase(ros::NodeHandle& nh)
     m_ServiceClient = nh.serviceClient<EmgClient>("emg_stop_server");
 }
 
+EmgClientBase::~EmgClientBase()
+{
+    
+}
+
 bool EmgClientBase::sendEmg()
 {   
     if(!m_ServiceClient.exists()){

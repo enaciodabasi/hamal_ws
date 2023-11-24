@@ -13,6 +13,8 @@ add_message_files(
     BmsStatus.msg
     SpeedLimitRatio.msg
     HardwareStatus.msg
+    ImuTestDebugInfo.msg
+    ProfileCommand.msg
 )
 
 add_action_files(

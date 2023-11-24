@@ -14,6 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
 )
 
+find_package(Qt5 COMPONENTS Widgets Core REQUIRED)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
 catkin_package(
    INCLUDE_DIRS include
@@ -39,6 +43,11 @@ add_executable(imu_test src/imu_test.cpp)
 target_link_libraries(imu_test ${catkin_LIBRARIES})
 target_include_directories(imu_test PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
+add_executable(emg_stop_gui 
+    src/emg_stop_gui.cpp
+)
+target_link_libraries(emg_stop_gui ${catkin_LIBRARIES} Qt5::Core Qt5::Widgets emg_stop_client)
+target_include_directories(emg_stop_gui PUBLIC ${catkin_INCLUDE_DIRS} include/)
 install(
     TARGETS dynamic_speed_limiter
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
