@@ -12,6 +12,8 @@
 
     <arg name="use_dwa_planner" default="true"></arg>
 
+    <arg name="use_ekf" default="true"></arg>
+
     <arg name="joy_config" default="xbox" />
     <arg name="joy_dev" default="/dev/input/js0" />
     <arg name="config_filepath" default="$(find teleop_twist_joy)/config/$(arg joy_config).config.yaml" />
@@ -80,7 +82,12 @@
     </group>
 
     <group unless="$(arg manual_enabled)">
-      <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>
+      <group if="$(arg use_ekf)">
+        <param name="/hamal/mobile_base_controller/enable_odom_tf" value="false"></param>  
+      </group>
+      <group unless="$(arg use_ekf)">
+        <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>
+      </group>
       <node 
         name="map_server"
         pkg="map_server" 
@@ -88,11 +95,16 @@
         args="$(find hamal_mapping)/maps/$(arg map)"> 
       </node>
 
-      <include file="$(find hamal_localization)/launch/localization.launch"></include>
+      <include file="$(find hamal_localization)/launch/localization.launch">
+          <arg name="use_ekf" value="$(arg use_ekf)"></arg>
+          <remap from="/odom" to="/odometry/filtered"></remap>
+      </include>
 
       <include file="$(find hamal_navigation)/launch/hamal_navigation.launch">
         <arg name="use_dwa_planner" value="$(arg use_dwa_planner)"></arg>
-        <remap from="/odom" to="/hamal/mobile_base_controller/odom"></remap>
+
+        <arg name="use_ekf" value="$(arg use_ekf)"></arg>
+        
         <remap from="/cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"></remap>
       </include>    
 

@@ -15,9 +15,11 @@ plugins:
 obstacles_layer:
   observation_sources: scan
   scan: {sensor_frame: base_link, data_type: LaserScan, topic: /scan, marking: true, clearing: true, obstacle_range: 3.5, raytrace_range: 3.0 , expected_update_rate: 12.5}
-
+  track_unknown_space: true
+  
 inflater_layer:
  #inflation_radius: 1.75
  #cost_scaling_factor: 2.58
  inflation_radius: 1.0
  cost_scaling_factor: 1.5
+ track_unknown_space: true

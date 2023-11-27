@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     degreeSub = nh.subscribe("/degree_command", 10, getInputDegree);
 
     ros::Subscriber odomSub;
-    odomSub = nh.subscribe("/hamal/mobile_base_controller/odom", 10, odomCallback);
+    odomSub = nh.subscribe("/odometry/filtered", 10, odomCallback);
 
     ros::Subscriber cmdSub;
     cmdSub = nh.subscribe("/manual_move", 10, manualMoveCommandCallback);

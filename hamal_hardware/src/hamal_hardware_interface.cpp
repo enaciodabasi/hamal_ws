@@ -475,7 +475,7 @@ namespace hamal
         if(leftWheelPosition && rightWheelPosition && lifterPosition)
         {
 
-            m_JointsMap.at(m_LeftWheelJointName).position = (motorPositionToJointPosition(leftWheelPosition.value())) * 1.0;/* * 0.5 */;
+            m_JointsMap.at(m_LeftWheelJointName).position = (motorPositionToJointPosition(leftWheelPosition.value())) * -1.0;/* * 0.5 */;
             m_JointsMap.at(m_RightWheelJointName).position = (motorPositionToJointPosition(rightWheelPosition.value())) /* * 0.5 */;
             double lifterPos = static_cast<double>(lifterPosition.value());
             double lifterPosInRads = (lifterPos / m_LifterIncrement) * (2.0 * M_PI);

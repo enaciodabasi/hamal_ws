@@ -34,7 +34,7 @@ hamal:
     #frame_id: base_link
 
     open_loop: false
-    enable_odom_tf: false
+    enable_odom_tf: true
  
     # Velocity and acceleration limitss
     # Whenever a min_* is unspecified, default to -max_*
