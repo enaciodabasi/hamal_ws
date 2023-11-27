@@ -54,6 +54,9 @@ class CentralWidget : public QWidget
 
     std::unique_ptr<EmgClientBase> m_EmgRosClient;
 
+    bool m_SetPress = true;
+
+    ros::ServiceClient m_ResetServiceClient;
 
 
 };

@@ -38,6 +38,12 @@ namespace hamal
             this
         );
 
+        m_QuickStopDeactivateServer = m_NodeHandle.advertiseService(
+            "/deactivate_quick_stop_server",
+            &HardwareInterface::deactivateQuickStopCb,
+            this
+        );
+
         //m_EmgStopSrvServer = m_NodeHandle.advertiseService(
         //    "/emg_stop_server",
         //    [](hamal_custom_interfaces::EmergencyStop::Request& req, 
@@ -584,8 +590,20 @@ namespace hamal
         hamal_custom_interfaces::EmergencyStop::Response& rep
     )
     {
-        ROS_INFO("EMG_CALLBACK");
+        
         m_EthercatController->setQuickStop();
+        return true;
+    }
+
+    bool HardwareInterface::deactivateQuickStopCb(
+        hamal_custom_interfaces::EmergencyStop::Request& req, 
+        hamal_custom_interfaces::EmergencyStop::Response& rep
+    )
+    {
+        if(m_EthercatController->isQuickStopActive()){
+            m_EthercatController->deactivateQuickStop();
+        }
+ 
         return true;
     }
 }

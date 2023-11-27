@@ -79,7 +79,6 @@ bool HamalEthercatController::activateQuickStop()
 
             m_Master->write<uint16_t>("domain_0", "somanet_node_1", "ctrl_word", rightMotorCtrlWordNew);
             m_Master->write<uint16_t>("domain_0", "somanet_node_2", "ctrl_word", leftMotorCtrlWordNew);
-            m_ActivateQuickStop = false;
             return true;
         }
 

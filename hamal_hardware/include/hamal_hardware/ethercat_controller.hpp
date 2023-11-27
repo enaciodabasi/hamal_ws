@@ -88,6 +88,16 @@ class HamalEthercatController : public ethercat_interface::controller::Controlle
     void setQuickStop(){
         m_ActivateQuickStop = true;
     }
+
+    void deactivateQuickStop()
+    {
+        m_ActivateQuickStop = false;
+    }
+
+    const bool isQuickStopActive() const
+    {
+        return m_ActivateQuickStop;
+    }
     
 
     private:

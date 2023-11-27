@@ -117,6 +117,7 @@ namespace hamal
         ros::NodeHandle m_NodeHandle;
 
         ros::ServiceServer m_EmgStopSrvServer;
+        ros::ServiceServer m_QuickStopDeactivateServer;
 
         ros::Timer m_UpdateTimer;
         ros::Time m_LastUpdateTime;
@@ -190,6 +191,11 @@ namespace hamal
 
         bool emgStopCallback(
             hamal_custom_interfaces::EmergencyStop::Request& req, 
+            hamal_custom_interfaces::EmergencyStop::Response& rep
+        );
+
+        bool deactivateQuickStopCb(
+            hamal_custom_interfaces::EmergencyStop::Request& req,
             hamal_custom_interfaces::EmergencyStop::Response& rep
         );
 
