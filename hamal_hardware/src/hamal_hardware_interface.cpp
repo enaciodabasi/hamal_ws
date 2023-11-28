@@ -590,7 +590,7 @@ namespace hamal
         hamal_custom_interfaces::EmergencyStop::Response& rep
     )
     {
-        
+        ROS_INFO("QUICK STOP ACTIVE");
         m_EthercatController->setQuickStop();
         return true;
     }
@@ -601,6 +601,7 @@ namespace hamal
     )
     {
         if(m_EthercatController->isQuickStopActive()){
+            ROS_INFO("DEACTIVATING QUICK STOP");
             m_EthercatController->deactivateQuickStop();
         }
  
