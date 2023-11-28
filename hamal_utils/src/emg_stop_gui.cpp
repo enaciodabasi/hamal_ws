@@ -36,7 +36,7 @@ CentralWidget::CentralWidget(ros::NodeHandle& nh, QWidget* parent)
 
     m_EmgButton = new QPushButton(this);
     m_EmgButtonPM = QPixmap(
-        "/home/naci/hamal_ws/src/hamal_utils/gui_resource/emg_button.png"
+        "/home/naci/hamal_ws/src/hamal_utils/gui_resource/emg_button2.png"
     );
     m_EmgButton->setIcon(QIcon(m_EmgButtonPM));
     m_EmgButton->setIconSize(m_EmgButtonPM.rect().size());
@@ -45,19 +45,21 @@ CentralWidget::CentralWidget(ros::NodeHandle& nh, QWidget* parent)
         m_EmgButton, &QPushButton::clicked,
         this, [&]() -> bool {
             if(this->m_SetPress){
+                std::cout << "Setting emg\n";
             this->m_EmgRosClient->sendEmg();
+            this->m_SetPress = false;
             }
             else{
                 if(!this->m_ResetServiceClient.exists()){
                     return false;
                 }
-
+                std::cout << "desetting emg\n";
                 hamal_custom_interfaces::EmergencyStop srv;
                 srv.request.trigger = std_msgs::Empty();
                 if(this->m_ResetServiceClient.call(srv)){
+                    this->m_SetPress = true;
                     return (bool)srv.response.stopped;
                 }
-
                 return true;
             }
         });

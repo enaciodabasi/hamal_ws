@@ -91,28 +91,65 @@ int main(int argc, char** argv)
     );
 
     ros::Publisher initialPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(
-        "initialpose",
+        "/initialpose",
         1,
         true
     );
-    YAML::Node baseFile = YAML::LoadFile("/home/grass/amr_ws/src/hamal_localization/pos_logs/pos_log.yaml");
+    std::string user = getlogin();
+    const std::string pathToConfig = "/home/" + user + "/hamal_ws/src/hamal_localization/pos_logs/pos_log.yaml";
+    bool isInitialPosSaving = false;
+    if(!std::filesystem::exists(pathToConfig)){
+        std::ofstream newFile(pathToConfig);
 
-    ros::Rate rate(10.0);
-    ros::Rate checkSubRate(50.0);
-    bool initialPosePublished = false;
-    while(initialPosePub.getNumSubscribers() == 0)
-    {   
-        ROS_INFO("No subs for initial pose.");
+        YAML::Node emptyFileNode;
+        emptyFileNode["robot_position"]["frame_id"] = "map";
+        emptyFileNode["robot_position"]["position"]["x"] = 0.0;
+        emptyFileNode["robot_position"]["position"]["y"] = 0.0;
+        emptyFileNode["robot_position"]["position"]["z"] = 0.0;
+        emptyFileNode["robot_position"]["orientation"]["x"] = 0.0;
+        emptyFileNode["robot_position"]["orientation"]["y"] = 0.0;
+        emptyFileNode["robot_position"]["orientation"]["z"] = 0.0;
+        emptyFileNode["robot_position"]["orientation"]["w"] = 0.0;
+
+        YAML::Node covarianceNode;
+        for(std::size_t covarianceMatIter = 0; covarianceMatIter < 36; covarianceMatIter++)
+        {
+            covarianceNode.push_back(0.0);
+        }
+
+        emptyFileNode["robot_position"]["covariance"] = covarianceNode;
+        isInitialPosSaving = true;
     }
 
-    if(initialPosePub.getNumSubscribers() != 0){
-        initialPosePub.publish(turnYamlNodeToPose(baseFile));
+
+
+    YAML::Node baseFile = YAML::LoadFile("/home/" + user + "/hamal_ws/src/hamal_localization/pos_logs/pos_log.yaml");
+
+    ros::Rate rate(10.0);
+    ros::Rate checkSubRate(500.0);
+    bool initialPosePublished = false;
+    if(!isInitialPosSaving){
+        while(initialPosePub.getNumSubscribers() == 0)
+        {   
+            if(ros::ok())
+                ros::spinOnce();
+            ROS_INFO("No subs for initial pose.");
+            checkSubRate.sleep();
+        }
+
+        if(initialPosePub.getNumSubscribers() != 0){
+            initialPosePub.publish(turnYamlNodeToPose(baseFile));
+            initialPosePublished = true;
+        }
+    }
+    else{
         initialPosePublished = true;
     }
 
     while(ros::ok())
     {
         if(!initialPosePublished){
+            rate.sleep();
             continue;
         }
         ros::spinOnce();
@@ -122,8 +159,8 @@ int main(int argc, char** argv)
         turnPoseMsgToYamlNode(baseFile, poseData);
         
         std::ofstream out;
-        out.open("/home/grass/amr_ws/src/hamal_localization/pos_logs/pos_log.yaml");
-        out << baseFile;
+        out.open("/home/"+ user +"/hamal_ws/src/hamal_localization/pos_logs/pos_log.yaml");
+        out << baseFile; 
 
         if(out.is_open()){
             out.close();
