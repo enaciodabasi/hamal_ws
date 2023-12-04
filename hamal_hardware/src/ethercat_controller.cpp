@@ -188,43 +188,39 @@ void HamalEthercatController::cyclicTask()
         const auto elapsed = (m_PrevUpdateTimePoint - current_time).count() / 1000.0;
         m_PrevUpdateTimePoint = current_time; */
 
-        if(slavesEnabled)
-        {
+        /* if(slavesEnabled)
+        { */
 
-            if(m_ActivateQuickStop){
-                activateQuickStop();
-                
-            }
-
-            auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_position");
-            auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
-            auto lifterPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_position");
-
-            if(leftMotorPosOpt){
-                setData<int32_t>("somanet_node_2", "actual_position", leftMotorPosOpt.value());
-            }
-            if(rightMotorPosOpt){
-                setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
-            }
-            if(lifterPosOpt){
-                setData<int32_t>("somanet_node_0", "actual_position", lifterPosOpt.value() * -1);
-            }
-
-            auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_velocity");
-            auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
-            auto lifterVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_velocity");
-
-            if(leftMotorVelOpt){
-                setData<int32_t>("somanet_node_2", "actual_velocity", leftMotorVelOpt.value());
-            }
-            if(rightMotorVelOpt){
-                setData<int32_t>("somanet_node_1", "actual_velocity", rightMotorVelOpt.value());
-            }
-            if(lifterVelOpt){
-                setData<int32_t>("somanet_node_0", "actual_velocity", lifterVelOpt.value());
-            }
+        if(m_ActivateQuickStop){
+            activateQuickStop();
+            
         }
-        // slavesEnabled = m_Master->enableSlaves();
+        auto leftMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_position");
+        auto rightMotorPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_position");
+        auto lifterPosOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_position");
+        if(leftMotorPosOpt){
+            setData<int32_t>("somanet_node_2", "actual_position", leftMotorPosOpt.value());
+        }
+        if(rightMotorPosOpt){
+            setData<int32_t>("somanet_node_1", "actual_position", rightMotorPosOpt.value());
+        }
+        if(lifterPosOpt){
+            setData<int32_t>("somanet_node_0", "actual_position", lifterPosOpt.value() * -1);
+        }
+        auto leftMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_2", "actual_velocity");
+        auto rightMotorVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_1", "actual_velocity");
+        auto lifterVelOpt = m_Master->read<int32_t>("domain_0", "somanet_node_0", "actual_velocity");
+        if(leftMotorVelOpt){
+            setData<int32_t>("somanet_node_2", "actual_velocity", leftMotorVelOpt.value());
+        }
+        if(rightMotorVelOpt){
+            setData<int32_t>("somanet_node_1", "actual_velocity", rightMotorVelOpt.value());
+        }
+        if(lifterVelOpt){
+            setData<int32_t>("somanet_node_0", "actual_velocity", lifterVelOpt.value());
+        }
+        /* } */
+        
 
         if(slavesEnabled && !m_HomingHelperPtr->isHomingActive)
         {
