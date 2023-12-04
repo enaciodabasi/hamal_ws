@@ -24,7 +24,7 @@ hamal:
     wheel_radius : 0.105
     publish_cmd : true
 
-    # Wheel separation and radius multipliers
+    # Wheel separation and radius multipliers 4PissarG
     wheel_separation_multiplier: 1.0 # default: 1.0
     wheel_radius_multiplier    : 1.0 # default: 1.0
  

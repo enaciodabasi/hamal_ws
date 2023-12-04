@@ -18,9 +18,12 @@
 #include <QPushButton>
 #include <QPixmap>
 #include <QHBoxLayout>
+#include <QLineEdit>
+#include <QRadioButton>
+#include <QDoubleValidator>
 
 #include <ros/ros.h>
-
+#include "hamal_custom_interfaces/ProfileCommand.h"
 #include "hamal_utils/emg_stop_client.hpp"
 
 class CentralWidget;
@@ -52,11 +55,21 @@ class CentralWidget : public QWidget
 
     QPixmap m_EmgButtonPM; 
 
+    QLineEdit* m_TargetValueLEdit;
+    QLineEdit* m_MaxVelocityLEdit;
+    QLineEdit* m_MaxAccLEdit;
+
+    QRadioButton* m_LinearMovementTypeSelect;
+    QRadioButton* m_AngularMovementTypeSelect;
+
+    QPushButton* m_SendProfileGoalButton;
     std::unique_ptr<EmgClientBase> m_EmgRosClient;
 
     bool m_SetPress = true;
 
     ros::ServiceClient m_ResetServiceClient;
+
+    ros::Publisher m_ProfileGoalPublisher;
 
 
 };

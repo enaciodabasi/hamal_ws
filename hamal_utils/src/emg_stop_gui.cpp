@@ -67,6 +67,68 @@ CentralWidget::CentralWidget(ros::NodeHandle& nh, QWidget* parent)
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(m_EmgButton);    
 
+    QVBoxLayout* profileCommandLayout = new QVBoxLayout();
+
+
+    m_TargetValueLEdit = new QLineEdit(this);
+    m_MaxVelocityLEdit = new QLineEdit(this);
+    m_MaxAccLEdit = new QLineEdit(this);
+
+    m_TargetValueLEdit->setValidator(new QDoubleValidator(-10.0, 10.0, 3, this));
+    m_MaxVelocityLEdit->setValidator(new QDoubleValidator(0.0, 10.0, 3, this));
+    m_MaxAccLEdit->setValidator(new QDoubleValidator(0.0, 10.0, 3, this));
+    
+    m_LinearMovementTypeSelect = new QRadioButton("Linear", this);
+    m_AngularMovementTypeSelect = new QRadioButton("Angular", this);
+    
+    m_SendProfileGoalButton = new QPushButton("Send", this);
+
+    QHBoxLayout* radioButtonsLayout = new QHBoxLayout();
+    radioButtonsLayout->addWidget(m_LinearMovementTypeSelect);
+    radioButtonsLayout->addWidget(m_AngularMovementTypeSelect);
+
+    profileCommandLayout->addLayout(radioButtonsLayout);
+
+    profileCommandLayout->addWidget(m_TargetValueLEdit);
+    profileCommandLayout->addWidget(m_MaxVelocityLEdit);
+    profileCommandLayout->addWidget(m_MaxAccLEdit);
+    
+    profileCommandLayout->addWidget(m_SendProfileGoalButton);
+
+    m_ProfileGoalPublisher = nh.advertise<hamal_custom_interfaces::ProfileCommand>(
+        "/profile_command/trapezoidal",
+        10,
+        false
+    );
+
+    connect(
+        m_SendProfileGoalButton, &QPushButton::clicked,
+        this, [&]() -> bool {
+            
+            hamal_custom_interfaces::ProfileCommand pCmd;
+            
+            double target, maxVel, maxAcc = 0.0;
+
+            if(this->m_LinearMovementTypeSelect->isChecked()){
+                pCmd.linear = true;
+            }
+            else if(this->m_AngularMovementTypeSelect->isChecked()){
+                pCmd.linear = false;
+            }
+            else{
+                return false;
+            }
+
+            pCmd.target = this->m_TargetValueLEdit->text().toDouble();
+            pCmd.max_vel = this->m_MaxVelocityLEdit->text().toDouble();
+            pCmd.max_acc = this->m_MaxAccLEdit->text().toDouble();
+
+            this->m_ProfileGoalPublisher.publish(pCmd);
+
+            return true;
+        });
+
+    mainLayout->addLayout(profileCommandLayout);
     this->setLayout(mainLayout);
 
 }

@@ -590,7 +590,7 @@ namespace hamal
         hamal_custom_interfaces::EmergencyStop::Response& rep
     )
     {
-        ROS_INFO("QUICK STOP ACTIVE");
+        // ROS_INFO("QUICK STOP ACTIVE");
         m_EthercatController->setQuickStop();
         return true;
     }

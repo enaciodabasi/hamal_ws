@@ -1,0 +1,10 @@
+profile_controller_params:
+  trapezoidal_profile:
+    velocity_controller:
+      kp: 0.1
+      ki: 0.0
+      kd: 0.0
+    orientation_controller:
+      kp: 1.0
+      ki: 0.0
+      kd: 0.0

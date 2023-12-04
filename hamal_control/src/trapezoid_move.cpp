@@ -9,14 +9,7 @@
  * 
  */
 
-#include <ros/ros.h>
-#include <geometry_msgs/Twist.h>
-#include <nav_msgs/Odometry.h>
-#include <hamal_custom_interfaces/ProfileCommand.h>
-
-#include <iostream>
-#include <array>
-#include <queue>
+#include "hamal_control/motion_profiles/trapezoidal_profile.hpp"
 
 std::array<double ,3> calculateMotionDurations(const double control_var, double max_vel, double max_accel)
 {
@@ -36,90 +29,16 @@ std::array<double ,3> calculateMotionDurations(const double control_var, double 
 
 }
 
-struct
+double quaternionToDegree(const geometry_msgs::Quaternion& orientation_quaternion)
 {
-    double max_vel;
-    double max_acc;
-    double target_position;
-    double ta, tc, td;
-    double pos_ref;
-    double vel_ref;
-    bool isMotionLinear = true;
-    void reset(){
-        target_position = 0.0;
-        ta, tc, td = 0.0;
-        pos_ref, vel_ref = 0.0;
+    tf2::Quaternion quat;
+    tf2::fromMsg(orientation_quaternion, quat);
+    tf2::Matrix3x3 m(quat);
+    double r, p, y = 0.0;
+    m.getRPY(r, p, y);
 
-    }
-}goalInfo;
-
-class PID
-{
-    public:
-
-    PID()
-    {
-
-    }
-
-    ~PID()
-    {
-
-    }
-
-    double control(double current_value, double control_value, const ros::Time& current_time)
-    {
-        const double dt = (current_time - m_PreviousTime).toSec();
-        const double error = control_value - current_value;
-
-        m_SumOfErrors += error * dt;
-
-        const double rateOfError = (m_PreviousError - error) / dt;
-        m_PreviousError = error;
-        m_PreviousTime = current_time;
-
-        return ((m_Kp * error) + (m_Ki * m_SumOfErrors) + (m_Kd * rateOfError)); 
-
-    }
-
-    /* double errorFunction(const double actual_value, const double control_value)
-    {
-
-    }
- */
-    void setParams(double kp, double ki, double kd)
-    {
-        m_Kp = kp;
-        m_Ki = ki;
-        m_Kd = kd;
-    }
-
-    void reset()
-    {
-        m_Error = 0.0;
-        m_PreviousError = 0.0;
-        m_SumOfErrors = 0.0;
-    }
-
-    private:
-
-    double m_Kp;
-    double m_Ki;
-    double m_Kd;
-
-    double m_Error;
-    double m_PreviousError;
-    double m_SumOfErrors;
-
-    ros::Time m_PreviousTime;
-
-};
-
-enum class MovementType
-{
-    Linear,
-    Angular
-};
+    return (y * (180.0 / M_PI));
+}
 
 int main(int argc, char** argv)
 {
@@ -133,6 +52,25 @@ int main(int argc, char** argv)
     ros::Time profileStart, prevTime = ros::Time(0.0);
 
     std::queue<hamal_custom_interfaces::ProfileCommand> commandQueue;
+    
+    double kp, ki, kd = 0.0;
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/velocity_controller/kp",
+        kp,
+        kp
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/velocity_controller/ki",
+        ki,
+        ki
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/velocity_controller/kd",
+        kd,
+        kd
+    );
 
     ros::Subscriber goalSub = nh.subscribe<hamal_custom_interfaces::ProfileCommand>(
         "/profile_command/trapezoidal",
@@ -146,35 +84,99 @@ int main(int argc, char** argv)
     nav_msgs::Odometry currentOdom;
 
     ros::Subscriber odomSub = nh.subscribe<nav_msgs::Odometry>(
-        "/odometry/filtered",
+        "/hamal/mobile_base_controller/odom",
         10,
         [&](const nav_msgs::Odometry::ConstPtr& odom_msg){
             currentOdom = (*odom_msg);
         }   
     );
 
-    ros::Publisher cmdVelPub = nh.advertise<geometry_msgs::Twist>(
+    std::shared_ptr<realtime_tools::RealtimePublisher<geometry_msgs::Twist>> cmdVelRtPub = std::make_shared<realtime_tools::RealtimePublisher<geometry_msgs::Twist>>(
+        nh,
         "/hamal/mobile_base_controller/cmd_vel",
         1,
         false
     );
 
-    PID controller;
+    /* ros::Publisher cmdVelPub = nh.advertise<geometry_msgs::Twist>(
+        "/hamal/mobile_base_controller/cmd_vel",
+        1,
+        false
+    ); */
+
+    ros::Publisher controlledCmdVelPub = nh.advertise<geometry_msgs::TwistStamped>(
+        "/hamal/mobile_base_controller/controlled_cmd_vel",
+        1,
+        false
+    );
+
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener baseOdomTfListener(tfBuffer, nh, true);
+
+    PID velController;
+    ROS_INFO("Velocity PID params: Kp: %f | Ki: %f | Kd: %f", kp, ki, kd);
+    velController.setParams(kp, ki, kd);
+
+    PID linearMoveOrientationController;
+    kp, ki, kd = 0.0;
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/orientation_controller/kp",
+        kp,
+        kp
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/orientation_controller/ki",
+        ki,
+        ki
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/orientation_controller/kd",
+        kd,
+        kd
+    );
+
+    linearMoveOrientationController.setParams(kp, ki, kd);
+
+    double orientationSetPoint = 0.0;
+    bool controlOrientation = true; 
+    double distanceWithoutFeedback = 0.0;
+    double distanceWithControlledVelReference = 0.0;
+    double realDistanceTraveled = 0.0;
+    double prevX = currentOdom.pose.pose.position.x;
+    double realDistanceTraveledAngular = abs(quaternionToDegree(currentOdom.pose.pose.orientation));
+    
+    auto resetVars = [&]() -> void {
+        geometry_msgs::Twist cmdVel;
+                cmdVel.angular.z = 0.0;
+                cmdVel.linear.x = 0.0;
+
+        if(cmdVelRtPub->trylock()){
+            cmdVelRtPub->msg_ = cmdVel;
+            cmdVelRtPub->unlockAndPublish();
+        };    
+        ROS_INFO("Distance traveled via commands: %f", distanceWithoutFeedback);
+        distanceWithoutFeedback = 0.0;
+        orientationSetPoint = 0.0;
+        goalInfo.reset();
+        goalInProgress = false;
+        distanceWithControlledVelReference = 0.0;
+    };
 
     while(ros::ok())
     {
         ros::spinOnce();
         
-        
-        //if(commandQueue.empty()){
-        //    if(goalArrived)
-        //        goalArrived = false;
-        //    rate.sleep();
-        //    continue;
-        //}
-        //else{
-        //    goalArrived = true;
-        //}
+
+        if(commandQueue.empty()){
+            if(goalArrived)
+                goalArrived = false;
+        }
+        else{
+            if(!goalInProgress)
+                goalArrived = true;
+        }
 
         if(goalArrived){
             
@@ -182,7 +184,30 @@ int main(int argc, char** argv)
             goalInfo.target_position = currentGoal.target;
             goalInfo.max_vel = currentGoal.max_vel;
             goalInfo.max_acc = currentGoal.max_acc;
-            goalInfo.isMotionLinear = currentGoal.linear;
+            if(currentGoal.linear){
+                goalInfo.motion_type = MotionType::Linear;
+                std::optional<geometry_msgs::TransformStamped> currentTfOpt;
+                try{
+                    geometry_msgs::TransformStamped currentTf = tfBuffer.lookupTransform(
+                        "odom",
+                        "base_link",
+                        ros::Time(0.0)
+                    );
+
+                    currentTfOpt = currentTf;
+                }catch(...){
+                    controlOrientation = false;
+                }
+
+                if(currentTfOpt){
+                    auto orientationQuat = currentTfOpt.value().transform.rotation;
+                    orientationSetPoint = quaternionToDegree(orientationQuat);
+                }
+            }
+            else{
+                goalInfo.motion_type = MotionType::Angular;
+                orientationSetPoint = 0.0;
+            }
             commandQueue.pop();
             ROS_INFO("Starting manual profile generation.");
             auto profileTimes = calculateMotionDurations(goalInfo.target_position, goalInfo.max_vel, goalInfo.max_acc);
@@ -193,9 +218,14 @@ int main(int argc, char** argv)
             ROS_INFO("Total profile time: %f seconds", (goalInfo.ta + goalInfo.tc + goalInfo.td));
             profileStart = ros::Time::now();
             prevTime = profileStart;
-
+            realDistanceTraveled = 0.0;
+            realDistanceTraveledAngular = quaternionToDegree(currentOdom.pose.pose.orientation);
+            prevX = 0.0;
+            distanceWithoutFeedback = 0.0;
             goalInProgress = true;
             goalArrived = false;
+            distanceWithControlledVelReference = 0.0;
+            orientationSetPoint = 0.0;
             
         }
         else if(goalInProgress){
@@ -206,38 +236,49 @@ int main(int argc, char** argv)
             if(timeSinceProfileStart > (goalInfo.ta + goalInfo.tc + goalInfo.td)){
                 
                 ROS_INFO("Estimated profile duration exceeded by: %f. Resetting controller and braking.", timeSinceProfileStart);
-                geometry_msgs::Twist cmdVel;
+                resetVars();
+                /* geometry_msgs::Twist cmdVel;
                 cmdVel.angular.z = 0.0;
                 cmdVel.linear.x = 0.0;
-                cmdVelPub.publish(cmdVel);
 
+                if(cmdVelRtPub->trylock()){
+                    cmdVelRtPub->msg_ = cmdVel;
+                    cmdVelRtPub->unlockAndPublish();
+                }
+
+                ROS_INFO("Distance traveled via commands: %f", distanceWithoutFeedback);
+
+                distanceWithoutFeedback = 0.0;
                 goalInfo.reset();
-                goalInProgress = false;
+                goalInProgress = false; */
                 continue;
             }
             auto elaspedLoopTime = (currTime - prevTime).toSec();
             prevTime = currTime;
             
             double velRef = 0.0;
-            auto currentMotionType = [&]() -> MovementType {
-                if(goalInfo.isMotionLinear){
-                    return MovementType::Linear;
-                }
-                return MovementType::Angular;
-            }();
-
             double currentValue = 0.0;
-
-            switch (currentMotionType)
+            std::optional<geometry_msgs::TransformStamped> orientTfOpt;
+            switch (goalInfo.motion_type)
             {
-            case MovementType::Linear:
+            case MotionType::Linear:
                 currentValue = currentOdom.twist.twist.linear.x;
-                break;
-            case MovementType::Angular:
+                realDistanceTraveled += currentValue * elaspedLoopTime;
+                if(controlOrientation){
+                    try{
+                        orientTfOpt = tfBuffer.lookupTransform("odom", "base_link", ros::Time(0.0));
+                    }catch(...){
+                        controlOrientation = false;
+                    }
+                }
+            case MotionType::Angular:
                 currentValue = currentOdom.twist.twist.angular.z;
+                realDistanceTraveledAngular += currentValue * elaspedLoopTime;
+                orientTfOpt = std::nullopt;
                 break;
             default:
                 currentValue = 0.0;
+                orientTfOpt = std::nullopt;
                 break;
             }
             
@@ -251,16 +292,41 @@ int main(int argc, char** argv)
                 velRef = goalInfo.vel_ref - (elaspedLoopTime * goalInfo.max_acc);
             }
 
-            auto controlledRef = controller.control(currentValue, velRef, currTime);
-
-
+            if(orientTfOpt && controlOrientation){
+                const auto orientTf = orientTfOpt.value();
+                double orientCtrl = linearMoveOrientationController.control(orientationSetPoint, quaternionToDegree(orientTf.transform.rotation), currTime);
+                goalInfo.angular_vel_ref = orientCtrl * elaspedLoopTime;
+                double err = quaternionToDegree(orientTf.transform.rotation) - orientationSetPoint;
+                ROS_INFO("Orientation error: %f | Angular velocity to control: %f", err, goalInfo.angular_vel_ref);
+            }else{ROS_WARN("Not controlling orientation.");}
+            
+            distanceWithoutFeedback += velRef * elaspedLoopTime;
+            auto controlledRef = velController.control(currentValue, goalInfo.vel_ref, currTime);
+            
+            ROS_INFO("Distance traveled (feedback): %f | Distance traveled (open-loop): %f", realDistanceTraveled, distanceWithoutFeedback);
+            if(goalInfo.target_position < 0){
+                velRef = velRef * -1.0;
+            }
             goalInfo.vel_ref = velRef;
-
             geometry_msgs::Twist cmdVel;
+            
             cmdVel.linear.x = velRef;
-            ROS_INFO("Velocity reference: %f", velRef);
-            cmdVelPub.publish(cmdVel);
+            /* cmdVel.angular.z = goalInfo.angular_vel_ref; */
+            controlledRef += velRef;
+            distanceWithControlledVelReference += controlledRef * elaspedLoopTime;
 
+
+            ROS_INFO("Distance traveled (controlled): %f", distanceWithControlledVelReference);
+            
+            ROS_INFO("Velocity Reference: %f | Controlled reference: %f", velRef, controlledRef);
+            if(cmdVelRtPub->trylock()){
+                    cmdVelRtPub->msg_ = cmdVel;
+                    cmdVelRtPub->unlockAndPublish();
+            }
+
+            geometry_msgs::TwistStamped controllerCmdVel;
+            controllerCmdVel.twist.linear.x = controlledRef;
+            controlledCmdVelPub.publish(controllerCmdVel);
         }
 
 

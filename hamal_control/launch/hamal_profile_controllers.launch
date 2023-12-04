@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+    <rosparam file="$(find hamal_control)/config/profile_controller_params.yaml" command="load"></rosparam>
+
+    <node
+        name="trapezoidal_profile"
+        pkg="hamal_control"
+        type="trapezoidal_profile"
+        respawn="false"
+        output="screen"
+    />
+
+</launch>
