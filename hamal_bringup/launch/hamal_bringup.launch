@@ -8,7 +8,7 @@
     <arg name="use_slam_toolbox" default="false"></arg>
     <arg name="mode" default="lifelong"></arg>
     <arg name="model" default="$(find hamal_description)/urdf/hamal.urdf.xacro"></arg>
-    <arg name="map" default="altinay_test.yaml"></arg>
+    <arg name="map" default="slam_toolbox/ayosb_st.yaml"></arg>
 
     <arg name="use_dwa_planner" default="true"></arg>
 
@@ -61,7 +61,7 @@
           type="sync_slam_toolbox_node"
           name="slam_toolbox"
           output="screen">
-          <rosparam command="load" file="$(find amr_mapping)/config/sbox_offline.yaml"></rosparam>
+          <rosparam command="load" file="$(find hamal_mapping)/config/sbox_offline.yaml"></rosparam>
         </node>
         </group>
 

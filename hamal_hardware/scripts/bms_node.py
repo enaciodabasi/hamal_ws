@@ -22,7 +22,7 @@ def GetPortList():
 def SetPortConfig():
     global PortName
 
-    Ser = serial.Serial('/dev/ttyACM1', 115200, timeout=.1)
+    Ser = serial.Serial('/dev/ttyACM0', 115200, timeout=.1)
 
     if (Ser.isOpen()):
         return Ser

@@ -14,7 +14,7 @@ scan_topic: /scan
 mode: localization #localization
 
 # if you'd like to start localizing on bringup in a map and pose
-map_file_name: /home/grass/catkin_ws/src/amr_mapping/maps/office_floor_0
+map_file_name: /home/rnd/hamal_ws/src/hamal_mapping/maps/slam_toolbox/ayosb_st
 #map_start_pose: [5.0, 1.0, 0.0]
 
 debug_logging: false

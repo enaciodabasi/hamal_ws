@@ -20,6 +20,6 @@ obstacles_layer:
 inflater_layer:
  #inflation_radius: 1.75
  #cost_scaling_factor: 2.58
- inflation_radius: 1.0
- cost_scaling_factor: 1.5
+ inflation_radius: 1.5    
+ cost_scaling_factor: 3.0
  track_unknown_space: true
