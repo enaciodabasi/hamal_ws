@@ -4,7 +4,7 @@
     <arg name="use_madgwick" default="true"></arg>
     <arg name="use_complementary_filter" default="false"></arg>
     <arg name="use_ekf" default="true"></arg>
-
+    <!-->
     <include file="$(find ros_openimu_upx)/launch/openimu_driver.launch"></include>
 
     <group if="$(arg use_complementary_filter)">
@@ -25,7 +25,7 @@
       <param name="publish_rate" value="true"></param>
     </node>
     </group>
-
+<-->
     <group if="$(arg use_ekf)">
     <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_node" clear_params="true">
         <rosparam command="load" file="$(find hamal_localization)/config/rl_ekf.yaml" />

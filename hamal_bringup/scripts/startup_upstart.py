@@ -30,6 +30,10 @@ if master_uri == "":
 startup_job = robot_upstart.Job(
     name="hamal_startup_ros"
 )
+
+master_uri = "http://" + master_uri + ":11311"
+print(master_uri)
+
 startup_job.user = "root"
 startup_job.rosdistro = "noetic"
 startup_job.master_uri = master_uri
