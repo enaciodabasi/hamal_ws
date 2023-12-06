@@ -230,7 +230,6 @@ int main(int argc, char** argv)
         }
         else if(goalInProgress){
 
-            ROS_INFO("Goal is active");
             auto currTime = ros::Time::now();
             auto timeSinceProfileStart = (currTime - profileStart).toSec();
             if(timeSinceProfileStart > (goalInfo.ta + goalInfo.tc + goalInfo.td)){

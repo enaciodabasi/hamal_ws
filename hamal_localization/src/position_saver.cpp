@@ -13,43 +13,45 @@
 
 void turnPoseMsgToYamlNode(
     YAML::Node& existing_yaml_node,
-    const geometry_msgs::PoseWithCovarianceStamped& pose_msg
+    const geometry_msgs::PoseStamped& pose_msg
 )
 {
     existing_yaml_node["robot_position"]["frame_id"] = pose_msg.header.frame_id;
-    existing_yaml_node["robot_position"]["position"]["x"] = pose_msg.pose.pose.position.x;
-    existing_yaml_node["robot_position"]["position"]["y"] = pose_msg.pose.pose.position.y;
-    existing_yaml_node["robot_position"]["position"]["z"] = pose_msg.pose.pose.position.z;
-    existing_yaml_node["robot_position"]["orientation"]["x"] = pose_msg.pose.pose.orientation.x;
-    existing_yaml_node["robot_position"]["orientation"]["y"] = pose_msg.pose.pose.orientation.y;
-    existing_yaml_node["robot_position"]["orientation"]["z"] = pose_msg.pose.pose.orientation.z;
-    existing_yaml_node["robot_position"]["orientation"]["w"] = pose_msg.pose.pose.orientation.w;
+    existing_yaml_node["robot_position"]["position"]["x"] = pose_msg.pose.position.x;
+    existing_yaml_node["robot_position"]["position"]["y"] = pose_msg.pose.position.y;
+    existing_yaml_node["robot_position"]["position"]["z"] = pose_msg.pose.position.z;
+    existing_yaml_node["robot_position"]["orientation"]["x"] = pose_msg.pose.orientation.x;
+    existing_yaml_node["robot_position"]["orientation"]["y"] = pose_msg.pose.orientation.y;
+    existing_yaml_node["robot_position"]["orientation"]["z"] = pose_msg.pose.orientation.z;
+    existing_yaml_node["robot_position"]["orientation"]["w"] = pose_msg.pose.orientation.w;
 
-    YAML::Node covarianceNode;
+    /* YAML::Node covarianceNode;
     for(std::size_t covarianceMatIter = 0; covarianceMatIter < pose_msg.pose.covariance.size(); covarianceMatIter++)
     {
         covarianceNode.push_back(pose_msg.pose.covariance.at(covarianceMatIter));
     }
 
-    existing_yaml_node["robot_position"]["covariance"] = covarianceNode;
+    existing_yaml_node["robot_position"]["covariance"] = covarianceNode; */
 
 }
 
-const geometry_msgs::PoseWithCovarianceStamped turnYamlNodeToPose(
+const geometry_msgs::PoseStamped turnYamlNodeToPose(
   const YAML::Node& existing_yaml_node
 )
 {
-    geometry_msgs::PoseWithCovarianceStamped poseMsg;
+    
+    geometry_msgs::PoseStamped poseMsg;
+    
     poseMsg.header.frame_id = existing_yaml_node["robot_position"]["frame_id"].as<std::string>();
-    poseMsg.pose.pose.position.x = existing_yaml_node["robot_position"]["position"]["x"].as<double>();
-    poseMsg.pose.pose.position.y = existing_yaml_node["robot_position"]["position"]["y"].as<double>();
-    poseMsg.pose.pose.position.z = existing_yaml_node["robot_position"]["position"]["z"].as<double>();
-    poseMsg.pose.pose.orientation.x = existing_yaml_node["robot_position"]["orientation"]["x"].as<double>();
-    poseMsg.pose.pose.orientation.y = existing_yaml_node["robot_position"]["orientation"]["y"].as<double>();
-    poseMsg.pose.pose.orientation.z = existing_yaml_node["robot_position"]["orientation"]["z"].as<double>(); 
-    poseMsg.pose.pose.orientation.w = existing_yaml_node["robot_position"]["orientation"]["w"].as<double>();
+    poseMsg.pose.position.x = existing_yaml_node["robot_position"]["position"]["x"].as<double>();
+    poseMsg.pose.position.y = existing_yaml_node["robot_position"]["position"]["y"].as<double>();
+    poseMsg.pose.position.z = existing_yaml_node["robot_position"]["position"]["z"].as<double>();
+    poseMsg.pose.orientation.x = existing_yaml_node["robot_position"]["orientation"]["x"].as<double>();
+    poseMsg.pose.orientation.y = existing_yaml_node["robot_position"]["orientation"]["y"].as<double>();
+    poseMsg.pose.orientation.z = existing_yaml_node["robot_position"]["orientation"]["z"].as<double>(); 
+    poseMsg.pose.orientation.w = existing_yaml_node["robot_position"]["orientation"]["w"].as<double>();
 
-    auto covarianceMatrix = existing_yaml_node["robot_position"]["covariance"].as<std::vector<double>>();
+    /* auto covarianceMatrix = existing_yaml_node["robot_position"]["covariance"].as<std::vector<double>>();
 
     auto covArrOpt = [&covarianceMatrix]() -> std::optional<boost::array<double, 36>> {
         if(covarianceMatrix.size() == 36){
@@ -63,7 +65,7 @@ const geometry_msgs::PoseWithCovarianceStamped turnYamlNodeToPose(
     
     if(covArrOpt){
         poseMsg.pose.covariance = covArrOpt.value();
-    }
+    } */
 
     return poseMsg;
 }
@@ -81,14 +83,17 @@ int main(int argc, char** argv)
     
     bool positionArrived = false;
     geometry_msgs::PoseWithCovarianceStamped poseData;
-    ros::Subscriber poseSub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
+    /* ros::Subscriber poseSub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
         "amcl_pose",
         1,
         [&](const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose){
             poseData = *pose;
             
         }
-    );
+    ); */
+
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener listener(tfBuffer, nh, true);
 
     ros::Publisher initialPosePub = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(
         "/initialpose",
@@ -111,13 +116,13 @@ int main(int argc, char** argv)
         emptyFileNode["robot_position"]["orientation"]["z"] = 0.0;
         emptyFileNode["robot_position"]["orientation"]["w"] = 0.0;
 
-        YAML::Node covarianceNode;
+        /* YAML::Node covarianceNode;
         for(std::size_t covarianceMatIter = 0; covarianceMatIter < 36; covarianceMatIter++)
         {
             covarianceNode.push_back(0.0);
         }
 
-        emptyFileNode["robot_position"]["covariance"] = covarianceNode;
+        emptyFileNode["robot_position"]["covariance"] = covarianceNode; */
         isInitialPosSaving = true;
     }
 
@@ -125,7 +130,7 @@ int main(int argc, char** argv)
 
     YAML::Node baseFile = YAML::LoadFile("/home/" + user + "/hamal_ws/src/hamal_localization/pos_logs/pos_log.yaml");
 
-    ros::Rate rate(10.0);
+    ros::Rate rate(100.0);
     ros::Rate checkSubRate(500.0);
     bool initialPosePublished = false;
     if(!isInitialPosSaving){
@@ -133,12 +138,16 @@ int main(int argc, char** argv)
         {   
             if(ros::ok())
                 ros::spinOnce();
-            ROS_INFO("No subs for initial pose.");
             checkSubRate.sleep();
         }
 
         if(initialPosePub.getNumSubscribers() != 0){
-            initialPosePub.publish(turnYamlNodeToPose(baseFile));
+            ROS_INFO("Publishing to /initialpose");
+            geometry_msgs::PoseWithCovarianceStamped poseToPub;
+            auto cpyPose = turnYamlNodeToPose(baseFile);
+            poseToPub.header = cpyPose.header;
+            poseToPub.pose.pose = cpyPose.pose;
+            initialPosePub.publish(poseToPub);
             initialPosePublished = true;
         }
     }
@@ -146,6 +155,15 @@ int main(int argc, char** argv)
         initialPosePublished = true;
     }
 
+    auto tfToPoseStamped = [](geometry_msgs::PoseStamped& pose, geometry_msgs::TransformStamped tf)->void{
+        
+        pose.pose.position.x = tf.transform.translation.x;
+        pose.pose.position.y = tf.transform.translation.y;
+        pose.pose.position.z = tf.transform.translation.z;
+        pose.header.frame_id = tf.header.frame_id;
+
+        pose.pose.orientation = tf.transform.rotation;
+    };
     while(ros::ok())
     {
         if(!initialPosePublished){
@@ -156,7 +174,17 @@ int main(int argc, char** argv)
         //if(!positionArrived){
         //    continue;
         //}
-        turnPoseMsgToYamlNode(baseFile, poseData);
+        geometry_msgs::PoseStamped robotPoseRelativeToMap;
+        try{
+            auto robotToMap = tfBuffer.lookupTransform("map", "base_link", ros::Time(0.0));
+            
+            tfToPoseStamped(robotPoseRelativeToMap, robotToMap);
+        }catch(...){
+            rate.sleep();
+            continue;
+        }
+        
+        turnPoseMsgToYamlNode(baseFile, robotPoseRelativeToMap);
         
         std::ofstream out;
         out.open("/home/"+ user +"/hamal_ws/src/hamal_localization/pos_logs/pos_log.yaml");

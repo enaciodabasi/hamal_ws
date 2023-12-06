@@ -20,6 +20,11 @@
 #include <filesystem>
 
 #include <ros/ros.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include <yaml-cpp/yaml.h>
@@ -42,10 +47,10 @@
 
 void turnPoseMsgToYamlNode(
     YAML::Node& existing_yaml_node,
-    const geometry_msgs::PoseWithCovarianceStamped& pose_msg
+    const geometry_msgs::PoseStamped& pose_msg
 );
 
-const geometry_msgs::PoseWithCovarianceStamped turnYamlNodeToPose(
+const geometry_msgs::PoseStamped turnYamlNodeToPose(
   const YAML::Node& existing_yaml_node
 );
 
