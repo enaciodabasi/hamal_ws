@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     move_base_msgs
     hamal_custom_interfaces
+    tf2_ros
 )
 
 find_package(Boost REQUIRED)
@@ -24,7 +25,7 @@ find_package(Boost REQUIRED)
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
-    CATKIN_DEPENDS controller_manager  roscpp actionlib control_msgs std_msgs
+    CATKIN_DEPENDS controller_manager  roscpp actionlib control_msgs std_msgs tf2_ros
     DEPENDS Boost
 )
 

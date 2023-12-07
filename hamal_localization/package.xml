@@ -16,6 +16,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
   <depend>geometry_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
