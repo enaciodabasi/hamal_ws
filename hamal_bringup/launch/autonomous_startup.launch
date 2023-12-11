@@ -19,6 +19,12 @@
         <remap from="/cmd_vel" to="/hamal/mobile_base_controller/cmd_vel"></remap>
     </include>
 
+    <node pkg="hamal_localization" type="position_saver" name="position_saver">
+        <rosparam command="load" file="$(find hamal_localization)/config/pos_saver_config.yaml" />
+    </node> 
+
+    <node pkg="hamal_utils" type="costmap_cleaning_node" name="costmap_cleaning_node"></node>
+
     <node 
         pkg="slam_toolbox" 
         type="localization_slam_toolbox_node"
