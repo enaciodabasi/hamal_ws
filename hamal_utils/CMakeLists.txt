@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
     nav_msgs
     std_msgs
     sensor_msgs
+    actionlib
 )
 
 find_package(Qt5 COMPONENTS Widgets Core REQUIRED)
@@ -42,6 +43,14 @@ target_include_directories(emg_stop_client PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE
 add_executable(imu_test src/imu_test.cpp)
 target_link_libraries(imu_test ${catkin_LIBRARIES})
 target_include_directories(imu_test PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+
+add_executable(costmap_cleaning_node src/costmap_cleaning.cpp)
+target_link_libraries(costmap_cleaning_node ${catkin_LIBRARIES})
+target_include_directories(costmap_cleaning_node PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+
+add_library(lifter_action_client SHARED src/lifter_client.cpp)
+target_link_libraries(lifter_action_client ${catkin_LIBRARIES})
+target_include_directories(lifter_action_client PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
 add_executable(emg_stop_gui 
     src/emg_stop_gui.cpp

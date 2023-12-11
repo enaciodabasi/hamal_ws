@@ -138,6 +138,47 @@ int main(int argc, char** argv)
     );
 
     linearMoveOrientationController.setParams(kp, ki, kd);
+    PID linearPositionController;
+    kp, ki, kd = 0.0;
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/linear_position_controller/kp",
+        kp,
+        kp
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/linear_position_controller/ki",
+        ki,
+        ki
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/linear_position_controller/kd",
+        kd,
+        kd
+    );
+    linearPositionController.setParams(kp, ki, kd);
+
+    PID angularPositionController;
+    kp, ki, kd = 0.0;
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/angular_position_controller/kp",
+        kp,
+        kp
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/angular_position_controller/ki",
+        ki,
+        ki
+    );
+
+    nh.param(
+        "/profile_controller_params/trapezoidal_profile/angular_position_controller/kd",
+        kd,
+        kd
+    );
+    angularPositionController.setParams(kp, ki, kd);
 
     double orientationSetPoint = 0.0;
     bool controlOrientation = true; 
@@ -196,12 +237,14 @@ int main(int argc, char** argv)
 
                     currentTfOpt = currentTf;
                 }catch(...){
+                    ROS_WARN("Can not get orientation.");
                     controlOrientation = false;
                 }
 
                 if(currentTfOpt){
                     auto orientationQuat = currentTfOpt.value().transform.rotation;
                     orientationSetPoint = quaternionToDegree(orientationQuat);
+                    controlOrientation = true;
                 }
             }
             else{
@@ -268,6 +311,7 @@ int main(int argc, char** argv)
                         orientTfOpt = tfBuffer.lookupTransform("odom", "base_link", ros::Time(0.0));
                     }catch(...){
                         controlOrientation = false;
+                        ROS_WARN("Can not get TF.");
                     }
                 }
             case MotionType::Angular:
@@ -280,15 +324,18 @@ int main(int argc, char** argv)
                 orientTfOpt = std::nullopt;
                 break;
             }
-            
+            int dir = 1.0;
+            if(goalInfo.target_position < 0){
+                    dir = -1.0;
+            }
             if(timeSinceProfileStart <= goalInfo.ta){
-                velRef = goalInfo.vel_ref + (elaspedLoopTime * goalInfo.max_acc);
+                velRef = goalInfo.vel_ref + (elaspedLoopTime * goalInfo.max_acc * dir) ;
             }
             else if((timeSinceProfileStart > goalInfo.ta) && timeSinceProfileStart <= (goalInfo.ta + goalInfo.tc)){
-                velRef = goalInfo.max_vel;
+                velRef = goalInfo.max_vel * dir;
             }
             else if((timeSinceProfileStart >= goalInfo.ta + goalInfo.tc) && (timeSinceProfileStart <= goalInfo.ta + goalInfo.tc + goalInfo.td)){
-                velRef = goalInfo.vel_ref - (elaspedLoopTime * goalInfo.max_acc);
+                velRef = goalInfo.vel_ref - (elaspedLoopTime * goalInfo.max_acc * dir);
             }
 
             if(orientTfOpt && controlOrientation){
@@ -303,18 +350,32 @@ int main(int argc, char** argv)
             auto controlledRef = velController.control(currentValue, goalInfo.vel_ref, currTime);
             
             ROS_INFO("Distance traveled (feedback): %f | Distance traveled (open-loop): %f", realDistanceTraveled, distanceWithoutFeedback);
-            if(goalInfo.target_position < 0){
+            /* if(goalInfo.target_position < 0){
                 velRef = velRef * -1.0;
+            } */
+            
+            double posControlOutput = 0.0;
+            if(goalInfo.motion_type == MotionType::Linear){
+                posControlOutput = linearPositionController.control(distanceWithoutFeedback, realDistanceTraveled, currTime);
             }
+            else if(goalInfo.motion_type == MotionType::Angular){
+                posControlOutput = angularPositionController.control(distanceWithoutFeedback, realDistanceTraveled, currTime);
+            }
+
             goalInfo.vel_ref = velRef;
             geometry_msgs::Twist cmdVel;
-            
-            cmdVel.linear.x = velRef;
-            /* cmdVel.angular.z = goalInfo.angular_vel_ref; */
             controlledRef += velRef;
+            double positionControlledRef = velRef + posControlOutput;
+
+            if(goalInfo.motion_type == MotionType::Angular){
+                cmdVel.angular.z = velRef;
+            }
+            else{
+                cmdVel.linear.x = velRef;
+            }
             distanceWithControlledVelReference += controlledRef * elaspedLoopTime;
 
-
+            ROS_INFO("Position controlled velocity reference: %f", positionControlledRef);
             ROS_INFO("Distance traveled (controlled): %f", distanceWithControlledVelReference);
             
             ROS_INFO("Velocity Reference: %f | Controlled reference: %f", velRef, controlledRef);
