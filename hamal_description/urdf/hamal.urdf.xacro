@@ -172,4 +172,18 @@
   </joint>
   <link name="imu_link"></link>
 
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="camera_link" />
+    <origin xyz="0.80612 0.0 0.185" rpy="0 0 0" />
+  </joint>
+
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://hamal_description/mesh/nanoscan.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </visual>
+  </link>
 </robot>

@@ -8,7 +8,7 @@
     type="spawner"
     respawn="false"
     output="screen"
-    args="/hamal/mobile_base_controller /hamal/joint_state_controller"
+    args="/hamal/mobile_base_controller /hamal/joint_state_controller /hamal/lifter_controller"
 />
 
 <!-- <node pkg="hamal_control" name="lifter_controller_client" type="lifter_controller_client" output="screen"></node> -->
