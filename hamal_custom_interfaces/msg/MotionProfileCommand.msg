@@ -1,0 +1,6 @@
+float64 x_target
+float64 yaw_target
+float64 max_velocity_x
+float64 max_accelaration_x
+float64 max_velocity_yaw
+float64 max_accelaration_yaw

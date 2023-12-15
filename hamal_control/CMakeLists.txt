@@ -18,9 +18,15 @@ find_package(catkin REQUIRED COMPONENTS
     move_base_msgs
     hamal_custom_interfaces
     tf2_ros
+    dynamic_reconfigure
 )
 
 find_package(Boost REQUIRED)
+
+
+generate_dynamic_reconfigure_options(
+    cfg/MotionController.cfg
+)
 
 catkin_package(
     INCLUDE_DIRS include
@@ -32,7 +38,6 @@ catkin_package(
 include_directories(
     include/
 )
-
 
 #add_dependencies(hamal_lifter_controller ${hamal_lifter_controller_EXPORTED_TARGETS})
 
@@ -46,6 +51,7 @@ target_include_directories(velocity_smoother PUBLIC ${catkin_INCLUDE_DIRS} inclu
 
 
 add_executable(trapezoidal_profile src/trapezoid_move.cpp)
+add_dependencies(trapezoidal_profile ${PROJECT_NAME}_gencfg)
 target_link_libraries(trapezoidal_profile ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_include_directories(trapezoidal_profile PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
 

@@ -116,9 +116,11 @@ namespace hamal_lifter_controller
                 m_GoalError = true;
             }
             else if(
-                const double currentJointPosition = m_LifterJointHandle.getPosition(),
-                currentPositionGoal = m_CurrentActionGoalPtr->target_position;
-                inRange(currentJointPosition, currentPositionGoal, m_PositionTolerance)    
+                [&]()->bool{
+                    const double currentJointPosition = m_LifterJointHandle.getPosition();
+                    double currentPositionGoal = m_CurrentActionGoalPtr->target_position;
+                    return inRange(currentJointPosition, currentPositionGoal, m_PositionTolerance);    
+                }()
             ){
                 
                 

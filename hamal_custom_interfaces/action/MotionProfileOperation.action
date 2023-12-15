@@ -1,0 +1,6 @@
+MotionProfileCommand profile_information
+---
+
+bool target_reached
+
+---

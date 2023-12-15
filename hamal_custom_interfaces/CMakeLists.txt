@@ -15,6 +15,7 @@ add_message_files(
     HardwareStatus.msg
     ImuTestDebugInfo.msg
     ProfileCommand.msg
+    MotionProfileCommand.msg
 )
 
 add_action_files(
@@ -23,6 +24,7 @@ add_action_files(
     FILES
     LifterOperation.action
     HomingOperation.action
+    MotionProfileOperation.action
 )
 
 add_service_files(
