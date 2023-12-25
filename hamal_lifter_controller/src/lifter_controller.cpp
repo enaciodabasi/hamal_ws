@@ -109,6 +109,10 @@ namespace hamal_lifter_controller
         }
         else if(m_GoalActive){
 
+            const double currentJointPosition = m_LifterJointHandle.getPosition();
+            double currentPositionGoal = m_CurrentActionGoalPtr->target_position;
+
+
             if(!m_LifterOperationServer->isActive()){
                 m_LifterJointHandle.setCommandPosition(0.0);
                 m_LifterJointHandle.setCommandVelocity(0.0);
@@ -116,11 +120,7 @@ namespace hamal_lifter_controller
                 m_GoalError = true;
             }
             else if(
-                [&]()->bool{
-                    const double currentJointPosition = m_LifterJointHandle.getPosition();
-                    double currentPositionGoal = m_CurrentActionGoalPtr->target_position;
-                    return inRange(currentJointPosition, currentPositionGoal, m_PositionTolerance);    
-                }()
+                inRange(currentPositionGoal, currentJointPosition, 0.1)
             ){
                 
                 

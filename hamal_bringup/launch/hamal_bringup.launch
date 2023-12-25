@@ -8,7 +8,7 @@
     <arg name="use_slam_toolbox" default="false"></arg>
     <arg name="mode" default="lifelong"></arg>
     <arg name="model" default="$(find hamal_description)/urdf/hamal.urdf.xacro"></arg>
-    <arg name="map" default="slam_toolbox/ayosb_st.yaml"></arg>
+    <arg name="map" default="fuar.yaml"></arg>
 
     <arg name="use_dwa_planner" default="true"></arg>
 

@@ -44,8 +44,10 @@ hamal:
         max_velocity           : 1.0  # m/s
         min_velocity           : -1.0 # m/s
         has_acceleration_limits: true
-        max_acceleration       : 0.5 # m/s^2
-        min_acceleration       : -0.5 # m/s^2
+        max_acceleration       : 0.25 # m/s^2
+        min_acceleration       : -0.25 # m/s^2
+        #max_acceleration       : 0.5 # m/s^2
+        #min_acceleration       : -0.5 # m/s^2
         has_jerk_limits        : false
         max_jerk               : 1.0  # m/s^3
     angular:
@@ -53,7 +55,8 @@ hamal:
         has_velocity_limits    : true
         max_velocity           : 1.5 # rad/s
         has_acceleration_limits: true
-        max_acceleration       : 0.75  # rad/s^2
+        #max_acceleration       : 0.75  # rad/s^2
+        max_acceleration       : 0.375  # rad/s^2
         has_jerk_limits        : false
         max_jerk               : 3.0 # rad/s^3
 
