@@ -14,11 +14,11 @@
     </node>
 
     <include file="$(find hamal_mapping)/launch/scanners.launch"></include>
-
+    
     <include file="$(find hamal_hardware)/launch/hamal_hardware.launch"></include>
     
     <include file="$(find hamal_control)/launch/hamal_control.launch"></include>
-    
+
     <param name="/hamal/mobile_base_controller/enable_odom_tf" value="true"></param>
     
     <node name="serial_node" pkg="rosserial_arduino" type="serial_node.py" output="screen">
@@ -26,6 +26,13 @@
         <param name="port" type="string" value="/dev/ttyACM0"/>
     </node>
 
+    <include file="$(find ros_openimu_upx)/launch/openimu_driver.launch"></include>
+    <node pkg="imu_filter_madgwick" type="imu_filter_node" name="ImuFilter" output="screen">
+      <param name="use_mag" value="false"/>
+      <param name="world_frame" value="enu"/>
+      <param name="publish_tf" value="false"></param>
+      <param name="publish_rate" value="true"></param>
+    </node>
     <arg name="joy_config" default="xbox" />
     <arg name="joy_dev" default="/dev/input/js0" />
     <arg name="config_filepath" default="$(find teleop_twist_joy)/config/$(arg joy_config).config.yaml" />
