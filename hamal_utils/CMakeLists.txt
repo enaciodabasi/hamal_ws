@@ -52,6 +52,10 @@ add_library(lifter_action_client SHARED src/lifter_client.cpp)
 target_link_libraries(lifter_action_client ${catkin_LIBRARIES})
 target_include_directories(lifter_action_client PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
+add_executable(robot_mode_service src/robot_mode_node.cpp)
+target_link_libraries(robot_mode_service ${catkin_LIBRARIES})
+target_include_directories(robot_mode_service PUBLIC ${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 add_executable(emg_stop_gui 
     src/emg_stop_gui.cpp
 )

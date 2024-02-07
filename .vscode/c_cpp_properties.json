@@ -14,6 +14,7 @@
         "/home/naci/hamal_ws/src/hamal_lifter_controller/include/**",
         "/home/naci/hamal_ws/src/hamal_localization/include/**",
         "/home/naci/hamal_ws/src/hamal_hardware/include/**",
+        "/home/naci/hamal_ws/src/hamal_velocity_multiplexer/include/*",
         "/usr/include/**",
         "/home/naci/Projects/igh_master/include/**",
         "/home/grass/ethercat_interface/include/*",

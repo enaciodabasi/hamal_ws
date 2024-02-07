@@ -32,6 +32,8 @@ add_service_files(
     srv
     FILES
     EmergencyStop.srv
+    GetRobotMode.srv
+    ChangeRobotMode.srv
 )
 
 generate_messages(

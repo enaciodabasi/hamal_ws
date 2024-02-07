@@ -3,3 +3,6 @@ dolly_pose_estimation.old
 autodock
 xsens_ros_mti_driver
 ros_openimu_upx
+hamal_utils/connection_checker_rust
+hamal_utils/gui_resource
+.gitignore

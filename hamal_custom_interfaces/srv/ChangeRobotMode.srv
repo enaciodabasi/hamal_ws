@@ -1,0 +1,7 @@
+#
+# mode 0 : Manual
+# mode 1: Autonomous
+# mode 2: Hybrid 
+uint16 mode
+---
+bool change_successful
