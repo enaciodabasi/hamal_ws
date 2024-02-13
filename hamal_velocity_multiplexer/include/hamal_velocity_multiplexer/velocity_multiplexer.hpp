@@ -39,13 +39,9 @@ struct VelocityPublisherInfo
 
     RobotMode allowedMode;
 
-    bool init();
-
     ros::Subscriber cmdVelSub;
 
 };
-
-
 
 using VelocityPublishers = std::map<unsigned int, VelocityPublisherInfo>;
 

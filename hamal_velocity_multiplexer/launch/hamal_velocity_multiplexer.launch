@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <param name="hamal_velocity_multiplexer/sub_info_config_file" type="string" value="/home/naci/hamal_ws/src/hamal_velocity_multiplexer/config/sub_info.yaml"></param>
+    <param name="hamal_velocity_multiplexer/pub_activity_timeout_period" type="double" value="0.5"></param>
+    <node name = "hamal_velocity_multiplexer" pkg="hamal_velocity_multiplexer" type="hamal_velocity_multiplexer" respawn="false" output="screen">
+        
+    </node>
+
+</launch>

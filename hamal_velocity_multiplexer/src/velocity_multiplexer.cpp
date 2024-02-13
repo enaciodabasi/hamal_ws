@@ -11,22 +11,22 @@
 
 #include "hamal_velocity_multiplexer/velocity_multiplexer.hpp"
 
-void parsePublisherInfoConfigFile(YAML::Node& file, VelocityPublishers& publishers)
+void parsePublisherInfoConfigFile(const YAML::Node& file, VelocityPublishers& publishers)
 {
     VelocityPublishers info;
     
     auto subInfoNode = file["subscriber_info"];
     std::size_t idCount = 0;
-    for(YAML::const_iterator it = subInfoNode.begin(); it!=file.end(); ++it)
+    for(const auto& info_node : subInfoNode)
     {
         VelocityPublisherInfo info;
         
         info.id = idCount;
         idCount += 1; 
-        info.name = it->second["name"].as<std::string>();
-        info.prio = it->second["prio"].as<unsigned int>();
-        info.allowedMode = RobotMode{it->second["allowed_mode"].as<uint16_t>()};
-        info.topicName = it->second["topic_name"].as<std::string>();
+        info.name = info_node["name"].as<std::string>();
+        info.prio = info_node["prio"].as<unsigned int>();
+        info.allowedMode = RobotMode{info_node["allowed_mode"].as<uint16_t>()};
+        info.topicName = info_node["topic_name"].as<std::string>();
 
         publishers[info.id] = info;
     }
@@ -55,10 +55,13 @@ int main(int argc, char** argv)
         ROS_ERROR("Can not find the config file for subscription info.");
         ros::shutdown();
     }
+
+    double activityTimeoutPeriod = 0.0;
+    nh.getParam("/hamal_velocity_multiplexer/publisher_activity_timeout_period", activityTimeoutPeriod);
     VelocityPublishers pubsInfo;
     parsePublisherInfoConfigFile(YAML::LoadFile(subInfoConfigFilePath), pubsInfo);
     const uint32_t threadCountPerPub = pubsInfo.size();
-    ros::MultiThreadedSpinner mtSpinner(threadCountPerPub);
+    ros::MultiThreadedSpinner mtSpinner(threadCountPerPub + 1);
 
     /* auto cmdVelCallback = [&](const geometry_msgs::Twist& msg, unsigned int id)
     {
@@ -72,10 +75,12 @@ int main(int argc, char** argv)
         true
     );
     
-    /* while(robotModeClient.waitForExistence())
+    ros::Rate rate(50);
+    while(!robotModeClient.waitForExistence())
     {
-
-    } */
+        ROS_WARN("Waiting for robot mode server to come up.");
+        rate.sleep();
+    }
 
     RobotMode currentRobotMode{0};
 
@@ -169,10 +174,10 @@ int main(int argc, char** argv)
             cmdVelMultiplexerActive = true;
             pubsInfo.at(id).isActive = true;
             activePubID = id;
+            outCmdVelPub.publish(msg);
 
         }
         
-
 
     }; 
 
@@ -186,7 +191,11 @@ int main(int argc, char** argv)
         );
     }
 
+    mtSpinner.spin();
+
+    ros::shutdown();
     
+    return 0;
     
 }
 

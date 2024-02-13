@@ -1,0 +1,18 @@
+subscriber_info:
+  -
+    name: autonomous_navigation_command
+    prio: 75
+    allowed_mode: 1
+    topic_name: /velocity_command/move_base
+
+  -
+    name: hybrid_navigation_command
+    prio: 85
+    allowed_mode: 2
+    topic_name: /velocity_command/motion_profile_generator
+
+  -
+    name: joystick_command
+    prio: 50
+    allowed_mode: 0
+    topic_name: /velocity_command/joystick
