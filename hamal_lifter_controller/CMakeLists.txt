@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
     hamal_custom_interfaces
 )
 find_package(Boost REQUIRED)
+find_package(MotionProfileGenerators REQUIRED)
+
 
 catkin_package(
     INCLUDE_DIRS include
@@ -31,9 +33,9 @@ include_directories(
     include ${Boost_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} src/lifter_controller.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-
+add_library(${PROJECT_NAME} src/hamal_lifter_controller.cpp)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${MotionProfileGenerators_LIB_INSTALL_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${catkin_INCLUDE_DIRS} ${MotionProfileGenerators_INCLUDE_DIR})
 
 install(DIRECTORY include/${PROJECT_NAME} DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(TARGETS ${PROJECT_NAME}

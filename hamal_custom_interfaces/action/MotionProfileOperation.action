@@ -4,3 +4,5 @@ MotionProfileCommand profile_information
 bool target_reached
 
 ---
+
+float32 profile_percentage

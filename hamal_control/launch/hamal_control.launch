@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 <rosparam file="$(find hamal_control)/config/hamal_control.yaml" command="load"></rosparam>
-<node
+<rosparam file="$(find hamal_control)/config/profile_controller_params.yaml" command="load"></rosparam>
+<!-- <node
 
     name="controller_manager"
     pkg="controller_manager"
@@ -9,7 +10,16 @@
     respawn="false"
     output="screen"
     args="/hamal/mobile_base_controller /hamal/joint_state_controller /hamal/lifter_controller"
-/>
+/> -->
+
+<rosparam file="$(find hamal_control)/config/profile_controller_params.yaml" command="load"></rosparam>
+
+<node
+    pkg="hamal_control"
+    name="motion_controller"
+    type="motion_controller"
+    output="screen">
+</node>
 
 <!-- <node pkg="hamal_control" name="lifter_controller_client" type="lifter_controller_client" output="screen"></node> -->
 

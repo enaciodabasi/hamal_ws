@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(hamal_control)
 
 set(CMAKE_CXX_STANDARD 17)
+list(APPEND CMAKE_MODULE_PATH /usr/local/lib/cmake/MotionProfileGenerators/)
 
 find_package(catkin REQUIRED COMPONENTS 
     controller_manager
@@ -22,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Boost REQUIRED)
-
+find_package(MotionProfileGenerators REQUIRED)
 
 generate_dynamic_reconfigure_options(
     cfg/MotionController.cfg
@@ -50,14 +51,18 @@ target_link_libraries(velocity_smoother ${catkin_LIBRARIES})
 target_include_directories(velocity_smoother PUBLIC ${catkin_INCLUDE_DIRS} include/hamal_control/velocity_smoother/include/)
 
 
-add_executable(trapezoidal_profile src/trapezoid_move.cpp)
-add_dependencies(trapezoidal_profile ${PROJECT_NAME}_gencfg)
-target_link_libraries(trapezoidal_profile ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(trapezoidal_profile PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
+#add_executable(trapezoidal_profile src/trapezoid_move.cpp)
+#add_dependencies(trapezoidal_profile ${PROJECT_NAME}_gencfg)
+#target_link_libraries(trapezoidal_profile ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#target_include_directories(trapezoidal_profile PUBLIC ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include/)
 
 # install(TARGETS lifter_controller_client
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
+
+add_executable(motion_controller src/motion_controller.cpp)
+target_link_libraries(motion_controller ${catkin_LIBRARIES} ${MotionProfileGenerators_LIB_INSTALL_DIR})
+target_include_directories(motion_controller PUBLIC ${catkin_INCLUDE_DIRS} ${MotionProfileGenerators_INCLUDE_DIR})
 
 install(TARGETS velocity_smoother
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

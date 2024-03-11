@@ -81,6 +81,7 @@
         "forward_list": "cpp",
         "future": "cpp",
         "regex": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "queue": "cpp"
     }
 }

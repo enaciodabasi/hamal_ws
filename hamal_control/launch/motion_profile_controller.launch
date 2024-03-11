@@ -1,0 +1,12 @@
+<launch>
+    
+    <rosparam file="$(find hamal_control)/config/profile_controller_params.yaml" command="load"></rosparam>
+
+    <node
+    pkg="hamal_control"
+    name="motion_controller"
+    type="motion_controller"
+    output="screen">
+</node>
+
+</launch>
