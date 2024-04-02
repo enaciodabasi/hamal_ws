@@ -1,0 +1,8 @@
+float64 target_position_x
+float64 target_velocity_x
+float64 target_acceleration_x
+
+float64 target_position_yaw
+float64 target_velocity_yaw
+float64 target_acceleration_yaw
+

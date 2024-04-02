@@ -12,6 +12,8 @@
 #include "hamal_control/motion_controller/motion_controller.hpp"
 #include <diff_drive_controller_hamal/DiffDriveControllerHamalConfig.h>
 
+constexpr auto RADIAN_TO_DEG_COEFF = 180.0 / M_PI;
+
 void load_params(ros::NodeHandle& nh, MotionConstraints<double>& linear_constraints, MotionConstraints<double>& angular_constraints)
 {
     nh.getParam("/hamal/mobile_base_controller/linear/x/max_velocity", linear_constraints.max_increment);
@@ -19,10 +21,12 @@ void load_params(ros::NodeHandle& nh, MotionConstraints<double>& linear_constrai
     linear_constraints.deacceleration = linear_constraints.acceleration;
     nh.getParam("/hamal/mobile_base_controller/linear/x/max_jerk", linear_constraints.jerk);
     
-    nh.getParam("/hamal/mobile_base_controller/angular/z/max_velocity", angular_constraints.max_increment);
+    nh.getParam("/hamal/mobile_base_controller/angular/z/max_velocity", (angular_constraints.max_increment));
     nh.getParam("/hamal/mobile_base_controller/angular/z/max_acceleration", angular_constraints.acceleration);
     angular_constraints.deacceleration = angular_constraints.acceleration;
     nh.getParam("/hamal/mobile_base_controller/angular/z/max_jerk", angular_constraints.jerk);
+
+    angular_constraints = angular_constraints * RADIAN_TO_DEG_COEFF;
 }
 
 double quaternionToDegree(const geometry_msgs::Quaternion& orientation_quaternion)
@@ -32,7 +36,7 @@ double quaternionToDegree(const geometry_msgs::Quaternion& orientation_quaternio
     tf2::Matrix3x3 m(quat);
     double r, p, y = 0.0;
     m.getRPY(r, p, y);
-
+    
     return (y * (180.0 / M_PI));
 }
 
@@ -68,17 +72,17 @@ int main(int argc, char **argv)
             linearMotionConstraints.deacceleration = controllerConf.min_acc_x;
             linearMotionConstraints.jerk = controllerConf.max_jerk_x;
 
-            angularMotionConstraints.max_increment = controllerConf.max_vel_z;
-            angularMotionConstraints.acceleration = controllerConf.max_acc_z;
-            angularMotionConstraints.deacceleration = controllerConf.min_acc_z;
-            angularMotionConstraints.jerk = controllerConf.max_jerk_z;
-
+            angularMotionConstraints.max_increment = (controllerConf.max_vel_z);
+            angularMotionConstraints.acceleration = (controllerConf.max_acc_z);
+            angularMotionConstraints.deacceleration = (controllerConf.min_acc_z);
+            angularMotionConstraints.jerk = (controllerConf.max_jerk_z);
+            angularMotionConstraints = angularMotionConstraints * RADIAN_TO_DEG_COEFF;
             linearMotionController.setMotionConstraints(linearMotionConstraints);
             angularMotionController.setMotionConstraints(angularMotionConstraints);
 
         }
     );
-
+    
     actionlib::SimpleActionServer<hamal_custom_interfaces::MotionProfileOperationAction> controllerSimpleServer(
         nh,
         "motion_profile_controller_server",
@@ -136,9 +140,10 @@ int main(int argc, char **argv)
         });
 
     controllerSimpleServer.registerPreemptCallback(
-        [&controllerSimpleServer, &goalActive]()
+        [&controllerSimpleServer, &goalActive, &commandQueue]()
         {
             goalActive = false;
+            commandQueue.pop();
             controllerSimpleServer.setPreempted();
         });
 
@@ -168,28 +173,28 @@ int main(int argc, char **argv)
     double realDisplacementSinceProfileStartedX = 0.0;
     double realDisplacementSinceProfileStartedYaw = 0.0;
 
-    auto activeGoalProcedureX = [&](const MotionProfileCommand& active_command, bool goal_done_flag) -> bool
+    auto activeGoalProcedureX = [&](const MotionProfileCommand& active_command, bool& goal_done_flag, const double& elapsed_time) -> bool
     {    
-        realDisplacementSinceProfileStartedX += std::abs(
+        realDisplacementSinceProfileStartedX += /* std::abs(
             currentOdom.pose.pose.position.x - 
             previousOdom.pose.pose.position.x
-        );
+        ); */
 
+        std::abs(previousOdom.twist.twist.linear.x * elapsed_time);
         const auto linearRef = linearMotionController.generateMotionProfileReference(active_command.x_target);
-        /* if(linearRef)
-        {
-            std::cout << linearRef->velocity << std::endl;
-        } */
+        //if(linearRef)
+        //{
+        //    std::cout << "Target velocity:" << linearRef->velocity << std::endl;
+        //}
 
-        if(bool currentInTolerance = inRange(realDisplacementSinceProfileStartedX, x_target, xTolerance))
+        if(bool currentInTolerance = inRange(realDisplacementSinceProfileStartedX, std::abs(x_target), xTolerance))
         {
-
             cmdVel.linear.x = 0.0;
-            if(!linearRef && !currentInTolerance)
+            /* if(!linearRef && !currentInTolerance)
             {
                 goal_done_flag = false;
                 return false;
-            }
+            } */
 
             goal_done_flag = true;
             return true;
@@ -202,59 +207,78 @@ int main(int argc, char **argv)
         }
         else
         {
-            ROS_ERROR("Reference is nullopt");
+            ROS_ERROR("Error during linear velocity reference generation.");
             cmdVel.linear.x = 0.0;
             return false;
         }
-
+        goal_done_flag = false;
         return true;
 
     };
 
-    auto activeGoalProcedureYaw = [&](const MotionProfileCommand& active_command, bool& goal_done_flag) -> bool
+    auto activeGoalProcedureYaw = [&](const MotionProfileCommand& active_command, bool& goal_done_flag, const double& elapsed_time) -> bool
     {
-        realDisplacementSinceProfileStartedYaw += std::abs(
+        
+        const auto angularRef = angularMotionController.generateMotionProfileReference(active_command.yaw_target);
+        if(!angularRef)
+        {   
+            goal_done_flag = true;
+            return true;
+        }
+        realDisplacementSinceProfileStartedYaw += /* std::abs(
             quaternionToDegree(currentOdom.pose.pose.orientation) -
             quaternionToDegree(previousOdom.pose.pose.orientation)
-        );
-
-        const auto angularRef = angularMotionController.generateMotionProfileReference(active_command.yaw_target);
-
-        if(bool currentInTolerance = inRange(realDisplacementSinceProfileStartedYaw, yaw_target, yawTolerance))
+        ); */
+        
+        std::abs((previousOdom.twist.twist.angular.z * RADIAN_TO_DEG_COEFF) * elapsed_time);    
+/*         std::cout << "current angular vel: " << previousOdom.twist.twist.angular.z << std::endl;
+ */        
+        /* std::cout << ang */
+        if(bool currentInTolerance = inRange(realDisplacementSinceProfileStartedYaw, std::abs(yaw_target), yawTolerance))
         {
-            
+            std::cout << "Yaw in tolerance\n";
             cmdVel.angular.z = 0.0;
-            if(!angularRef && !currentInTolerance)
+            /* if(!angularRef && !currentInTolerance)
             {
                 goal_done_flag = false;
-                return false;
-            }
+                return false;cd
+            } */
             goal_done_flag = true;
             return true;
         }
 
+/*         const auto angularRef = angularMotionController.generateMotionProfileReference(active_command.yaw_target);
+ */
         if(angularRef)
         {
-            cmdVel.angular.z = angularRef->velocity;
+            cmdVel.angular.z = angularRef->velocity * (1.0 / RADIAN_TO_DEG_COEFF);
+            std::cout << angularRef->velocity << " " << cmdVel.angular.z << std::endl;
         }
         else
         {
+            ROS_ERROR("Error during angular velocity reference generation.");
             cmdVel.angular.z = 0.0;
             return false;
         }
-
+        goal_done_flag = false;
         return true;
     };
 
+    auto currentTime = ros::Time::now();
+    ros::Time previosTime = currentTime;
+
     while (ros::ok())
     {   
-
         ros::spinOnce();
-
+        currentTime = ros::Time::now();
+        double loopUpdateElapsedTime = (currentTime - previosTime).toSec();
+        previosTime = currentTime;
         if (commandQueue.empty() && !goalActive)
         {
             //ROS_INFO("No commands arrived. Waiting...");
             rate.sleep();
+            realDisplacementSinceProfileStartedX = 0.0;
+            realDisplacementSinceProfileStartedYaw = 0.0;
             continue;
         }
 
@@ -265,7 +289,10 @@ int main(int argc, char **argv)
         // Setup profile generation.
         if (!goalActive && !commandQueue.empty())
         {
-
+            linearMotionController.reset();
+            angularMotionController.reset();
+            linearMotionController.setMotionConstraints(linearMotionConstraints);
+            angularMotionController.setMotionConstraints(angularMotionConstraints);
             const auto newGoal = commandQueue.front();
             if(newGoal.profile_type != 0)
             {
@@ -275,10 +302,12 @@ int main(int argc, char **argv)
 
             realDisplacementSinceProfileStartedX = 0.0;
             realDisplacementSinceProfileStartedYaw = 0.0;
-
+            /* currentOdom = nav_msgs::Odometry();
+            previousOdom = currentOdom; */
+            
             if (newGoal.x_target != 0.0)
             {
-                
+
                 bool setupOk = linearMotionController.setupProfile(
                     newGoal.x_target/* ,
                     static_cast<MotionProfileType>(newGoal.profile_type + 1) */);
@@ -290,6 +319,9 @@ int main(int argc, char **argv)
                     ROS_ERROR("Can not setup profile with the given parameters.");
                     continue;
                 }
+
+                /* initialProfileDurationX = linearMotionController */
+                previousOdom = currentOdom;
                 x_target = newGoal.x_target;
             }
 
@@ -306,7 +338,60 @@ int main(int argc, char **argv)
                     ROS_ERROR("Can not setup profile with the given parameters.");
                     continue;
                 }
+                previousOdom = currentOdom;
                 yaw_target = newGoal.yaw_target;
+            }          
+
+            if(newGoal.x_target != 0.0 && newGoal.yaw_target != 0.0)
+            {
+                
+                double initialProfileDurationX, initialProfileDurationYaw = 0.0;
+
+                initialProfileDurationX = linearMotionController.m_CurrentProfileInformation.m_CurrentProfileTimes->getTotalTime();
+                initialProfileDurationYaw = angularMotionController.m_CurrentProfileInformation.m_CurrentProfileTimes->getTotalTime();
+
+                if(initialProfileDurationX != initialProfileDurationYaw)
+                {
+                
+                    if(initialProfileDurationX > initialProfileDurationYaw)
+                    {
+                        // X movement is longer than yaw movement
+                        // Slow down on the yaw axis
+                        const auto ratio =  initialProfileDurationX / initialProfileDurationYaw;
+                        const auto tempAngularMotionConstraints = angularMotionConstraints * ratio;
+                        angularMotionController.setMotionConstraints(tempAngularMotionConstraints);
+                        bool setupOk = angularMotionController.setupProfile(
+                        newGoal.yaw_target);
+                        if(!setupOk)
+                        {
+                            commandQueue.pop();
+                            goalActive = false;
+                            controllerSimpleServer.setAborted();
+                            ROS_ERROR("Can not setup profile with the given parameters.");
+                            continue;
+                        }
+                    }
+                    else
+                    {   
+                        // Yaw movement is longer than X movement
+                        // Slow down on the x-Axis:
+                        const auto ratio = initialProfileDurationYaw / initialProfileDurationX;
+                        const auto tempLinearMotionConstraints = linearMotionConstraints * ratio;
+                        linearMotionController.setMotionConstraints(tempLinearMotionConstraints);
+                        bool setupOk = linearMotionController.setupProfile(
+                        newGoal.x_target/* ,
+                        static_cast<MotionProfileType>(newGoal.profile_type + 1) */);
+                        if(!setupOk)
+                        {
+                            commandQueue.pop();
+                            goalActive = false;
+                            controllerSimpleServer.setAborted();
+                            ROS_ERROR("Can not setup profile with the given parameters.");
+                            continue;
+                        }
+                    }
+                }
+
             }
             
             goalActive = true;
@@ -319,14 +404,14 @@ int main(int argc, char **argv)
             bool goalOkX, goalOkYaw = false;
             bool goalDoneX, goalDoneYaw = false;
             bool currentGoalSuccessful = false;
-
             if(goalActiveInX) 
             {
-                goalOkX = activeGoalProcedureX(activeCommand, goalDoneX);
+                goalOkX = activeGoalProcedureX(activeCommand, goalDoneX, loopUpdateElapsedTime);
 
                 if(goalDoneX)
                 {
-                    currentGoalSuccessful = true;
+                    std::cout << "X goal done." << std::endl;
+                    currentGoalSuccessful = true;   
                 }
                 else
                 {
@@ -337,11 +422,13 @@ int main(int argc, char **argv)
 
             if(goalActiveInYaw)
             {
-                goalOkYaw = activeGoalProcedureYaw(activeCommand, goalDoneYaw);
+                goalOkYaw = activeGoalProcedureYaw(activeCommand, goalDoneYaw, loopUpdateElapsedTime);
                 
                 if(goalDoneYaw)
                 {
-                    currentGoalSuccessful = true;
+                    std::cout << "Yaw goal done." << std::endl;
+                    if(!(goalActiveInX && !goalDoneX))
+                        currentGoalSuccessful = true;
                 }
                 else
                 {
@@ -352,6 +439,11 @@ int main(int argc, char **argv)
 
             if(currentGoalSuccessful)
             {
+                std::cout << "Goal is done successfuly.\n";
+                std::cout << "Delta Dx: " << realDisplacementSinceProfileStartedX << std::endl;
+                std::cout << "Delta Dyaw: " << realDisplacementSinceProfileStartedYaw << std::endl;
+
+                
                 hamal_custom_interfaces::MotionProfileOperationResult res;
                 res.target_reached = true;
                 controllerSimpleServer.setSucceeded(res);
@@ -361,7 +453,9 @@ int main(int argc, char **argv)
             
             if(!(goalOkYaw && goalOkX))
             {
-                ROS_ERROR("Error during reference generation.");
+                /* ROS_ERROR("Error during reference generation."); */
+                std::cout << "Delta Dx: " << realDisplacementSinceProfileStartedX << std::endl;
+                std::cout << "Delta Dyaw: " << realDisplacementSinceProfileStartedYaw << std::endl;
                 hamal_custom_interfaces::MotionProfileOperationResult res;
                 res.target_reached = false;
                 controllerSimpleServer.setAborted(res);
@@ -369,102 +463,12 @@ int main(int argc, char **argv)
                 goalActive = false;
             }
 
-            /* realDisplacementSinceProfileStartedX += std::abs(currentOdom.pose.pose.position.x - previousOdom.pose.pose.position.x);
-            realDisplacementSinceProfileStartedYaw += std::abs(quaternionToDegree(currentOdom.pose.pose.orientation) - quaternionToDegree(previousOdom.pose.pose.orientation)); */
-            /* std::future<std::optional<MotionProfileReference<double>>> angularRef;
-            std::optional<MotionProfileReference<double>> linearRef;
-            bool asyncOpActive = false;
-
-            bool yawOpDone, linearOpDone = false;
-            if(yaw_target != 0.0 && inRange(realDisplacementSinceProfileStartedYaw, yaw_target, 0.05))
-            {
-                yawOpDone = true;
-            }
-
-            if(x_target != 0.0 && inRange(realDisplacementSinceProfileStartedX, x_target, 0.05))
-            {
-                linearOpDone = true;
-            } */
-
-           /*  if(yawOpDone || linearOpDone)
-            {
-                hamal_custom_interfaces::MotionProfileOperationResult res;
-                res.target_reached = true;
-                controllerSimpleServer.setSucceeded(res);
-            }
-
-            if (yaw_target != 0.0 && x_target != 0.0)
-            {
-                angularRef = std::async(
-                    std::launch::async,
-                    &MotionProfileController<double, double>::generateMotionProfileReference,
-                    std::ref(angularMotionController),
-                    std::ref(yaw_target)
-                    );
-
-                asyncOpActive = true;
-            }
-
-            if(x_target != 0.0)
-            {
-                linearRef = linearMotionController.generateMotionProfileReference(x_target);
-                if(linearRef)
-                {
-                    std::cout << linearRef->velocity << std::endl;
-                    cmdVel.linear.x = linearRef->velocity;
-                }
-                else
-                {
-                    resetCmdVel();
-                }
-            }
-            if(yaw_target != 0.0 && !asyncOpActive)
-            {
-                
-                auto newAngRef = angularMotionController.generateMotionProfileReference(yaw_target);
-                if(newAngRef)
-                {
-                    cmdVel.angular.z = newAngRef->velocity;
-                }
-                else
-                {
-                    resetCmdVel();
-                }
-            }       
-            auto currentTime = std::chrono::high_resolution_clock::now();
-
-            if(asyncOpActive)
-            {
-
-                auto futureRes = angularRef.wait_for(std::chrono::duration<double>((loopPeriod - std::chrono::duration<double>(currentTime - prevUpdateTime).count())));
-
-                if(futureRes == std::future_status::ready)
-                {
-                    auto angularRefResOpt = angularRef.get();
-                    if(angularRefResOpt)
-                    {
-                        cmdVel.angular.z = angularRefResOpt.value().velocity;
-                    }
-                    else
-                    {
-                        resetCmdVel();
-                    }
-                }
-                else
-                {
-                    resetCmdVel();
-                }
-                if(linearRef)
-                {
-                    cmdVel.linear.x = linearRef.value().velocity;
-                }
-            } */            
-
+            previousOdom = currentOdom;
             cmdVelPub.publish(cmdVel);
-            resetCmdVel();
-            
-            rate.sleep();
+            resetCmdVel();        
         }
+
+        rate.sleep();
     }
 
     return 0;

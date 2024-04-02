@@ -1,6 +1,8 @@
 motion_controller:
   velocity_cmd_topic_name: /hamal/mobile_base_controller/cmd_vel
   controller_frequency: 500.0
+  x_tolerance: 0.005
+  yaw_tolerance: 0.005
 
 profile_controller_params:
   trapezoidal_profile:
